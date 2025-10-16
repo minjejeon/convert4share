@@ -1,0 +1,42 @@
+# Configuration for Convert4Share
+
+# A list of path patterns. If a source file's path contains one of these strings,
+# the output will be saved to the `defaultDestDir` instead of the source directory.
+excludeStringPatterns: []
+
+# To add more patterns, uncomment and edit the lines below.
+# For example:
+# excludeStringPatterns:
+#   - "Some Cloud/Photos"
+#   - "Google Drive/My Pictures"
+
+# The default destination directory for files matching one of the `excludeStringPatterns`.
+# Environment variables like $HOMEPATH are supported.
+defaultDestDir: "$HOMEPATH/Pictures"
+
+# Hardware accelerator to use for video encoding.
+# Supported values: "amd", "nvidia", "none".
+# If this key is missing or the file doesn't exist, the application will
+# attempt to auto-detect the GPU and create a config file.
+# If set to "none" or an unknown value, the software encoder (libx264) will be used.
+hardwareAccelerator: "none"
+
+# Video scaling option for ffmpeg.
+# The video will be resized to fit within a `maxSize` x `maxSize` square,
+# while maintaining the original aspect ratio. For example, a 3000x2000 video
+# with maxSize: 1920 will become 1920x1280.
+maxSize: 1920
+
+# Number of concurrent workers for image conversion.
+# More workers can speed up processing for many images, but uses more CPU.
+maxMagickWorkers: 5
+
+# Number of concurrent workers for video conversion.
+# It is recommended to keep this at 1 to ensure stability and avoid excessive resource usage.
+maxFfmpegWorkers: 1
+
+# Additional custom arguments for ffmpeg.
+# These arguments will be added to the ffmpeg command line.
+# Example: "-preset slow -crf 23"
+# Use with caution, as incorrect arguments can cause conversion to fail.
+ffmpegCustomArgs: ""
