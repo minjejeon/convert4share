@@ -74,15 +74,11 @@ var configTemplate []byte
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 
-	// Find home directory.
-	home, err := os.UserHomeDir()
-	cobra.CheckErr(err)
 	exePath, err := os.Executable()
 	cobra.CheckErr(err)
 	exeDir := filepath.Dir(exePath)
 
 	// Search config in home directory, executable directory with name "config.yaml".
-	viper.AddConfigPath(home)
 	viper.AddConfigPath(exeDir)
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -201,11 +197,8 @@ func ffmpeg(orig, dest string) error {
 	switch accelerator {
 	case "amd":
 		log.Println("Using 'amd' hardware accelerator (h264_amf) from config.")
-		amdScaleArg := fmt.Sprintf("vpp_amf='w=%d:h=%d:force_original_aspect_ratio=decrease:format=yuv420p'", maxSize, maxSize)
-		// Add -pix_fmt to ensure compatibility with encoders that don't support 10-bit input.
+		amdScaleArg := fmt.Sprintf("vpp_amf='w=%d:h=%d:force_original_aspect_ratio=decrease'", maxSize, maxSize)
 		args = append(args,
-			"-hwaccel", "amf",
-			"-hwaccel_output_format", "yuv420p",
 			"-i", orig,
 			"-c:v", "h264_amf",
 			"-vf", amdScaleArg,
