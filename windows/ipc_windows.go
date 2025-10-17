@@ -38,7 +38,7 @@ import (
 type COPYDATASTRUCT struct {
 	dwData uintptr
 	cbData uint32
-	lpData uintptr
+	lpData unsafe.Pointer
 }
 
 // WMCOPYDATA_SINGLE_INSTANCE_DATA we define our own type for WM_COPYDATA message
@@ -53,7 +53,7 @@ func sendMessage(hwnd w32.HWND, data string) {
 		log.Fatalf("UTF16FromString failed: %v", err)
 	}
 	pCopyData.cbData = uint32(len(utf16Data) * 2) // Size in bytes
-	pCopyData.lpData = uintptr(unsafe.Pointer(&utf16Data[0]))
+	pCopyData.lpData = unsafe.Pointer(&utf16Data[0])
 
 	w32.SendMessage(hwnd, w32.WM_COPYDATA, 0, uintptr(unsafe.Pointer(pCopyData)))
 }
@@ -110,10 +110,10 @@ func SetupSingleInstance(uniqueId string, secondInstanceBuffer chan<- string) bo
 func createEventTargetWindow(className string, windowName string, secondInstanceBuffer chan<- string) {
 	// callback handler in the event target window
 	wndProc := func(
-		hwnd w32.HWND, msg uint32, wparam w32.WPARAM, lparam w32.LPARAM,
+		hwnd w32.HWND, msg uint32, wparam unsafe.Pointer, lparam unsafe.Pointer,
 	) w32.LRESULT {
 		if msg == w32.WM_COPYDATA {
-			pCopyData := (*COPYDATASTRUCT)(unsafe.Pointer(lparam))
+			pCopyData := (*COPYDATASTRUCT)(lparam)
 
 			if pCopyData.dwData == WMCOPYDATA_SINGLE_INSTANCE_DATA {
 				// The data is a pointer to a UTF-16 string.
@@ -128,7 +128,7 @@ func createEventTargetWindow(className string, windowName string, secondInstance
 			return w32.LRESULT(0)
 		}
 
-		return w32.DefWindowProc(hwnd, msg, wparam, lparam)
+		return w32.DefWindowProc(hwnd, msg, uintptr(wparam), uintptr(lparam))
 	}
 
 	classNamePtr, _ := syscall.UTF16PtrFromString(className)
