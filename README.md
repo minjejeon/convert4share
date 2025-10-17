@@ -35,15 +35,18 @@ This command compiles the application as a GUI program. This is crucial to preve
 
 ## How to Use
 
-The tool is designed to be used from the command line or, more conveniently, through the Windows File Explorer.
+The tool is designed to be used from the command line or, more conveniently, through the Windows File Explorer. You can convert a single file or multiple files at once.
 
 ### Command Line
 
-Run the executable with the path to the file you want to convert as an argument:
+Run the executable with the paths to the files you want to convert as arguments:
 
 ```shell
+# Convert a single file
 convert4share.exe "C:\path\to\your\video.mov"
-convert4share.exe "C:\path\to\your\image.heic"
+
+# Convert multiple files at once
+convert4share.exe "C:\path\to\video.mov" "C:\path\to\image.heic" "D:\another\video.mov"
 ```
 
 ### Windows Explorer Integration (Recommended)
