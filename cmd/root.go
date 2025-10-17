@@ -57,7 +57,7 @@ func initConfig() {
 	// Set default values
 	viper.SetDefault("magickBinary", "magick")
 	viper.SetDefault("ffmpegBinary", "ffmpeg")
-	viper.SetDefault("defaultDestDir", "$HOMEPATH/Downloads")
+	viper.SetDefault("defaultDestDir", "$HOMEPATH/Pictures")
 	viper.SetDefault("excludeStringPatterns", []string{})
 	viper.SetDefault("maxSize", 1920)
 	viper.SetDefault("maxMagickWorkers", 5)
