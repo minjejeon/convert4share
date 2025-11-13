@@ -12,7 +12,7 @@ It is built to be seamlessly integrated with the Windows Shell's "Open with" or 
 - **Hardware Acceleration**: Automatically detects AMD GPUs on Windows and utilizes the `h264_amf` hardware encoder for faster video conversion. Falls back to the `libx264` software encoder if an AMD GPU is not found.
 - **Concurrent Processing**: Boosts performance by processing multiple image conversions in parallel. Video conversions are processed one at a time to ensure stability.
 - **Smart Output Path**:
-  - If a source file is located within a path containing `Nextcloud/Photos`, the converted file is saved to your user's `Downloads` folder.
+  - If a source file is located within a path containing `Photos`, the converted file is saved to your user's `Downloads` folder.
   - Otherwise, the converted file is saved in the same directory as the original file.
 - **Single Instance Execution**: Ensures that only one instance of the application runs at a time. If you select multiple files to convert, they are queued and processed by the single master instance, providing a smooth and predictable user experience.
 

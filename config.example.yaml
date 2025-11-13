@@ -11,8 +11,8 @@ excludeStringPatterns: []
 #   - "Google Drive/My Pictures"
 
 # The default destination directory for files matching one of the `excludeStringPatterns`.
-# Environment variables like $HOMEPATH are supported.
-defaultDestDir: "$HOMEPATH/Pictures"
+# Environment variables like $HOMEDRIVE, $HOMEPATH are supported.
+defaultDestDir: "$HOMEDRIVE/$HOMEPATH/Pictures"
 
 # Hardware accelerator to use for video encoding.
 # Supported values: "amd", "nvidia", "none".
