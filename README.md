@@ -1,8 +1,8 @@
 # Convert4Share
 
-`Convert4Share` is a simple command-line utility for Windows designed to convert `.mov` and `.heic` files into the more widely compatible `.mp4` and `.jpg` formats.
+`Convert4Share` is a Windows desktop application designed to convert `.mov` and `.heic` files into the more widely compatible `.mp4` and `.jpg` formats.
 
-It is built to be seamlessly integrated with the Windows Shell's "Open with" or "Send to" context menus, allowing for quick and easy file conversions directly from the file explorer.
+It features a modern GUI and is built to be seamlessly integrated with the Windows Shell's "Open with" or "Send to" context menus, allowing for quick and easy file conversions directly from the file explorer.
 
 ## Key Features
 
@@ -55,22 +55,26 @@ The application can be integrated directly into the Windows context menu for `.m
 
 **To install the context menu:**
 
-1.  Place the `convert4share.exe` file in a permanent location on your computer (e.g., `C:\Program Files\Convert4Share`).
-2.  Open a Command Prompt or PowerShell and navigate to the directory where you placed the executable.
-3.  Run the following command:
-    ```shell
-    convert4share.exe install
-    ```
-   The application will automatically request administrator privileges (UAC prompt) to add a "Convert with Convert4Share" option to the right-click menu.
+You can install the context menu integration directly from the application GUI:
 
-   **Note for Windows 11 users:** Due to changes in the context menu, the "Convert with Convert4Share" option may appear in the "Show more options" submenu. You can also access the classic context menu directly by holding `Shift` while right-clicking the file.
+1.  Run `convert4share.exe`.
+2.  On the main screen, you may see a banner prompting you to install the context menu. Click "Install Now".
+3.  Alternatively, go to the **Settings** page.
+4.  Under the "Windows Integration" section, click the **Install** button.
+
+The application will automatically request administrator privileges (UAC prompt) to add a "Convert with Convert4Share" option to the right-click menu.
+
+**CLI Alternative:**
+
+You can also use the command line:
+1.  Open a Command Prompt or PowerShell and navigate to the directory where you placed the executable.
+2.  Run: `convert4share.exe install`
+
+**Note for Windows 11 users:** Due to changes in the context menu, the "Convert with Convert4Share" option may appear in the "Show more options" submenu. You can also access the classic context menu directly by holding `Shift` while right-clicking the file.
 
 **To uninstall the context menu:**
 
-Simply run the `uninstall` command from the same directory:
-   ```shell
-   convert4share.exe uninstall
-   ```
+You can uninstall it from the **Settings** page in the application, or by running `convert4share.exe uninstall` from the command line.
 
 ## How It Works
 

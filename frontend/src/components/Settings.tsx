@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { GetSettings, SaveSettings } from '../wailsjs/go/main/App';
+import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Monitor } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export function SettingsView() {
+interface SettingsViewProps {
+    isInstalled: boolean;
+    onStatusChange: (status: boolean) => void;
+}
+
+export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps) {
     const [settings, setSettings] = useState<main.Settings | null>(null);
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [togglingMenu, setTogglingMenu] = useState(false);
 
     useEffect(() => {
         GetSettings().then((s) => {
@@ -15,6 +21,38 @@ export function SettingsView() {
             setLoading(false);
         });
     }, []);
+
+    const handleToggleMenu = async () => {
+        setTogglingMenu(true);
+        try {
+            if (isInstalled) {
+                await UninstallContextMenu();
+            } else {
+                await InstallContextMenu();
+            }
+
+            // Poll for status change
+            const targetStatus = !isInstalled;
+            const start = Date.now();
+            const interval = setInterval(async () => {
+                const status = await GetContextMenuStatus();
+                if (status === targetStatus) {
+                    onStatusChange(status);
+                    setTogglingMenu(false);
+                    clearInterval(interval);
+                }
+                if (Date.now() - start > 15000) { // 15s timeout
+                     setTogglingMenu(false);
+                     clearInterval(interval);
+                     onStatusChange(await GetContextMenuStatus());
+                }
+            }, 1000);
+
+        } catch (e) {
+            console.error(e);
+            setTogglingMenu(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!settings) return;
@@ -39,6 +77,34 @@ export function SettingsView() {
             </div>
 
             <div className="space-y-6">
+                <div className="pb-6 border-b border-slate-700/50">
+                     <h3 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                        <Monitor className="h-4 w-4" />
+                        Windows Integration
+                     </h3>
+                     <div className="flex items-center justify-between bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                        <div>
+                            <p className="text-sm font-medium text-slate-200">Context Menu</p>
+                            <p className="text-xs text-slate-400 mt-1">
+                                {isInstalled ? "Currently installed. Right-click files to convert." : "Not installed. Install to add to right-click menu."}
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleToggleMenu}
+                            disabled={togglingMenu}
+                            className={cn(
+                                "px-3 py-1.5 text-xs font-medium rounded-md transition-colors border flex items-center justify-center min-w-[80px]",
+                                isInstalled
+                                    ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
+                                    : "border-blue-500/30 text-blue-400 hover:bg-blue-500/10",
+                                togglingMenu && "opacity-50 cursor-wait"
+                            )}
+                        >
+                            {togglingMenu ? <Loader2 className="animate-spin h-4 w-4" /> : (isInstalled ? "Uninstall" : "Install")}
+                        </button>
+                     </div>
+                </div>
+
                 <div className="space-y-4">
                     <label className="block">
                         <span className="text-sm font-medium text-slate-300">Hardware Accelerator</span>
