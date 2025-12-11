@@ -1,0 +1,21 @@
+{
+  "name": "convert4share",
+  "outputfilename": "convert4share",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "http://localhost:5173",
+  "author": {
+    "name": "minjejeon",
+    "email": ""
+  },
+  "info": {
+    "companyName": "",
+    "productName": "Convert4Share",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright \u00a9 2024",
+    "comments": "Converts media files"
+  },
+  "wailsjsdir": "./frontend/src",
+  "version": "2"
+}
