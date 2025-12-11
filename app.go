@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/minjejeon/convert4share/converter"
+	"github.com/minjejeon/convert4share/windows"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -98,6 +99,18 @@ func (a *App) GetSettings() Settings {
 		DefaultDestDir:      viper.GetString("defaultDestDir"),
 		ExcludePatterns:     viper.GetStringSlice("excludeStringPatterns"),
 	}
+}
+
+func (a *App) GetContextMenuStatus() bool {
+	return windows.IsContextMenuInstalled()
+}
+
+func (a *App) InstallContextMenu() error {
+	return windows.RunCommandAsAdmin("install")
+}
+
+func (a *App) UninstallContextMenu() error {
+	return windows.RunCommandAsAdmin("uninstall")
 }
 
 func (a *App) SaveSettings(s Settings) error {

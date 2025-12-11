@@ -9,3 +9,7 @@ func RunAsAdmin() {
 func IsElevated() bool {
 	return false
 }
+
+func RunCommandAsAdmin(args string) error {
+	return nil
+}

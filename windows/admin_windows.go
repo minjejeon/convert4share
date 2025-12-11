@@ -40,6 +40,28 @@ func RunAsAdmin() {
 	}
 }
 
+// RunCommandAsAdmin runs the current executable with the specified arguments as administrator.
+func RunCommandAsAdmin(args string) error {
+	exe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("error getting executable path: %w", err)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("error getting current working directory: %w", err)
+	}
+
+	verb := "runas"
+	verbPtr, _ := syscall.UTF16PtrFromString(verb)
+	exePtr, _ := syscall.UTF16PtrFromString(exe)
+	cwdPtr, _ := syscall.UTF16PtrFromString(cwd)
+	argsPtr, _ := syscall.UTF16PtrFromString(args)
+
+	var showCmd int32 = 1 //SW_NORMAL
+
+	return windows.ShellExecute(0, verbPtr, exePtr, argsPtr, cwdPtr, showCmd)
+}
+
 // IsElevated checks if the current process is running with administrator privileges.
 func IsElevated() bool {
 	var token windows.Token

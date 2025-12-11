@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { EventsOn } from './wailsjs/runtime';
-import { ConvertFiles } from './wailsjs/go/main/App';
+import { ConvertFiles, GetContextMenuStatus, InstallContextMenu } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
 import { SettingsView } from './components/Settings';
+import { AlertCircle } from 'lucide-react';
 
 function App() {
     const [view, setView] = useState<'home' | 'settings'>('home');
     const [files, setFiles] = useState<FileItem[]>([]);
+    const [isInstalled, setIsInstalled] = useState<boolean>(true);
 
     useEffect(() => {
+        GetContextMenuStatus().then(setIsInstalled);
         // Listen for new files added (e.g. from context menu or args)
         // The payload 'data' is the file path string
         const stopFileAdded = EventsOn("file-added", (path: string) => {
@@ -86,15 +89,51 @@ function App() {
         }
     }, [files]);
 
+    const handleInstall = async () => {
+        try {
+            await InstallContextMenu();
+            // Poll for status change
+            const interval = setInterval(() => {
+                GetContextMenuStatus().then(status => {
+                    if (status) {
+                        setIsInstalled(true);
+                        clearInterval(interval);
+                    }
+                });
+            }, 1000);
+            // Stop polling after 10 seconds
+            setTimeout(() => clearInterval(interval), 10000);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     return (
         <Layout currentView={view} onNavigate={setView}>
             {view === 'home' && (
                 <div className="max-w-3xl mx-auto pb-12">
+                     {!isInstalled && (
+                        <div className="mb-6 rounded-md bg-blue-500/10 p-4 border border-blue-500/20 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <AlertCircle className="h-5 w-5 text-blue-400" />
+                                <div>
+                                    <h3 className="text-sm font-medium text-blue-100">Context Menu Integration</h3>
+                                    <p className="text-sm text-blue-300/80">Install the right-click menu option for quick access.</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleInstall}
+                                className="px-3 py-1.5 text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                            >
+                                Install Now
+                            </button>
+                        </div>
+                    )}
                     <DropZone />
                     <FileList files={files} />
                 </div>
             )}
-            {view === 'settings' && <SettingsView />}
+            {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} />}
         </Layout>
     );
 }

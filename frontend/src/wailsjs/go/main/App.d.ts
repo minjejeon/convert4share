@@ -7,8 +7,14 @@ export function AddFiles(arg1:Array<string>):Promise<void>;
 
 export function ConvertFiles(arg1:Array<string>):Promise<void>;
 
+export function GetContextMenuStatus():Promise<boolean>;
+
 export function GetSettings():Promise<main.Settings>;
+
+export function InstallContextMenu():Promise<void>;
 
 export function OnSecondInstanceLaunch(arg1:options.SecondInstanceData):Promise<void>;
 
 export function SaveSettings(arg1:main.Settings):Promise<void>;
+
+export function UninstallContextMenu():Promise<void>;
