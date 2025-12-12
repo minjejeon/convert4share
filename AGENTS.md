@@ -22,6 +22,7 @@ It was originally a CLI tool integrated with Windows Context Menu, but is being 
 
 2.  **Platform Specifics**:
     -   The app relies heavily on Windows features (Context Menu Registry, `powershell` for GPU detection).
+    -   **Context Menu**: Uses `SystemFileAssociations` for Windows 10/Classic menu and `OpenWithProgids` for Windows 11 Modern menu integration.
     -   Use `//go:build windows` for code that imports `windows` or `golang.org/x/sys/windows`.
     -   Provide dummy implementations for other OSs (e.g., `//go:build !windows`) to allow cross-platform compilation/checking (even if runtime functionality is limited).
 
