@@ -21,6 +21,7 @@ type App struct {
 	cfg          *converter.Config
 	pendingFiles []string
 	mu           sync.Mutex
+	isReady      bool
 }
 
 // Config struct to send to frontend
@@ -53,8 +54,8 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.initConfig()
-	// Process any pending files passed via args or second instance
-	a.processPendingFiles()
+	// Note: We do NOT call processPendingFiles here because the frontend
+	// might not be ready to receive events. We do it in domReady.
 }
 
 func (a *App) initConfig() {
@@ -81,10 +82,16 @@ func (a *App) processPendingFiles() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	for _, file := range a.pendingFiles {
-		runtime.EventsEmit(a.ctx, "file-added", file)
+	// Only process if frontend is ready
+	if !a.isReady {
+		return
 	}
-	a.pendingFiles = nil // Clear
+
+	if len(a.pendingFiles) > 0 {
+		// Use batch event which is more efficient and handled by frontend
+		runtime.EventsEmit(a.ctx, "files-received", a.pendingFiles)
+		a.pendingFiles = nil // Clear
+	}
 }
 
 // Methods exposed to Frontend
@@ -227,7 +234,12 @@ func (a *App) AddFiles(files []string) {
 
 // domReady is called after the front-end resources have been loaded
 func (a *App) domReady(ctx context.Context) {
-	// Add your action here
+	a.mu.Lock()
+	a.isReady = true
+	a.mu.Unlock()
+
+	// Process any files that were queued during startup
+	a.processPendingFiles()
 }
 
 // beforeClose is called when the application is about to quit,
@@ -256,10 +268,12 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 			}
 		}
 		if len(actualFiles) > 0 {
-			runtime.EventsEmit(a.ctx, "files-received", actualFiles)
-			// Also trigger conversion automatically? Or just add to list?
-			// User requirement: "all files are queued and processed"
-			// So we should probably tell frontend to start processing or just add them.
+			a.mu.Lock()
+			a.pendingFiles = append(a.pendingFiles, actualFiles...)
+			a.mu.Unlock()
+
+			// Try to process immediately (if ready)
+			a.processPendingFiles()
 		}
 	}
 }
