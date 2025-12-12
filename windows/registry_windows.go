@@ -29,13 +29,14 @@ func RegisterContextMenu() error {
 		return fmt.Errorf("could not register ProgID: %w", err)
 	}
 
-	for _, ext := range extensions {
-		// 2. Register SystemFileAssociations (Classic Menu / Show More Options)
-		if err := registerSystemFileAssociation(ext, exePath); err != nil {
-			return fmt.Errorf("could not register system file association for %s: %w", ext, err)
-		}
+	// 2. Register Generic Shell Extension (Classic Menu / Show More Options)
+	// This uses "AppliesTo" on "*" to support mixed selection of .mov and .heic files.
+	if err := registerGenericShellExtension(exePath); err != nil {
+		return fmt.Errorf("could not register generic shell extension: %w", err)
+	}
 
-		// 3. Register OpenWithProgids (Modern Menu - via Open With submenu)
+	// 3. Register OpenWithProgids (Modern Menu - via Open With submenu)
+	for _, ext := range extensions {
 		if err := registerOpenWith(ext); err != nil {
 			return fmt.Errorf("could not register OpenWith for %s: %w", ext, err)
 		}
@@ -83,8 +84,6 @@ func registerProgID(exePath string) error {
 		return err
 	}
 	defer openKey.Close()
-	// Usually FriendlyAppName works better in HKCR\Applications\Convert4Share.exe,
-	// but adding it here doesn't hurt.
 	if err := openKey.SetStringValue("FriendlyAppName", menuName); err != nil {
 		// Ignore error if we can't set friendly name, it's cosmetic
 	}
@@ -92,8 +91,9 @@ func registerProgID(exePath string) error {
 	return nil
 }
 
-func registerSystemFileAssociation(ext, exePath string) error {
-	keyPath := fmt.Sprintf(`SystemFileAssociations\%s\shell\%s`, ext, keyName)
+func registerGenericShellExtension(exePath string) error {
+	// Register under HKCR\*\shell\Convert4Share
+	keyPath := fmt.Sprintf(`*\shell\%s`, keyName)
 	key, _, err := registry.CreateKey(registry.CLASSES_ROOT, keyPath, registry.SET_VALUE)
 	if err != nil {
 		return err
@@ -104,6 +104,12 @@ func registerSystemFileAssociation(ext, exePath string) error {
 		return err
 	}
 	if err := key.SetStringValue("Icon", fmt.Sprintf(`"%s"`, exePath)); err != nil {
+		return err
+	}
+
+	// AppliesTo logic: Only show for .mov or .heic
+	appliesTo := "System.FileExtension:=.mov OR System.FileExtension:=.heic"
+	if err := key.SetStringValue("AppliesTo", appliesTo); err != nil {
 		return err
 	}
 
@@ -141,12 +147,17 @@ func registerOpenWith(ext string) error {
 func UnregisterContextMenu() error {
 	extensions := []string{".mov", ".heic"}
 	for _, ext := range extensions {
-		if err := deleteSystemFileAssociation(ext); err != nil {
-			return err
-		}
+		// Remove OpenWith
 		if err := unregisterOpenWith(ext); err != nil {
 			return err
 		}
+		// Also try to remove old SystemFileAssociations (legacy cleanup)
+		_ = deleteSystemFileAssociation(ext)
+	}
+
+	// Remove new Generic Shell Extension
+	if err := deleteGenericShellExtension(); err != nil {
+		return err
 	}
 
 	if err := deleteProgID(); err != nil {
@@ -156,14 +167,28 @@ func UnregisterContextMenu() error {
 	return nil
 }
 
-func deleteSystemFileAssociation(ext string) error {
+func deleteGenericShellExtension() error {
 	// Delete command first
-	cmdPath := fmt.Sprintf(`SystemFileAssociations\%s\shell\%s\command`, ext, keyName)
+	cmdPath := fmt.Sprintf(`*\shell\%s\command`, keyName)
 	if err := registry.DeleteKey(registry.CLASSES_ROOT, cmdPath); err != nil && err != registry.ErrNotExist {
 		return err
 	}
 
 	// Delete key
+	keyPath := fmt.Sprintf(`*\shell\%s`, keyName)
+	if err := registry.DeleteKey(registry.CLASSES_ROOT, keyPath); err != nil && err != registry.ErrNotExist {
+		return err
+	}
+	return nil
+}
+
+// Kept for legacy cleanup
+func deleteSystemFileAssociation(ext string) error {
+	cmdPath := fmt.Sprintf(`SystemFileAssociations\%s\shell\%s\command`, ext, keyName)
+	if err := registry.DeleteKey(registry.CLASSES_ROOT, cmdPath); err != nil && err != registry.ErrNotExist {
+		return err
+	}
+
 	keyPath := fmt.Sprintf(`SystemFileAssociations\%s\shell\%s`, ext, keyName)
 	if err := registry.DeleteKey(registry.CLASSES_ROOT, keyPath); err != nil && err != registry.ErrNotExist {
 		return err
@@ -186,7 +211,6 @@ func unregisterOpenWith(ext string) error {
 }
 
 func deleteProgID() error {
-	// Delete keys recursively-ish
 	keys := []string{
 		progID + `\shell\open\command`,
 		progID + `\shell\open`,
@@ -197,11 +221,6 @@ func deleteProgID() error {
 
 	for _, k := range keys {
 		if err := registry.DeleteKey(registry.CLASSES_ROOT, k); err != nil && err != registry.ErrNotExist {
-			// If we fail to delete a child, we might fail to delete parent.
-			// But we try anyway.
-			// For robustness, maybe we should return error?
-			// But if one child fails, we still want to try deleting others?
-			// Let's just return error for now to be safe.
 			return err
 		}
 	}
@@ -210,10 +229,14 @@ func deleteProgID() error {
 
 // IsContextMenuInstalled checks if the context menu is currently registered.
 func IsContextMenuInstalled() bool {
-	// Check one of the keys. If it exists, we assume it's installed.
-	keyPath := `SystemFileAssociations\.mov\shell\Convert4Share`
+	// Check the new Generic Shell Extension key
+	keyPath := `*\shell\Convert4Share`
 	k, err := registry.OpenKey(registry.CLASSES_ROOT, keyPath, registry.QUERY_VALUE)
 	if err != nil {
+		// Fallback check for legacy installation?
+		// If new key is missing, check old key to avoid false negatives during transition?
+		// But usually we just care if the *current* version is installed.
+		// If old is installed but new isn't, we might return false so user reinstalls.
 		return false
 	}
 	k.Close()
