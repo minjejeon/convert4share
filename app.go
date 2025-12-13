@@ -129,7 +129,15 @@ func (a *App) SaveSettings(s Settings) error {
 	viper.Set("defaultDestDir", s.DefaultDestDir)
 	viper.Set("excludeStringPatterns", s.ExcludePatterns)
 
-	return viper.WriteConfig()
+	// Ensure we have a valid config file path to write to, especially on first run
+	exePath, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	exeDir := filepath.Dir(exePath)
+	configPath := filepath.Join(exeDir, "config.yaml")
+
+	return viper.WriteConfigAs(configPath)
 }
 
 func (a *App) ConvertFiles(files []string) {
@@ -263,7 +271,7 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 		var actualFiles []string
 		for _, arg := range files {
 			// naive check if it is a file
-			if _, err := os.Stat(arg); err == nil {
+			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 				actualFiles = append(actualFiles, arg)
 			}
 		}
