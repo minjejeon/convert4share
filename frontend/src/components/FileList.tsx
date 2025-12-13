@@ -22,11 +22,13 @@ export function FileList({ files }: FileListProps) {
             <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
                 Queue ({files.length})
             </h2>
-            {files.map((file) => (
-                <div
-                    key={file.id}
-                    className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 flex items-center gap-4 group transition-all"
-                >
+            {files.map((file) => {
+                const fileName = file.path.split(/[/\\]/).pop() || file.path;
+                return (
+                    <div
+                        key={file.id}
+                        className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 flex items-center gap-4 group transition-all"
+                    >
                     <div className="shrink-0 p-2.5 rounded-md bg-slate-800 ring-1 ring-slate-700">
                         {file.path.toLowerCase().endsWith('.mov') ? (
                             <FileVideo className="w-5 h-5 text-indigo-400" />
@@ -51,7 +53,15 @@ export function FileList({ files }: FileListProps) {
                             </span>
                         </div>
 
-                        <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                            className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden"
+                            role="progressbar"
+                            aria-valuenow={file.progress}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`Progress for ${fileName}`}
+                            aria-valuetext={`${file.status}: ${Math.round(file.progress)}%`}
+                        >
                             <div
                                 className={cn(
                                     "h-full transition-all duration-300 ease-out",
@@ -76,7 +86,7 @@ export function FileList({ files }: FileListProps) {
                         {file.status === 'error' && <XCircle className="w-5 h-5 text-red-400" />}
                     </div>
                 </div>
-            ))}
+            )})}
         </div>
     );
 }
