@@ -17,6 +17,8 @@ interface FileListProps {
 // Optimized: Extract FileItemRow and wrap with React.memo to prevent
 // re-rendering of all items when only one item's progress updates.
 const FileItemRow = memo(({ file }: { file: FileItem }) => {
+    const fileName = file.path.split(/[/\\]/).pop() || file.path;
+
     return (
         <div
             className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 flex items-center gap-4 group transition-all"
@@ -45,7 +47,15 @@ const FileItemRow = memo(({ file }: { file: FileItem }) => {
                     </span>
                 </div>
 
-                <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
+                <div
+                    className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={file.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Progress for ${fileName}`}
+                    aria-valuetext={`${file.status}: ${Math.round(file.progress)}%`}
+                >
                     <div
                         className={cn(
                             "h-full transition-all duration-300 ease-out",
