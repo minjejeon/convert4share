@@ -48,14 +48,21 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	configReadErr := viper.ReadInConfig()
+	if configReadErr == nil {
 		log.Println("Using config file:", viper.ConfigFileUsed())
 	}
 
 	// Set default values
 	viper.SetDefault("magickBinary", "magick")
 	viper.SetDefault("ffmpegBinary", "ffmpeg")
-	viper.SetDefault("defaultDestDir", "$HOMEPATH/Pictures")
+
+	defaultDest := "$HOMEPATH/Pictures"
+	if home, err := os.UserHomeDir(); err == nil {
+		defaultDest = filepath.Join(home, "Pictures")
+	}
+	viper.SetDefault("defaultDestDir", defaultDest)
+
 	viper.SetDefault("excludeStringPatterns", []string{})
 	viper.SetDefault("maxSize", 1920)
 	viper.SetDefault("maxMagickWorkers", 5)
@@ -78,7 +85,7 @@ func initConfig() {
 		viper.Set("hardwareAccelerator", detectedAccelerator)
 
 		// Create a new config file if it wasn't found
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		if _, ok := configReadErr.(viper.ConfigFileNotFoundError); ok {
 			createDefaultConfig(exeDir)
 		}
 	}
