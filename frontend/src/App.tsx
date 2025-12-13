@@ -7,28 +7,42 @@ import { FileList, FileItem } from './components/FileList';
 import { SettingsView } from './components/Settings';
 import { AlertCircle } from 'lucide-react';
 
+interface ProgressData {
+    file: string;
+    status: 'queued' | 'processing' | 'done' | 'error';
+    progress: number;
+    error?: string;
+}
+
 function App() {
     const [view, setView] = useState<'home' | 'settings'>('home');
     const [files, setFiles] = useState<FileItem[]>([]);
     const [isInstalled, setIsInstalled] = useState<boolean>(true);
 
+    const addFile = (path: string) => {
+        setFiles(prev => {
+            if (prev.some(f => f.path === path)) return prev;
+            return [...prev, { id: path, path, status: 'queued', progress: 0 }];
+        });
+    };
+
     useEffect(() => {
         GetContextMenuStatus().then(setIsInstalled);
         // Listen for new files added (e.g. from context menu or args)
         // The payload 'data' is the file path string
-        const stopFileAdded = EventsOn("file-added", (path: string) => {
+        const cleanupFileAdded = EventsOn("file-added", (path: string) => {
             console.log("File added:", path);
             addFile(path);
         });
 
         // Listen for batch of files
-        const stopFilesReceived = EventsOn("files-received", (paths: string[]) => {
+        const cleanupFilesReceived = EventsOn("files-received", (paths: string[]) => {
              console.log("Files received:", paths);
              paths.forEach(addFile);
         });
 
         // Listen for progress updates
-        const stopProgress = EventsOn("conversion-progress", (data: any) => {
+        const cleanupProgress = EventsOn("conversion-progress", (data: ProgressData) => {
             setFiles(prev => prev.map(f => {
                 // We use path as ID for now
                 if (f.id === data.file) {
@@ -39,20 +53,11 @@ function App() {
         });
 
         return () => {
-            // Cleanup events if component unmounts (rare for root App)
-             // EventsOff("file-added"); // EventsOff expects event name
-             // EventsOff("files-received");
-             // EventsOff("conversion-progress");
-             // Note: Wails JS runtime EventsOff removes ALL listeners for that event
+            cleanupFileAdded();
+            cleanupFilesReceived();
+            cleanupProgress();
         };
     }, []);
-
-    const addFile = (path: string) => {
-        setFiles(prev => {
-            if (prev.some(f => f.path === path)) return prev;
-            return [...prev, { id: path, path, status: 'queued', progress: 0 }];
-        });
-    };
 
     // Auto-start conversion when files are added?
     // Or add a "Start" button?
