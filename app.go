@@ -71,11 +71,23 @@ func (a *App) initConfig() {
 	viper.SetConfigType("yaml")
 	viper.AutomaticEnv()
 
+	// Set default values
+	viper.SetDefault("magickBinary", "magick")
+	viper.SetDefault("ffmpegBinary", "ffmpeg")
+	viper.SetDefault("maxSize", 1920)
+	viper.SetDefault("maxMagickWorkers", 5)
+	viper.SetDefault("maxFfmpegWorkers", 1)
+	viper.SetDefault("hardwareAccelerator", "none")
+
+	defaultDest := "$HOMEDRIVE/$HOMEPATH/Pictures"
+	if home, err := os.UserHomeDir(); err == nil {
+		defaultDest = filepath.Join(home, "Pictures")
+	}
+	viper.SetDefault("defaultDestDir", defaultDest)
+
 	if err := viper.ReadInConfig(); err != nil {
 		log.Println("Config file not found, using defaults")
 	}
-
-	// Defaults handled by viper if not present
 }
 
 func (a *App) processPendingFiles() {

@@ -50,3 +50,4 @@ It was originally a CLI tool integrated with Windows Context Menu, but is being 
 
 -   **Wails Generate Error**: Often due to build tags. Ensure `cmd/` files have appropriate `!windows` fallbacks if they import windows-specific packages.
 -   **Vite Build**: Ensure `npm install` is run in `frontend/` before building.
+-   **Viper Configuration**: Ensure `viper.SetDefault` is used for all critical configuration keys (especially binary paths) to prevent runtime errors when `config.yaml` is missing. Use `os.UserHomeDir()` for default paths.
