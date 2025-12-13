@@ -189,6 +189,12 @@ func (a *App) ConvertFiles(files []string) {
 
 		for _, f := range files {
 			fpath := f
+
+			// Skip directories
+			if info, err := os.Stat(fpath); err != nil || info.IsDir() {
+				continue
+			}
+
 			ext := strings.ToLower(filepath.Ext(fpath))
 
 			// Setup destination
@@ -248,7 +254,9 @@ func (a *App) ConvertFiles(files []string) {
 func (a *App) AddFiles(files []string) {
 	// Called when files are dropped or passed via args
 	for _, f := range files {
-		runtime.EventsEmit(a.ctx, "file-added", f)
+		if info, err := os.Stat(f); err == nil && !info.IsDir() {
+			runtime.EventsEmit(a.ctx, "file-added", f)
+		}
 	}
 }
 
