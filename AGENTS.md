@@ -51,3 +51,4 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 
 -   **Wails Generate Error**: Often due to build tags. Ensure `cmd/` files have appropriate `!windows` fallbacks if they import windows-specific packages.
 -   **Vite Build**: Ensure `pnpm install` is run in `frontend/` before building.
+-   **Viper Configuration**: Ensure `viper.SetDefault` is used for all critical configuration keys (especially binary paths) to prevent runtime errors when `config.yaml` is missing. Use `os.UserHomeDir()` for default paths.
