@@ -42,7 +42,7 @@ func main() {
 	if len(os.Args) > 1 {
 		// Just take everything from 1 onwards as potential files
 		for _, arg := range os.Args[1:] {
-			if _, err := os.Stat(arg); err == nil {
+			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 				app.pendingFiles = append(app.pendingFiles, arg)
 			}
 		}

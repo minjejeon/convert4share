@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -93,8 +94,12 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		return fmt.Errorf("could not start ffmpeg: %w", err)
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	// Parsing logic
 	go func() {
+		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
 		scanner.Split(bufio.ScanLines)
 
@@ -141,7 +146,9 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		}
 	}()
 
-	if err := cmd.Wait(); err != nil {
+	err = cmd.Wait()
+	wg.Wait() // Wait for stderr reading to finish to ensure we captured all progress
+	if err != nil {
 		return fmt.Errorf("ffmpeg finished with error: %w", err)
 	}
 	return nil
