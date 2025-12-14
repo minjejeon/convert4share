@@ -13,10 +13,8 @@ import (
 	"time"
 )
 
-// Job defines a conversion task.
 type Job struct{ Orig, Dest string }
 
-// Config holds the configuration for the converters.
 type Config struct {
 	MagickBinary        string
 	FfmpegBinary        string
@@ -25,7 +23,6 @@ type Config struct {
 	FfmpegCustomArgs    string
 }
 
-// ProgressCallback is a function that reports progress percentage (0-100).
 type ProgressCallback func(progress int)
 
 var (
@@ -33,7 +30,6 @@ var (
 	timeRegex     = regexp.MustCompile(`time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})`)
 )
 
-// Magick runs the ImageMagick conversion command.
 func (c *Config) Magick(orig, dest string) error {
 	cmd := exec.Command(c.MagickBinary, orig, dest)
 	cmd.Stdout = os.Stdout
@@ -42,18 +38,16 @@ func (c *Config) Magick(orig, dest string) error {
 	return cmd.Run()
 }
 
-// Ffmpeg runs the FFmpeg conversion command with progress reporting.
 func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 	args := []string{
 		"-hide_banner",
-		"-loglevel", "info", // Need info to see duration and stats
-		"-stats", // Ensure stats are printed
-		"-y",     // Overwrite output files without asking
+		"-loglevel", "info",
+		"-stats",
+		"-y",
 	}
 
 	scaleArg := fmt.Sprintf("scale='w=%d:h=%d:force_original_aspect_ratio=decrease'", c.MaxSize, c.MaxSize)
 
-	// Set video codec based on configuration
 	accelerator := strings.ToLower(c.HardwareAccelerator)
 	switch accelerator {
 	case "amd":
@@ -66,7 +60,7 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 	case "nvidia":
 		log.Println("Using 'nvidia' hardware accelerator (h264_nvenc) from config.")
 		args = append(args, "-hwaccel", "cuda", "-i", orig, "-c:v", "h264_nvenc", "-vf", scaleArg)
-	case "none", "": // Handles 'none' or null/empty value from yaml
+	case "none", "":
 		log.Println("Using software encoder (libx264).")
 		args = append(args, "-i", orig, "-c:v", "libx264", "-vf", scaleArg)
 	default:
@@ -74,14 +68,11 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		args = append(args, "-i", orig, "-c:v", "libx264", "-vf", scaleArg)
 	}
 
-	// Add custom ffmpeg arguments from config
 	if c.FfmpegCustomArgs != "" {
-		// Split the string by spaces to get individual arguments
 		log.Printf("Adding custom ffmpeg arguments: %s", c.FfmpegCustomArgs)
 		args = append(args, strings.Fields(c.FfmpegCustomArgs)...)
 	}
 
-	// Add audio codec and destination
 	args = append(args,
 		"-c:a", "aac",
 		dest,
@@ -89,7 +80,6 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 
 	cmd := exec.Command(c.FfmpegBinary, args...)
 
-	// We need to read stderr for ffmpeg output
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return fmt.Errorf("could not get stderr pipe: %w", err)
@@ -102,7 +92,6 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	// Parsing logic
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
@@ -112,9 +101,7 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 
 		for scanner.Scan() {
 			line := scanner.Text()
-			// log.Println("ffmpeg output:", line) // Debug
 
-			// Parse Duration
 			if duration == 0 {
 				matches := durationRegex.FindStringSubmatch(line)
 				if len(matches) == 5 {
@@ -127,7 +114,6 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 				}
 			}
 
-			// Parse time= to calculate progress
 			if duration > 0 {
 				matches := timeRegex.FindStringSubmatch(line)
 				if len(matches) == 5 {
@@ -150,7 +136,7 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 	}()
 
 	err = cmd.Wait()
-	wg.Wait() // Wait for stderr reading to finish to ensure we captured all progress
+	wg.Wait()
 	if err != nil {
 		return fmt.Errorf("ffmpeg finished with error: %w", err)
 	}

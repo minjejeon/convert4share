@@ -46,6 +46,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 5.  **UI/UX**: The frontend listens to `conversion-progress` events. Ensure any new long-running tasks emit appropriate events.
 6.  **Config**: Configuration is handled by `viper`. `App` struct exposes settings to frontend.
 7.  **Cleanup**: Binary artifacts (e.g., `.exe` files, `dist/` folders) MUST be removed before committing.
+8.  **Code Comments**: Avoid verbose comments that are unnecessary because the actual code is sufficiently self-explanatory. Code should be self-documenting where possible.
 
 ## Common Issues / Solutions
 
