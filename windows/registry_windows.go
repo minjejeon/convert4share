@@ -36,11 +36,12 @@ func RegisterContextMenu() error {
 	}
 
 	// 3. Register OpenWithProgids (Modern Menu - via Open With submenu)
-	for _, ext := range extensions {
-		if err := registerOpenWith(ext); err != nil {
-			return fmt.Errorf("could not register OpenWith for %s: %w", ext, err)
-		}
-	}
+	// This part is disabled because it does not work correctly with multi-selection on Windows 11.
+	// for _, ext := range extensions {
+	// 	if err := registerOpenWith(ext); err != nil {
+	// 		return fmt.Errorf("could not register OpenWith for %s: %w", ext, err)
+	// 	}
+	// }
 	return nil
 }
 
@@ -127,34 +128,8 @@ func registerGenericShellExtension(exePath string) error {
 	return nil
 }
 
-func registerOpenWith(ext string) error {
-	keyPath := fmt.Sprintf(`%s\OpenWithProgids`, ext)
-	// Use CreateKey to ensure it exists
-	key, _, err := registry.CreateKey(registry.CLASSES_ROOT, keyPath, registry.SET_VALUE)
-	if err != nil {
-		return err
-	}
-	defer key.Close()
-
-	// Set value with name = progID, data = empty string
-	if err := key.SetStringValue(progID, ""); err != nil {
-		return err
-	}
-	return nil
-}
-
 // UnregisterContextMenu removes the application from the Windows context menu.
 func UnregisterContextMenu() error {
-	extensions := []string{".mov", ".heic"}
-	for _, ext := range extensions {
-		// Remove OpenWith
-		if err := unregisterOpenWith(ext); err != nil {
-			return err
-		}
-		// Also try to remove old SystemFileAssociations (legacy cleanup)
-		_ = deleteSystemFileAssociation(ext)
-	}
-
 	// Remove new Generic Shell Extension
 	if err := deleteGenericShellExtension(); err != nil {
 		return err
@@ -177,34 +152,6 @@ func deleteGenericShellExtension() error {
 	// Delete key
 	keyPath := fmt.Sprintf(`*\shell\%s`, keyName)
 	if err := registry.DeleteKey(registry.CLASSES_ROOT, keyPath); err != nil && err != registry.ErrNotExist {
-		return err
-	}
-	return nil
-}
-
-// Kept for legacy cleanup
-func deleteSystemFileAssociation(ext string) error {
-	cmdPath := fmt.Sprintf(`SystemFileAssociations\%s\shell\%s\command`, ext, keyName)
-	if err := registry.DeleteKey(registry.CLASSES_ROOT, cmdPath); err != nil && err != registry.ErrNotExist {
-		return err
-	}
-
-	keyPath := fmt.Sprintf(`SystemFileAssociations\%s\shell\%s`, ext, keyName)
-	if err := registry.DeleteKey(registry.CLASSES_ROOT, keyPath); err != nil && err != registry.ErrNotExist {
-		return err
-	}
-	return nil
-}
-
-func unregisterOpenWith(ext string) error {
-	keyPath := fmt.Sprintf(`%s\OpenWithProgids`, ext)
-	k, err := registry.OpenKey(registry.CLASSES_ROOT, keyPath, registry.SET_VALUE)
-	if err == nil {
-		defer k.Close()
-		if err := k.DeleteValue(progID); err != nil && err != registry.ErrNotExist {
-			return err
-		}
-	} else if err != registry.ErrNotExist {
 		return err
 	}
 	return nil
