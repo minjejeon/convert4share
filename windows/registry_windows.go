@@ -22,8 +22,6 @@ func RegisterContextMenu() error {
 		return fmt.Errorf("could not get executable path: %w", err)
 	}
 
-	extensions := []string{".mov", ".heic"}
-
 	// 1. Register the ProgID (Convert4Share.File) - Required for Open With
 	if err := registerProgID(exePath); err != nil {
 		return fmt.Errorf("could not register ProgID: %w", err)
@@ -74,7 +72,7 @@ func registerProgID(exePath string) error {
 	}
 	defer cmdKey.Close()
 
-	command := fmt.Sprintf(`"%s" "%%1"`, exePath)
+	command := fmt.Sprintf(`"%s" "%%*"`, exePath)
 	if err := cmdKey.SetStringValue("", command); err != nil {
 		return err
 	}
@@ -121,7 +119,7 @@ func registerGenericShellExtension(exePath string) error {
 	}
 	defer cmdKey.Close()
 
-	command := fmt.Sprintf(`"%s" "%%1"`, exePath)
+	command := fmt.Sprintf(`"%s" "%%*"`, exePath)
 	if err := cmdKey.SetStringValue("", command); err != nil {
 		return err
 	}

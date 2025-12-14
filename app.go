@@ -256,6 +256,8 @@ func (a *App) shutdown(ctx context.Context) {
 }
 
 func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
+	runtime.WindowShow(a.ctx)
+
 	if len(secondInstanceData.Args) > 1 {
 		files := secondInstanceData.Args[1:]
 		var actualFiles []string
