@@ -2,8 +2,10 @@ package main
 
 import (
 	"embed"
-	"log"
+	"log/slog"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/minjejeon/convert4share/cmd"
 	"github.com/wailsapp/wails/v2"
@@ -18,11 +20,42 @@ var assets embed.FS
 //go:embed config.example.yaml
 var configTemplate []byte
 
+var logger *slog.Logger
+
+func initLogger() {
+	exePath, err := os.Executable()
+	if err != nil {
+		// Can't get executable path, log to stderr
+		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+		logger.Error("Could not get executable path", "error", err)
+		return
+	}
+
+	logPath := filepath.Join(filepath.Dir(exePath), "convert4share-debug.log")
+	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		// Can't open log file, log to stderr
+		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+		logger.Error("Could not open log file", "path", logPath, "error", err)
+		return
+	}
+
+	handler := slog.NewTextHandler(logFile, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+	logger = slog.New(handler)
+}
+
 func init() {
 	cmd.ConfigTemplate = configTemplate
 }
 
 func main() {
+	initLogger()
+	logger.Info("--------------------")
+	logger.Info("App launched", "time", time.Now().String())
+	logger.Info("Arguments", "args", os.Args)
+
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "install", "uninstall", "help", "--help":
@@ -68,6 +101,6 @@ func main() {
 	})
 
 	if err != nil {
-		log.Println("Error:", err.Error())
+		logger.Error("Wails run error", "error", err.Error())
 	}
 }

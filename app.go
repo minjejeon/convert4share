@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,7 +52,7 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) initConfig() {
 	exePath, err := os.Executable()
 	if err != nil {
-		log.Println("Error getting executable path:", err)
+		logger.Error("Error getting executable path", "error", err)
 		return
 	}
 	exeDir := filepath.Dir(exePath)
@@ -77,7 +76,7 @@ func (a *App) initConfig() {
 	viper.SetDefault("defaultDestDir", defaultDest)
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Println("Config file not found, using defaults")
+		logger.Info("Config file not found, using defaults", "error", err)
 	}
 }
 
@@ -86,10 +85,12 @@ func (a *App) processPendingFiles() {
 	defer a.mu.Unlock()
 
 	if !a.isReady {
+		logger.Info("processPendingFiles called but DOM not ready yet.")
 		return
 	}
 
 	if len(a.pendingFiles) > 0 {
+		logger.Info("Processing pending files", "files", a.pendingFiles)
 		runtime.EventsEmit(a.ctx, "files-received", a.pendingFiles)
 		a.pendingFiles = nil
 	}
@@ -245,6 +246,7 @@ func (a *App) domReady(ctx context.Context) {
 	a.isReady = true
 	a.mu.Unlock()
 
+	logger.Info("DOM is ready.")
 	a.processPendingFiles()
 }
 
@@ -256,10 +258,11 @@ func (a *App) shutdown(ctx context.Context) {
 }
 
 func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
+	logger.Info("Second instance launched", "args", secondInstanceData.Args)
 	runtime.WindowShow(a.ctx)
 
-	if len(secondInstanceData.Args) > 1 {
-		files := secondInstanceData.Args[1:]
+	if len(secondInstanceData.Args) > 0 {
+		files := secondInstanceData.Args
 		var actualFiles []string
 		for _, arg := range files {
 			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
@@ -267,11 +270,16 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 			}
 		}
 		if len(actualFiles) > 0 {
+			logger.Info("Adding files from second instance", "files", actualFiles)
 			a.mu.Lock()
 			a.pendingFiles = append(a.pendingFiles, actualFiles...)
 			a.mu.Unlock()
 
 			a.processPendingFiles()
+		} else {
+			logger.Info("No valid files found in second instance args.")
 		}
+	} else {
+		logger.Info("Second instance launched with no args.")
 	}
 }
