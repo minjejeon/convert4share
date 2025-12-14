@@ -23,7 +23,6 @@ func init() {
 }
 
 func main() {
-	// Check if this is a CLI command (install/uninstall)
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "install", "uninstall", "help", "--help":
@@ -32,15 +31,9 @@ func main() {
 		}
 	}
 
-	// Create an instance of the app structure
 	app := NewApp()
 
-	// Capture initial arguments (files dropped or passed via context menu)
-	// Filter out the executable path (os.Args[0]) and flags if any
-	// In Windows context menu usage, args are usually just file paths.
-	// But Wails might capture flags too.
 	if len(os.Args) > 1 {
-		// Just take everything from 1 onwards as potential files
 		for _, arg := range os.Args[1:] {
 			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 				app.pendingFiles = append(app.pendingFiles, arg)
@@ -48,7 +41,6 @@ func main() {
 		}
 	}
 
-	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "Convert4Share",
 		Width:  1024,

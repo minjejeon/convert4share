@@ -28,23 +28,19 @@ function App() {
 
     useEffect(() => {
         GetContextMenuStatus().then(setIsInstalled);
-        // Listen for new files added (e.g. from context menu or args)
-        // The payload 'data' is the file path string
+
         const cleanupFileAdded = EventsOn("file-added", (path: string) => {
             console.log("File added:", path);
             addFile(path);
         });
 
-        // Listen for batch of files
         const cleanupFilesReceived = EventsOn("files-received", (paths: string[]) => {
              console.log("Files received:", paths);
              paths.forEach(addFile);
         });
 
-        // Listen for progress updates
         const cleanupProgress = EventsOn("conversion-progress", (data: ProgressData) => {
             setFiles(prev => prev.map(f => {
-                // We use path as ID for now
                 if (f.id === data.file) {
                     return { ...f, status: data.status, progress: data.progress, error: data.error };
                 }
@@ -59,33 +55,11 @@ function App() {
         };
     }, []);
 
-    // Auto-start conversion when files are added?
-    // Or add a "Start" button?
-    // The requirement implies seamless "convert files" action.
-    // The previous CLI tool converted immediately.
-    // Let's add an effect to convert 'queued' files.
-    // However, if we drop 10 files, we don't want to call ConvertFiles 10 times individually if the backend expects a list.
-    // But our backend ConvertFiles takes []string.
-    // Let's implement a "Start Conversion" button, OR auto-start with a small debounce.
-    // Given the "Send to" nature, it should probably just start.
-
-    // Let's modify: When files are added, if they are not processing, trigger conversion for queued files?
-    // Actually, simply adding them to the list and then having a button is safer UI,
-    // but context menu usage expects immediate action.
-
-    // Let's make it start immediately for now for "Context Menu" feel.
-
     useEffect(() => {
         const queued = files.filter(f => f.status === 'queued');
         if (queued.length > 0) {
-            // Check if we are already processing something?
-            // The backend handles concurrency (semaphores).
-            // So we can just fire them off.
-
-            // To avoid rapid firing if multiple files added in loop, we can debounce.
             const timeout = setTimeout(() => {
                 const queuedPaths = queued.map(f => f.path);
-                // Mark them as processing in UI immediately so we don't re-trigger
                 setFiles(prev => prev.map(f => queuedPaths.includes(f.path) ? { ...f, status: 'processing', progress: 0 } : f));
 
                 ConvertFiles(queuedPaths);
@@ -97,7 +71,6 @@ function App() {
     const handleInstall = async () => {
         try {
             await InstallContextMenu();
-            // Poll for status change
             const interval = setInterval(() => {
                 GetContextMenuStatus().then(status => {
                     if (status) {
@@ -106,7 +79,6 @@ function App() {
                     }
                 });
             }, 1000);
-            // Stop polling after 10 seconds
             setTimeout(() => clearInterval(interval), 10000);
         } catch (e) {
             console.error(e);
