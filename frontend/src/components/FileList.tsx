@@ -17,14 +17,18 @@ interface FileListProps {
 // Optimized: Extract FileItemRow and wrap with React.memo to prevent
 // re-rendering of all items when only one item's progress updates.
 const FileItemRow = memo(({ file }: { file: FileItem }) => {
-    const fileName = file.path.split(/[/\\]/).pop() || file.path;
+    // Extract filename and directory for better UX
+    // We handle both Windows (\) and Unix (/) separators
+    const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
+    const fileName = lastSeparatorIndex >= 0 ? file.path.substring(lastSeparatorIndex + 1) : file.path;
+    const dirName = lastSeparatorIndex >= 0 ? file.path.substring(0, lastSeparatorIndex) : '';
 
     return (
         <div
             className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 flex items-center gap-4 group transition-all"
         >
             <div className="shrink-0 p-2.5 rounded-md bg-slate-800 ring-1 ring-slate-700">
-                {file.path.toLowerCase().endsWith('.mov') ? (
+                {fileName.toLowerCase().endsWith('.mov') ? (
                     <FileVideo className="w-5 h-5 text-indigo-400" />
                 ) : (
                     <FileImage className="w-5 h-5 text-purple-400" />
@@ -32,12 +36,20 @@ const FileItemRow = memo(({ file }: { file: FileItem }) => {
             </div>
 
             <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="text-sm font-medium text-slate-200 truncate pr-4" title={file.path}>
-                        {file.path}
-                    </h3>
+                <div className="flex items-center justify-between mb-1.5 gap-4">
+                    <div className="min-w-0 flex-1 flex flex-col">
+                        <h3 className="text-sm font-medium text-slate-200 truncate" title={fileName}>
+                            {fileName}
+                        </h3>
+                        {dirName && (
+                             <p className="text-xs text-slate-500 truncate" title={dirName}>
+                                {dirName}
+                             </p>
+                        )}
+                    </div>
+
                     <span className={cn(
-                        "text-xs font-medium px-2 py-0.5 rounded-full capitalize",
+                        "text-xs font-medium px-2 py-0.5 rounded-full capitalize shrink-0 self-start mt-0.5",
                         file.status === 'done' && "bg-emerald-500/10 text-emerald-400",
                         file.status === 'processing' && "bg-blue-500/10 text-blue-400",
                         file.status === 'error' && "bg-red-500/10 text-red-400",
