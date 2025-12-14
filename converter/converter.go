@@ -28,6 +28,11 @@ type Config struct {
 // ProgressCallback is a function that reports progress percentage (0-100).
 type ProgressCallback func(progress int)
 
+var (
+	durationRegex = regexp.MustCompile(`Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})`)
+	timeRegex     = regexp.MustCompile(`time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})`)
+)
+
 // Magick runs the ImageMagick conversion command.
 func (c *Config) Magick(orig, dest string) error {
 	cmd := exec.Command(c.MagickBinary, orig, dest)
@@ -104,8 +109,6 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		scanner.Split(bufio.ScanLines)
 
 		var duration time.Duration
-		durationRegex := regexp.MustCompile(`Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})`)
-		timeRegex := regexp.MustCompile(`time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})`)
 
 		for scanner.Scan() {
 			line := scanner.Text()

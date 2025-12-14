@@ -1,12 +1,12 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { UploadCloud } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { AddFiles } from '../wailsjs/go/main/App';
 
 interface DropZoneProps {
     onFilesAdded?: (files: string[]) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function DropZone({ onFilesAdded }: DropZoneProps) {
     const [isDragging, setIsDragging] = useState(false);
 
