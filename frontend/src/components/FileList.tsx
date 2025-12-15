@@ -63,7 +63,7 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                 </div>
 
                 <div
-                    className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden"
+                    className="h-2 w-full bg-slate-700 rounded-full overflow-hidden"
                     role="progressbar"
                     aria-valuenow={file.progress}
                     aria-valuemin={0}
