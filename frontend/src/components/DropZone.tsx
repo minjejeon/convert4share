@@ -38,7 +38,7 @@ export function DropZone({ onFilesAdded }: DropZoneProps) {
     return (
         <div
             className={cn(
-                "border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 ease-in-out cursor-default",
+                "border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ease-in-out cursor-default",
                 isDragging
                     ? "border-indigo-500 bg-indigo-500/10 scale-[1.01]"
                     : "border-slate-700 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50"
