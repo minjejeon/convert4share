@@ -30,6 +30,7 @@ type Settings struct {
 	FfmpegCustomArgs    string   `json:"ffmpegCustomArgs"`
 	DefaultDestDir      string   `json:"defaultDestDir"`
 	ExcludePatterns     []string `json:"excludePatterns"`
+	VideoQuality        string   `json:"videoQuality"`
 }
 
 type JobStatus struct {
@@ -68,6 +69,7 @@ func (a *App) initConfig() {
 	viper.SetDefault("maxMagickWorkers", 5)
 	viper.SetDefault("maxFfmpegWorkers", 1)
 	viper.SetDefault("hardwareAccelerator", "none")
+	viper.SetDefault("videoQuality", "high")
 
 	defaultDest := "$HOMEDRIVE/$HOMEPATH/Pictures"
 	if home, err := os.UserHomeDir(); err == nil {
@@ -105,6 +107,7 @@ func (a *App) GetSettings() Settings {
 		FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
 		DefaultDestDir:      viper.GetString("defaultDestDir"),
 		ExcludePatterns:     viper.GetStringSlice("excludeStringPatterns"),
+		VideoQuality:        viper.GetString("videoQuality"),
 	}
 }
 
@@ -128,6 +131,7 @@ func (a *App) SaveSettings(s Settings) error {
 	viper.Set("ffmpegCustomArgs", s.FfmpegCustomArgs)
 	viper.Set("defaultDestDir", s.DefaultDestDir)
 	viper.Set("excludeStringPatterns", s.ExcludePatterns)
+	viper.Set("videoQuality", s.VideoQuality)
 
 	exePath, err := os.Executable()
 	if err != nil {
@@ -148,6 +152,7 @@ func (a *App) ConvertFiles(files []string) {
 			MaxSize:             viper.GetInt("maxSize"),
 			HardwareAccelerator: viper.GetString("hardwareAccelerator"),
 			FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
+			VideoQuality:        viper.GetString("videoQuality"),
 		}
 
 		reporter := func(file string, percent int, status string, errMsg string) {
