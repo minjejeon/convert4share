@@ -32,6 +32,7 @@ type Settings struct {
 	DefaultDestDir      string   `json:"defaultDestDir"`
 	ExcludePatterns     []string `json:"excludePatterns"`
 	VideoQuality        string   `json:"videoQuality"`
+	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
 }
 
 type JobStatus struct {
@@ -110,6 +111,7 @@ func (a *App) GetSettings() Settings {
 		DefaultDestDir:      viper.GetString("defaultDestDir"),
 		ExcludePatterns:     viper.GetStringSlice("excludeStringPatterns"),
 		VideoQuality:        viper.GetString("videoQuality"),
+		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
 	}
 }
 
@@ -138,6 +140,7 @@ func (a *App) SaveSettings(s Settings) error {
 	viper.Set("defaultDestDir", s.DefaultDestDir)
 	viper.Set("excludeStringPatterns", s.ExcludePatterns)
 	viper.Set("videoQuality", s.VideoQuality)
+	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
 
 	exePath, err := os.Executable()
 	if err != nil {
