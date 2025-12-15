@@ -58,7 +58,7 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                         file.status === 'error' && "bg-red-500/10 text-red-400",
                         file.status === 'queued' && "bg-slate-700 text-slate-400",
                     )}>
-                        {file.status}
+                        {file.status === 'queued' ? 'Waiting' : file.status}
                     </span>
                 </div>
 
@@ -123,14 +123,32 @@ FileItemRow.displayName = 'FileItemRow';
 export function FileList({ files, onRemove, onCopy }: FileListProps) {
     if (files.length === 0) return null;
 
+    const activeFiles = files.filter(f => f.status !== 'done');
+    const completedFiles = files.filter(f => f.status === 'done');
+
     return (
-        <div className="space-y-3 mt-6">
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
-                Queue ({files.length})
-            </h2>
-            {files.map((file) => (
-                <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
-            ))}
+        <div className="space-y-6 mt-6">
+            {activeFiles.length > 0 && (
+                <div className="space-y-3">
+                     <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
+                        Queue ({activeFiles.length})
+                    </h2>
+                    {activeFiles.map(file => (
+                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                    ))}
+                </div>
+            )}
+
+            {completedFiles.length > 0 && (
+                <div className="space-y-3">
+                     <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
+                        Completed ({completedFiles.length})
+                    </h2>
+                    {completedFiles.map(file => (
+                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
