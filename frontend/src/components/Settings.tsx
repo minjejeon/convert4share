@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import { Loader2, Save, Monitor } from 'lucide-react';
+import { Loader2, Save, Monitor, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SettingsViewProps {
@@ -12,6 +12,7 @@ interface SettingsViewProps {
 export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps) {
     const [settings, setSettings] = useState<main.Settings | null>(null);
     const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
     const [togglingMenu, setTogglingMenu] = useState(false);
 
@@ -21,6 +22,13 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
             setLoading(false);
         });
     }, []);
+
+    useEffect(() => {
+        if (saved) {
+            const timer = setTimeout(() => setSaved(false), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [saved]);
 
     const handleToggleMenu = async () => {
         setTogglingMenu(true);
@@ -59,7 +67,7 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
         setSaving(true);
         try {
             await SaveSettings(settings);
-            // Optionally show toast
+            setSaved(true);
         } finally {
             setSaving(false);
         }
@@ -169,14 +177,21 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                 <div className="flex justify-end pt-4">
                     <button
                         onClick={handleSave}
-                        disabled={saving}
+                        disabled={saving || saved}
                         className={cn(
-                            "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all",
-                            saving && "opacity-75 cursor-wait"
+                            "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all",
+                            saving && "opacity-75 cursor-wait",
+                            saved ? "bg-emerald-600 hover:bg-emerald-700" : "bg-indigo-600 hover:bg-indigo-700"
                         )}
                     >
-                        {saving ? <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4"/> : <Save className="-ml-1 mr-2 h-4 w-4" />}
-                        Save Changes
+                        {saving ? (
+                            <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                        ) : saved ? (
+                            <Check className="-ml-1 mr-2 h-4 w-4" />
+                        ) : (
+                            <Save className="-ml-1 mr-2 h-4 w-4" />
+                        )}
+                        {saved ? "Saved!" : "Save Changes"}
                     </button>
                 </div>
             </div>
