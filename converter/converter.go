@@ -21,6 +21,7 @@ type Config struct {
 	MaxSize             int
 	HardwareAccelerator string
 	FfmpegCustomArgs    string
+	VideoQuality        string // "high", "medium", "low"
 }
 
 type ProgressCallback func(progress int)
@@ -48,6 +49,28 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 
 	scaleArg := fmt.Sprintf("scale='w=%d:h=%d:force_original_aspect_ratio=decrease'", c.MaxSize, c.MaxSize)
 
+	// Determine bitrate and preset based on VideoQuality
+	var bitrate string
+	var amdQuality string
+	var nvidiaPreset string
+
+	switch strings.ToLower(c.VideoQuality) {
+	case "low":
+		bitrate = "1M"
+		amdQuality = "speed"
+		nvidiaPreset = "fast"
+	case "medium":
+		bitrate = "2.5M"
+		amdQuality = "balanced"
+		nvidiaPreset = "medium"
+	case "high":
+		fallthrough
+	default:
+		bitrate = "5M"
+		amdQuality = "quality"
+		nvidiaPreset = "slow"
+	}
+
 	accelerator := strings.ToLower(c.HardwareAccelerator)
 	switch accelerator {
 	case "amd":
@@ -55,11 +78,20 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		args = append(args,
 			"-i", orig,
 			"-c:v", "h264_amf",
+			"-b:v", bitrate,
+			"-quality", amdQuality,
 			"-vf", strings.Replace(scaleArg, "scale", "vpp_amf", 1),
 		)
 	case "nvidia":
 		log.Println("Using 'nvidia' hardware accelerator (h264_nvenc) from config.")
-		args = append(args, "-hwaccel", "cuda", "-i", orig, "-c:v", "h264_nvenc", "-vf", scaleArg)
+		args = append(args,
+			"-hwaccel", "cuda",
+			"-i", orig,
+			"-c:v", "h264_nvenc",
+			"-preset", nvidiaPreset,
+			"-b:v", bitrate,
+			"-vf", scaleArg,
+		)
 	case "none", "":
 		log.Println("Using software encoder (libx264).")
 		args = append(args, "-i", orig, "-c:v", "libx264", "-vf", scaleArg)
