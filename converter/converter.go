@@ -51,22 +51,30 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 
 	// Determine bitrate and preset based on VideoQuality
 	var bitrate string
+	var maxBitrate string
+	var bufSize string
 	var amdQuality string
 	var nvidiaPreset string
 
 	switch strings.ToLower(c.VideoQuality) {
 	case "low":
 		bitrate = "1M"
+		maxBitrate = "2M"
+		bufSize = "2M"
 		amdQuality = "speed"
 		nvidiaPreset = "fast"
 	case "medium":
 		bitrate = "2.5M"
+		maxBitrate = "5M"
+		bufSize = "5M"
 		amdQuality = "balanced"
 		nvidiaPreset = "medium"
 	case "high":
 		fallthrough
 	default:
 		bitrate = "5M"
+		maxBitrate = "10M"
+		bufSize = "10M"
 		amdQuality = "quality"
 		nvidiaPreset = "slow"
 	}
@@ -82,6 +90,36 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 			"-quality", amdQuality,
 			"-vf", strings.Replace(scaleArg, "scale", "vpp_amf", 1),
 		)
+
+		// Recommended settings from https://github.com/GPUOpen-LibrariesAndSDKs/AMF/wiki/Recommended-FFmpeg-Encoder-Settings
+		switch amdQuality {
+		case "quality": // High
+			args = append(args,
+				"-rc", "vbr_peak",
+				"-maxrate", maxBitrate,
+				"-bufsize", bufSize,
+				"-vbaq", "true",
+				"-preencode", "true",
+				"-high_motion_quality_boost_enable", "true",
+				"-preanalysis", "true",
+				"-pa_adaptive_mini_gop", "true",
+				"-pa_lookahead_buffer_depth", "40",
+				"-pa_taq_mode", "2",
+				"-bf", "3",
+			)
+		case "balanced": // Medium
+			args = append(args,
+				"-rc", "vbr_peak",
+				"-maxrate", maxBitrate,
+				"-bufsize", bufSize,
+				"-vbaq", "true",
+				"-preencode", "true",
+				"-high_motion_quality_boost_enable", "true",
+				"-bf", "3",
+			)
+		case "speed": // Low
+			// Keep it simple for speed
+		}
 	case "nvidia":
 		log.Println("Using 'nvidia' hardware accelerator (h264_nvenc) from config.")
 		args = append(args,
