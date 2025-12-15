@@ -37,6 +37,7 @@ type Settings struct {
 type JobStatus struct {
 	ID       string `json:"id"`
 	File     string `json:"file"`
+	DestFile string `json:"destFile,omitempty"`
 	Status   string `json:"status"` // "queued", "processing", "done", "error"
 	Progress int    `json:"progress"`
 	Error    string `json:"error,omitempty"`
@@ -122,6 +123,10 @@ func (a *App) InstallContextMenu() error {
 
 func (a *App) UninstallContextMenu() error {
 	return windows.RunCommandAsAdmin("uninstall")
+}
+
+func (a *App) CopyFileToClipboard(path string) error {
+	return windows.CopyFileToClipboard(path)
 }
 
 func (a *App) SaveSettings(s Settings) error {
@@ -256,10 +261,11 @@ func (a *App) ConvertFiles(files []string) {
 			VideoQuality:        viper.GetString("videoQuality"),
 		}
 
-		reporter := func(file string, percent int, status string, errMsg string) {
+		reporter := func(file string, destFile string, percent int, status string, errMsg string) {
 			runtime.EventsEmit(a.ctx, "conversion-progress", JobStatus{
 				ID:       file,
 				File:     file,
+				DestFile: destFile,
 				Status:   status,
 				Progress: percent,
 				Error:    errMsg,
@@ -282,7 +288,7 @@ func (a *App) ConvertFiles(files []string) {
 			fpath := f
 
 			if info, err := os.Stat(fpath); err != nil || info.IsDir() {
-				reporter(fpath, 0, "error", "File not found or invalid")
+				reporter(fpath, "", 0, "error", "File not found or invalid")
 				continue
 			}
 
@@ -307,30 +313,35 @@ func (a *App) ConvertFiles(files []string) {
 				defer wg.Done()
 
 				var err error
-				reporter(src, 0, "processing", "")
+				var dest string
 
 				if extension == ".mov" {
+					dest = filepath.Join(destDir, stem+".mp4")
+					reporter(src, dest, 0, "processing", "")
+
 					ffmpegSem <- struct{}{}
 					defer func() { <-ffmpegSem }()
-					dest := filepath.Join(destDir, stem+".mp4")
 
 					err = convConfig.Ffmpeg(src, dest, func(progress int) {
-						reporter(src, progress, "processing", "")
+						reporter(src, dest, progress, "processing", "")
 					})
 				} else if extension == ".heic" {
+					dest = filepath.Join(destDir, stem+".jpg")
+					reporter(src, dest, 0, "processing", "")
+
 					magickSem <- struct{}{}
 					defer func() { <-magickSem }()
-					dest := filepath.Join(destDir, stem+".jpg")
+
 					err = convConfig.Magick(src, dest)
 				} else {
-					reporter(src, 0, "error", "Unsupported format")
+					reporter(src, "", 0, "error", "Unsupported format")
 					return
 				}
 
 				if err != nil {
-					reporter(src, 100, "error", err.Error())
+					reporter(src, dest, 100, "error", err.Error())
 				} else {
-					reporter(src, 100, "done", "")
+					reporter(src, dest, 100, "done", "")
 				}
 			}(fpath, ext)
 		}
