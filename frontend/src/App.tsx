@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { EventsOn } from './wailsjs/runtime';
-import { ConvertFiles, GetContextMenuStatus, InstallContextMenu } from './wailsjs/go/main/App';
+import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
@@ -9,6 +9,7 @@ import { AlertCircle } from 'lucide-react';
 
 interface ProgressData {
     file: string;
+    destFile?: string;
     status: 'queued' | 'processing' | 'done' | 'error';
     progress: number;
     error?: string;
@@ -24,6 +25,14 @@ function App() {
             if (prev.some(f => f.path === path)) return prev;
             return [...prev, { id: path, path, status: 'queued', progress: 0 }];
         });
+    };
+
+    const handleRemove = (id: string) => {
+        setFiles(prev => prev.filter(f => f.id !== id));
+    };
+
+    const handleCopy = (path: string) => {
+        CopyFileToClipboard(path).catch(console.error);
     };
 
     useEffect(() => {
@@ -42,7 +51,13 @@ function App() {
         const cleanupProgress = EventsOn("conversion-progress", (data: ProgressData) => {
             setFiles(prev => prev.map(f => {
                 if (f.id === data.file) {
-                    return { ...f, status: data.status, progress: data.progress, error: data.error };
+                    return {
+                        ...f,
+                        status: data.status,
+                        progress: data.progress,
+                        error: data.error,
+                        destFile: data.destFile
+                    };
                 }
                 return f;
             }));
@@ -107,7 +122,7 @@ function App() {
                         </div>
                     )}
                     <DropZone />
-                    <FileList files={files} />
+                    <FileList files={files} onRemove={handleRemove} onCopy={handleCopy} />
                 </div>
             )}
             {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} />}

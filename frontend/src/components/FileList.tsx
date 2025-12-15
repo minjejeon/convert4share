@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export interface FileItem {
     id: string; // usually path
     path: string;
+    destFile?: string;
     status: 'queued' | 'processing' | 'done' | 'error';
     progress: number;
     error?: string;
@@ -12,11 +13,13 @@ export interface FileItem {
 
 interface FileListProps {
     files: FileItem[];
+    onRemove: (id: string) => void;
+    onCopy: (path: string) => void;
 }
 
 // Optimized: Extract FileItemRow and wrap with React.memo to prevent
 // re-rendering of all items when only one item's progress updates.
-const FileItemRow = memo(({ file }: { file: FileItem }) => {
+const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove: (id: string) => void; onCopy: (path: string) => void }) => {
     // Extract filename and directory for better UX
     // We handle both Windows (\) and Unix (/) separators
     const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
@@ -86,10 +89,30 @@ const FileItemRow = memo(({ file }: { file: FileItem }) => {
                 )}
             </div>
 
-            <div className="shrink-0 text-slate-500">
-                {file.status === 'processing' && <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />}
-                {file.status === 'done' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
-                {file.status === 'error' && <XCircle className="w-5 h-5 text-red-400" />}
+            <div className="shrink-0 flex items-center gap-2">
+                {file.status === 'done' && file.destFile && (
+                    <button
+                        onClick={() => onCopy(file.destFile!)}
+                        className="p-1.5 hover:bg-slate-700 rounded-full text-slate-400 hover:text-indigo-400 transition-colors"
+                        title="Copy File"
+                    >
+                        <Copy className="w-4 h-4" />
+                    </button>
+                )}
+
+                <button
+                    onClick={() => onRemove(file.id)}
+                    className="p-1.5 hover:bg-slate-700 rounded-full text-slate-400 hover:text-red-400 transition-colors"
+                    title="Remove from queue"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
+
+                <div className="w-5 h-5 flex items-center justify-center text-slate-500">
+                    {file.status === 'processing' && <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />}
+                    {file.status === 'done' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+                    {file.status === 'error' && <XCircle className="w-5 h-5 text-red-400" />}
+                </div>
             </div>
         </div>
     );
@@ -97,7 +120,7 @@ const FileItemRow = memo(({ file }: { file: FileItem }) => {
 
 FileItemRow.displayName = 'FileItemRow';
 
-export function FileList({ files }: FileListProps) {
+export function FileList({ files, onRemove, onCopy }: FileListProps) {
     if (files.length === 0) return null;
 
     return (
@@ -106,7 +129,7 @@ export function FileList({ files }: FileListProps) {
                 Queue ({files.length})
             </h2>
             {files.map((file) => (
-                <FileItemRow key={file.id} file={file} />
+                <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
             ))}
         </div>
     );
