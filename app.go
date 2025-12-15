@@ -366,7 +366,10 @@ func (a *App) shutdown(ctx context.Context) {
 
 func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	logger.Info("Second instance launched", "args", secondInstanceData.Args)
+	runtime.WindowUnminimise(a.ctx)
 	runtime.WindowShow(a.ctx)
+	runtime.WindowSetAlwaysOnTop(a.ctx, true)
+	runtime.WindowSetAlwaysOnTop(a.ctx, false)
 
 	exePath, err := os.Executable()
 	if err != nil {
