@@ -2,10 +2,12 @@ package converter
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -32,7 +34,7 @@ var (
 )
 
 func (c *Config) Magick(orig, dest string) error {
-	cmd := exec.Command(c.MagickBinary, orig, dest)
+	cmd := prepareCommand(c.MagickBinary, orig, dest)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	log.Printf("Running magick command: %s", cmd.String())
@@ -148,7 +150,7 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		dest,
 	)
 
-	cmd := exec.Command(c.FfmpegBinary, args...)
+	cmd := prepareCommand(c.FfmpegBinary, args...)
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
@@ -165,7 +167,7 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
-		scanner.Split(bufio.ScanLines)
+		scanner.Split(scanCR)
 
 		var duration time.Duration
 
@@ -211,4 +213,64 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		return fmt.Errorf("ffmpeg finished with error: %w", err)
 	}
 	return nil
+}
+
+func (c *Config) GenerateThumbnail(inputFile string) ([]byte, error) {
+	ext := strings.ToLower(filepath.Ext(inputFile))
+	var cmd *exec.Cmd
+	var stdout bytes.Buffer
+
+	// Preview size: 200px width, aspect ratio preserved
+
+	if ext == ".mov" || ext == ".mp4" || ext == ".mkv" || ext == ".avi" {
+		// FFMPEG
+		// -ss 00:00:00 -i input -vframes 1 -vf scale=200:-1 -f image2 -c:v mjpeg pipe:1
+		args := []string{
+			"-hide_banner",
+			"-loglevel", "error",
+			"-ss", "00:00:00",
+			"-i", inputFile,
+			"-vframes", "1",
+			"-vf", "scale=200:-1",
+			"-f", "image2",
+			"-c:v", "mjpeg",
+			"pipe:1",
+		}
+		cmd = prepareCommand(c.FfmpegBinary, args...)
+	} else {
+		// Magick
+		// input[0] -resize 200x200 jpeg:-
+		// Note: For HEIC, magick handles it if delegates are present.
+		// We use input[0] to get the first frame/page.
+		args := []string{
+			inputFile + "[0]",
+			"-resize", "200x200",
+			"-quality", "80",
+			"jpeg:-",
+		}
+		cmd = prepareCommand(c.MagickBinary, args...)
+	}
+
+	cmd.Stdout = &stdout
+	// We can ignore stderr or capture it for debug
+	// cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("thumbnail generation failed: %w", err)
+	}
+
+	return stdout.Bytes(), nil
+}
+
+func scanCR(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.IndexAny(data, "\r\n"); i >= 0 {
+		return i + 1, data[0:i], nil
+	}
+	if atEOF {
+		return len(data), data, nil
+	}
+	return 0, nil, nil
 }

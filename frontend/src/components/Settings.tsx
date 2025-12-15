@@ -172,6 +172,18 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                     </label>
 
                     <label className="block">
+                        <span className="text-sm font-medium text-slate-300">Concurrent Jobs (Max FFMPEG Workers)</span>
+                        <input
+                            type="number"
+                            min="1"
+                            className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                            value={settings.maxFfmpegWorkers || 1}
+                            onChange={(e) => setSettings({ ...settings, maxFfmpegWorkers: parseInt(e.target.value) || 1 })}
+                        />
+                        <span className="text-xs text-slate-500">Number of videos to convert simultaneously. Default is 1.</span>
+                    </label>
+
+                    <label className="block">
                         <span className="text-sm font-medium text-slate-300">Max Resolution (Size)</span>
                          <input
                             type="number"
