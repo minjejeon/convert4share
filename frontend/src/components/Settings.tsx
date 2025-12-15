@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus } from '../wailsjs/go/main/App';
+import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus, SelectBinaryDialog, DetectBinaries } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import { Loader2, Save, Monitor, Check } from 'lucide-react';
+import { Loader2, Save, Monitor, Check, FolderOpen, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SettingsViewProps {
@@ -70,6 +70,37 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
             setSaved(true);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleBrowse = async (field: 'magickBinary' | 'ffmpegBinary') => {
+        const path = await SelectBinaryDialog();
+        if (path && settings) {
+            setSettings({ ...settings, [field]: path });
+        }
+    };
+
+    const handleDetect = async () => {
+        if (!settings) return;
+        try {
+            const results = await DetectBinaries();
+            const newSettings = { ...settings };
+            let updated = false;
+
+            if (results['ffmpeg']) {
+                newSettings.ffmpegBinary = results['ffmpeg'];
+                updated = true;
+            }
+            if (results['magick']) {
+                newSettings.magickBinary = results['magick'];
+                updated = true;
+            }
+
+            if (updated) {
+                setSettings(newSettings);
+            }
+        } catch (error) {
+            console.error("Error detecting binaries:", error);
         }
     };
 
@@ -164,6 +195,54 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                 </div>
 
                 <div className="pt-4 border-t border-slate-700/50">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-slate-200">External Tools</h3>
+                        <button
+                            onClick={handleDetect}
+                            className="text-xs flex items-center gap-1.5 px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-300 transition-colors"
+                        >
+                            <Search className="w-3 h-3" /> Auto-Detect
+                        </button>
+                    </div>
+                    <div className="space-y-4 mb-6">
+                        <label className="block">
+                            <span className="text-sm font-medium text-slate-300">FFmpeg Binary</span>
+                            <div className="mt-1.5 flex gap-2">
+                                <input
+                                    type="text"
+                                    className="block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                    value={settings.ffmpegBinary}
+                                    onChange={(e) => setSettings({ ...settings, ffmpegBinary: e.target.value })}
+                                />
+                                <button
+                                    onClick={() => handleBrowse('ffmpegBinary')}
+                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 border border-slate-600 transition-colors"
+                                    title="Browse..."
+                                >
+                                    <FolderOpen className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </label>
+                        <label className="block">
+                            <span className="text-sm font-medium text-slate-300">Magick Binary</span>
+                            <div className="mt-1.5 flex gap-2">
+                                <input
+                                    type="text"
+                                    className="block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                    value={settings.magickBinary}
+                                    onChange={(e) => setSettings({ ...settings, magickBinary: e.target.value })}
+                                />
+                                <button
+                                    onClick={() => handleBrowse('magickBinary')}
+                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 border border-slate-600 transition-colors"
+                                    title="Browse..."
+                                >
+                                    <FolderOpen className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </label>
+                    </div>
+
                      <h3 className="text-sm font-semibold text-slate-200 mb-3">Paths</h3>
                      <div className="space-y-4">
                         <label className="block">
