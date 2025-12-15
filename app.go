@@ -176,6 +176,7 @@ func (a *App) ConvertFiles(files []string) {
 			fpath := f
 
 			if info, err := os.Stat(fpath); err != nil || info.IsDir() {
+				reporter(fpath, 0, "error", "File not found or invalid")
 				continue
 			}
 
@@ -261,10 +262,22 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 	logger.Info("Second instance launched", "args", secondInstanceData.Args)
 	runtime.WindowShow(a.ctx)
 
+	exePath, err := os.Executable()
+	if err != nil {
+		logger.Error("Error getting executable path during second instance launch", "error", err)
+	}
+
 	if len(secondInstanceData.Args) > 0 {
 		files := secondInstanceData.Args
 		var actualFiles []string
 		for _, arg := range files {
+			// Skip the argument if it matches the executable path (self-reference)
+			if exePath != "" {
+				if absArg, err := filepath.Abs(arg); err == nil && strings.EqualFold(absArg, exePath) {
+					continue
+				}
+			}
+
 			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 				actualFiles = append(actualFiles, arg)
 			}

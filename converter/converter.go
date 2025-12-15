@@ -26,8 +26,8 @@ type Config struct {
 type ProgressCallback func(progress int)
 
 var (
-	durationRegex = regexp.MustCompile(`Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})`)
-	timeRegex     = regexp.MustCompile(`time=(\d{2}):(\d{2}):(\d{2})\.(\d{2})`)
+	durationRegex = regexp.MustCompile(`Duration: (\d+):(\d{2}):(\d{2})\.(\d{2})`)
+	timeRegex     = regexp.MustCompile(`time=(\d+):(\d{2}):(\d{2})\.(\d{2})`)
 )
 
 func (c *Config) Magick(orig, dest string) error {
