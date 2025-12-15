@@ -90,7 +90,7 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
             </div>
 
             <div className="shrink-0 flex items-center gap-2">
-                {file.status === 'done' && file.destFile && (
+                {file.status === 'done' && file.destFile ? (
                     <button
                         onClick={() => onCopy(file.destFile!)}
                         className="p-1.5 hover:bg-slate-700 rounded-full text-slate-400 hover:text-indigo-400 transition-colors"
@@ -98,6 +98,8 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                     >
                         <Copy className="w-4 h-4" />
                     </button>
+                ) : (
+                    <div className="w-7 h-7" aria-hidden="true" />
                 )}
 
                 <button
