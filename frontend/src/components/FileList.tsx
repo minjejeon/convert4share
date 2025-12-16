@@ -15,6 +15,7 @@ interface FileListProps {
     files: FileItem[];
     onRemove: (id: string) => void;
     onCopy: (path: string) => void;
+    onClearCompleted: () => void;
 }
 
 // Optimized: Extract FileItemRow and wrap with React.memo to prevent
@@ -28,9 +29,9 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
 
     return (
         <div
-            className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 flex items-center gap-4 group transition-all"
+            className="bg-slate-800/40 hover:bg-slate-800/70 rounded-lg p-4 border border-slate-700/50 hover:border-slate-600 transition-all duration-200 group animate-in fade-in slide-in-from-bottom-2"
         >
-            <div className="shrink-0 p-2.5 rounded-md bg-slate-800 ring-1 ring-slate-700">
+            <div className="shrink-0 p-2.5 rounded-md bg-slate-800 ring-1 ring-slate-700/50 shadow-sm">
                 {fileName.toLowerCase().endsWith('.mov') ? (
                     <FileVideo className="w-5 h-5 text-indigo-400" />
                 ) : (
@@ -122,33 +123,45 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
 
 FileItemRow.displayName = 'FileItemRow';
 
-export function FileList({ files, onRemove, onCopy }: FileListProps) {
+export function FileList({ files, onRemove, onCopy, onClearCompleted }: FileListProps) {
     if (files.length === 0) return null;
 
     const activeFiles = files.filter(f => f.status !== 'done');
     const completedFiles = files.filter(f => f.status === 'done');
 
     return (
-        <div className="space-y-6 mt-6">
+        <div className="space-y-8 mt-8">
             {activeFiles.length > 0 && (
                 <div className="space-y-3">
-                     <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
-                        Queue ({activeFiles.length})
+                     <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
+                        Queue <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md text-[10px]">{activeFiles.length}</span>
                     </h2>
-                    {activeFiles.map(file => (
-                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
-                    ))}
+                    <div className="space-y-2">
+                        {activeFiles.map(file => (
+                            <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                        ))}
+                    </div>
                 </div>
             )}
 
             {completedFiles.length > 0 && (
                 <div className="space-y-3">
-                     <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
-                        Completed ({completedFiles.length})
-                    </h2>
-                    {completedFiles.map(file => (
-                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
-                    ))}
+                    <div className="flex items-center justify-between mb-3 px-1">
+                        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                            Completed <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md text-[10px]">{completedFiles.length}</span>
+                        </h2>
+                        <button
+                            onClick={onClearCompleted}
+                            className="text-xs font-medium text-slate-500 hover:text-red-400 transition-colors flex items-center gap-1"
+                        >
+                            <Trash2 className="w-3 h-3" /> Clear All
+                        </button>
+                    </div>
+                    <div className="space-y-2">
+                        {completedFiles.map(file => (
+                            <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

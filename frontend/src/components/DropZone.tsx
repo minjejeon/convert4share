@@ -38,10 +38,10 @@ export function DropZone({ onFilesAdded }: DropZoneProps) {
     return (
         <div
             className={cn(
-                "border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ease-in-out cursor-default",
+                "group relative overflow-hidden border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ease-in-out cursor-default",
                 isDragging
-                    ? "border-indigo-500 bg-indigo-500/10 scale-[1.01]"
-                    : "border-slate-700 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50"
+                    ? "border-indigo-500 bg-indigo-500/10 scale-[1.01] shadow-lg shadow-indigo-500/10"
+                    : "border-slate-700/50 bg-slate-800/30 hover:border-indigo-500/30 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-indigo-500/5"
             )}
             onDragOver={(e) => {
                 e.preventDefault();
@@ -58,14 +58,22 @@ export function DropZone({ onFilesAdded }: DropZoneProps) {
                 // No, we need to register OnFileDrop in options.App (which I haven't).
             }}
         >
-            <div className="flex flex-col items-center gap-4">
-                <div className="p-4 rounded-full bg-slate-800 ring-1 ring-slate-700 shadow-sm">
-                    <UploadCloud className="w-8 h-8 text-indigo-400" />
+            <div className="relative z-10 flex flex-col items-center gap-4">
+                <div className={cn(
+                    "p-4 rounded-full bg-slate-800 ring-1 ring-slate-700/50 shadow-sm transition-transform duration-300",
+                    isDragging ? "scale-110 ring-indigo-500/50" : "group-hover:scale-110 group-hover:ring-indigo-500/30"
+                )}>
+                    <UploadCloud className={cn(
+                        "w-8 h-8 transition-colors duration-300",
+                        isDragging ? "text-indigo-400" : "text-slate-400 group-hover:text-indigo-400"
+                    )} />
                 </div>
                 <div>
-                    <h3 className="text-lg font-semibold text-slate-200">Drag & Drop files here</h3>
-                    <p className="text-slate-400 mt-1 text-sm">
-                        Supported formats: .mov, .heic
+                    <h3 className="text-lg font-semibold text-slate-200 group-hover:text-white transition-colors">
+                        Drag & Drop files here
+                    </h3>
+                    <p className="text-slate-500 mt-1.5 text-sm group-hover:text-slate-400 transition-colors">
+                        Supported formats: <span className="font-medium text-indigo-400/80">.mov</span>, <span className="font-medium text-indigo-400/80">.heic</span>
                     </p>
                 </div>
             </div>

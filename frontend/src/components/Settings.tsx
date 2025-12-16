@@ -109,19 +109,20 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
     }
 
     return (
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className="max-w-2xl mx-auto space-y-8 pb-12">
             <div>
                 <h2 className="text-xl font-bold text-slate-100">Settings</h2>
                 <p className="text-slate-400 mt-1">Configure conversion parameters and paths.</p>
             </div>
 
             <div className="space-y-6">
-                <div className="pb-6 border-b border-slate-700/50">
-                     <h3 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
-                        <Monitor className="h-4 w-4" />
+                {/* Integration Card */}
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                     <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                        <Monitor className="h-4 w-4 text-indigo-400" />
                         Windows Integration
                      </h3>
-                     <div className="flex items-center justify-between bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                     <div className="flex items-center justify-between bg-slate-900/50 p-4 rounded-lg border border-slate-800">
                         <div>
                             <p className="text-sm font-medium text-slate-200">Context Menu</p>
                             <p className="text-xs text-slate-400 mt-1">
@@ -144,61 +145,63 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                      </div>
                 </div>
 
-                <div className="space-y-4">
-                    <label className="block">
-                        <span className="text-sm font-medium text-slate-300">Hardware Accelerator</span>
-                        <select
-                            className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
-                            value={settings.hardwareAccelerator}
-                            onChange={(e) => setSettings({ ...settings, hardwareAccelerator: e.target.value })}
-                        >
-                            <option value="none">None (CPU - libx264)</option>
-                            <option value="nvidia">NVIDIA (CUDA/NVENC)</option>
-                            <option value="amd">AMD (AMF)</option>
-                        </select>
-                    </label>
+                {/* Video Options Card */}
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 space-y-4">
+                    <h3 className="text-sm font-semibold text-slate-200 mb-2">Video Options</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="block">
+                            <span className="text-sm font-medium text-slate-300">Hardware Accelerator</span>
+                            <select
+                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                value={settings.hardwareAccelerator}
+                                onChange={(e) => setSettings({ ...settings, hardwareAccelerator: e.target.value })}
+                            >
+                                <option value="none">None (CPU - libx264)</option>
+                                <option value="nvidia">NVIDIA (CUDA/NVENC)</option>
+                                <option value="amd">AMD (AMF)</option>
+                            </select>
+                        </label>
 
-                    <label className="block">
-                        <span className="text-sm font-medium text-slate-300">Video Quality Preset</span>
-                        <select
-                            className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
-                            value={settings.videoQuality || "high"}
-                            onChange={(e) => setSettings({ ...settings, videoQuality: e.target.value })}
-                        >
-                            <option value="high">High (5 Mbps, Slow/Quality)</option>
-                            <option value="medium">Medium (2.5 Mbps, Balanced)</option>
-                            <option value="low">Low (1 Mbps, Fast)</option>
-                        </select>
-                    </label>
+                        <label className="block">
+                            <span className="text-sm font-medium text-slate-300">Video Quality Preset</span>
+                            <select
+                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                value={settings.videoQuality || "high"}
+                                onChange={(e) => setSettings({ ...settings, videoQuality: e.target.value })}
+                            >
+                                <option value="high">High (5 Mbps, Slow/Quality)</option>
+                                <option value="medium">Medium (2.5 Mbps, Balanced)</option>
+                                <option value="low">Low (1 Mbps, Fast)</option>
+                            </select>
+                        </label>
 
-                    <label className="block">
-                        <span className="text-sm font-medium text-slate-300">Concurrent Jobs (Max FFMPEG Workers)</span>
-                        <input
-                            type="number"
-                            min="1"
-                            className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
-                            value={settings.maxFfmpegWorkers || 1}
-                            onChange={(e) => setSettings({ ...settings, maxFfmpegWorkers: parseInt(e.target.value) || 1 })}
-                        />
-                        <span className="text-xs text-slate-500">Number of videos to convert simultaneously. Default is 1.</span>
-                    </label>
+                        <label className="block">
+                            <span className="text-sm font-medium text-slate-300">Concurrent Jobs</span>
+                            <input
+                                type="number"
+                                min="1"
+                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                value={settings.maxFfmpegWorkers || 1}
+                                onChange={(e) => setSettings({ ...settings, maxFfmpegWorkers: parseInt(e.target.value) || 1 })}
+                            />
+                        </label>
 
-                    <label className="block">
-                        <span className="text-sm font-medium text-slate-300">Max Resolution (Size)</span>
-                         <input
-                            type="number"
-                            className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
-                            value={settings.maxSize}
-                            onChange={(e) => setSettings({ ...settings, maxSize: parseInt(e.target.value) || 0 })}
-                        />
-                         <span className="text-xs text-slate-500">Maximum width/height in pixels. Aspect ratio preserved.</span>
-                    </label>
+                        <label className="block">
+                            <span className="text-sm font-medium text-slate-300">Max Resolution (Size)</span>
+                             <input
+                                type="number"
+                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                value={settings.maxSize}
+                                onChange={(e) => setSettings({ ...settings, maxSize: parseInt(e.target.value) || 0 })}
+                            />
+                        </label>
+                    </div>
 
                     <label className="block">
                         <span className="text-sm font-medium text-slate-300">Custom FFmpeg Args</span>
                          <input
                             type="text"
-                            className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                            className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                             value={settings.ffmpegCustomArgs}
                             onChange={(e) => setSettings({ ...settings, ffmpegCustomArgs: e.target.value })}
                             placeholder="-crf 23 -preset slow"
@@ -206,8 +209,9 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                     </label>
                 </div>
 
-                <div className="pt-4 border-t border-slate-700/50">
-                    <div className="flex items-center justify-between mb-3">
+                {/* External Tools Card */}
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                    <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-semibold text-slate-200">External Tools</h3>
                         <button
                             onClick={handleDetect}
@@ -216,13 +220,13 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                             <Search className="w-3 h-3" /> Auto-Detect
                         </button>
                     </div>
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-4">
                         <label className="block">
                             <span className="text-sm font-medium text-slate-300">FFmpeg Binary</span>
                             <div className="mt-1.5 flex gap-2">
                                 <input
                                     type="text"
-                                    className="block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                    className="block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                                     value={settings.ffmpegBinary}
                                     onChange={(e) => setSettings({ ...settings, ffmpegBinary: e.target.value })}
                                 />
@@ -240,7 +244,7 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                             <div className="mt-1.5 flex gap-2">
                                 <input
                                     type="text"
-                                    className="block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                    className="block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                                     value={settings.magickBinary}
                                     onChange={(e) => setSettings({ ...settings, magickBinary: e.target.value })}
                                 />
@@ -254,14 +258,17 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                             </div>
                         </label>
                     </div>
+                </div>
 
-                     <h3 className="text-sm font-semibold text-slate-200 mb-3">Paths</h3>
+                {/* Paths Card */}
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                     <h3 className="text-sm font-semibold text-slate-200 mb-4">Paths</h3>
                      <div className="space-y-4">
                         <label className="block">
                             <span className="text-sm font-medium text-slate-300">Default Destination</span>
                             <input
                                 type="text"
-                                className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                                 value={settings.defaultDestDir}
                                 onChange={(e) => setSettings({ ...settings, defaultDestDir: e.target.value })}
                             />
@@ -270,7 +277,7 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                             <span className="text-sm font-medium text-slate-300">Exclude Patterns (Comma separated)</span>
                              <input
                                 type="text"
-                                className="mt-1.5 block w-full rounded-md bg-slate-800 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                                 value={settings.excludePatterns?.join(', ')}
                                 onChange={(e) => setSettings({ ...settings, excludePatterns: e.target.value.split(',').map(s => s.trim()) })}
                             />
