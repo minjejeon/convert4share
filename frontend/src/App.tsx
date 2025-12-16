@@ -31,6 +31,10 @@ function App() {
         setFiles(prev => prev.filter(f => f.id !== id));
     };
 
+    const handleClearCompleted = () => {
+        setFiles(prev => prev.filter(f => f.status !== 'done'));
+    };
+
     const handleCopy = (path: string) => {
         CopyFileToClipboard(path).catch(console.error);
     };
@@ -122,7 +126,7 @@ function App() {
                         </div>
                     )}
                     <DropZone />
-                    <FileList files={files} onRemove={handleRemove} onCopy={handleCopy} />
+                    <FileList files={files} onRemove={handleRemove} onCopy={handleCopy} onClearCompleted={handleClearCompleted} />
                 </div>
             )}
             {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} />}
