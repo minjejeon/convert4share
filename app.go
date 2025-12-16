@@ -444,10 +444,14 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 }
 
 func (a *App) handleSecondInstance() {
-	runtime.WindowUnminimise(a.ctx)
-	runtime.WindowShow(a.ctx)
-	runtime.WindowSetAlwaysOnTop(a.ctx, true)
-	runtime.WindowSetAlwaysOnTop(a.ctx, false)
+	// If the app is still starting up (ctx is nil), the window will appear naturally.
+	// We only need to force focus if the app is already running.
+	if a.ctx != nil {
+		runtime.WindowUnminimise(a.ctx)
+		runtime.WindowShow(a.ctx)
+		runtime.WindowSetAlwaysOnTop(a.ctx, true)
+		runtime.WindowSetAlwaysOnTop(a.ctx, false)
+	}
 
 	a.processPendingFiles()
 }
