@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -360,6 +362,22 @@ func (a *App) AddFiles(files []string) {
 			runtime.EventsEmit(a.ctx, "file-added", f)
 		}
 	}
+}
+
+func (a *App) GetThumbnail(path string) (string, error) {
+	convConfig := &converter.Config{
+		MagickBinary: viper.GetString("magickBinary"),
+		FfmpegBinary: viper.GetString("ffmpegBinary"),
+	}
+
+	data, err := convConfig.GenerateThumbnail(path)
+	if err != nil {
+		logger.Error("Failed to generate thumbnail", "path", path, "error", err)
+		return "", fmt.Errorf("failed to generate thumbnail: %w", err)
+	}
+
+	base64Str := base64.StdEncoding.EncodeToString(data)
+	return "data:image/jpeg;base64," + base64Str, nil
 }
 
 func (a *App) domReady(ctx context.Context) {

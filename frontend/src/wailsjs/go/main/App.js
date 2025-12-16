@@ -41,3 +41,7 @@ export function SelectBinaryDialog() {
 export function DetectBinaries() {
     return window['go']['main']['App']['DetectBinaries']();
 }
+
+export function GetThumbnail(arg1) {
+    return window['go']['main']['App']['GetThumbnail'](arg1);
+}

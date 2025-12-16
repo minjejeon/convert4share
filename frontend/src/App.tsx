@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { EventsOn } from './wailsjs/runtime';
-import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard } from './wailsjs/go/main/App';
+import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard, GetThumbnail } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
@@ -25,6 +25,13 @@ function App() {
         setFiles(prev => {
             if (prev.some(f => f.path === path)) return prev;
             return [...prev, { id: path, path, status: 'queued', progress: 0 }];
+        });
+
+        // Fetch thumbnail
+        GetThumbnail(path).then(thumb => {
+            setFiles(prev => prev.map(f => f.path === path ? { ...f, thumbnail: thumb } : f));
+        }).catch(err => {
+            console.error("Failed to load thumbnail for", path, err);
         });
     };
 
