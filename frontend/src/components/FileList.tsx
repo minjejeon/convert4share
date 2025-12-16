@@ -9,6 +9,7 @@ export interface FileItem {
     status: 'queued' | 'processing' | 'done' | 'error';
     progress: number;
     error?: string;
+    thumbnail?: string;
 }
 
 interface FileListProps {
@@ -29,13 +30,17 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
 
     return (
         <div
-            className="bg-slate-800/40 hover:bg-slate-800/70 rounded-lg p-4 border border-slate-700/50 hover:border-slate-600 transition-all duration-200 group animate-in fade-in slide-in-from-bottom-2"
+            className="flex items-center gap-4 bg-slate-800/40 hover:bg-slate-800/70 rounded-lg p-4 border border-slate-700/50 hover:border-slate-600 transition-all duration-200 group animate-in fade-in slide-in-from-bottom-2"
         >
-            <div className="shrink-0 p-2.5 rounded-md bg-slate-800 ring-1 ring-slate-700/50 shadow-sm">
-                {fileName.toLowerCase().endsWith('.mov') ? (
-                    <FileVideo className="w-5 h-5 text-indigo-400" />
+            <div className="shrink-0 p-1.5 rounded-md bg-slate-800 ring-1 ring-slate-700/50 shadow-sm overflow-hidden w-[52px] h-[52px] flex items-center justify-center">
+                {file.thumbnail ? (
+                     <img src={file.thumbnail} alt={fileName} className="w-full h-full object-cover rounded-sm" />
                 ) : (
-                    <FileImage className="w-5 h-5 text-purple-400" />
+                    fileName.toLowerCase().endsWith('.mov') ? (
+                        <FileVideo className="w-6 h-6 text-indigo-400" />
+                    ) : (
+                        <FileImage className="w-6 h-6 text-purple-400" />
+                    )
                 )}
             </div>
 

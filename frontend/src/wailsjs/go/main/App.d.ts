@@ -23,3 +23,5 @@ export function UninstallContextMenu():Promise<void>;
 export function SelectBinaryDialog():Promise<string>;
 
 export function DetectBinaries():Promise<{[key: string]: string}>;
+
+export function GetThumbnail(arg1:string):Promise<string>;
