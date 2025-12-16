@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { EventsOn } from './wailsjs/runtime';
+import { EventsOn } from './wailsjs/runtime/runtime';
 import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard, GetThumbnail } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';

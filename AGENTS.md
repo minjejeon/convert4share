@@ -11,7 +11,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 
 -   **Backend**: Go (Wails framework)
 -   **Frontend**: React, TypeScript, Vite, Tailwind CSS
--   **Package Manager**: `pnpm` (Enforced. Do not use `npm` or `yarn` for frontend dependencies).
+-   **Package Manager**: `npm` (Enforced. Do not use `pnpm` or `yarn` for frontend dependencies).
 -   **OS**: Windows (Target), but development environment might be Linux/macOS (requiring conditional builds).
 
 ## Architecture Guidelines
@@ -34,7 +34,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 ## Development Tasks & Status
 
 -   **Status**: Wails migration is complete. Frontend and Backend are integrated.
--   **Frontend**: Located in `frontend/`. Uses `pnpm`.
+-   **Frontend**: Located in `frontend/`. Uses `npm`.
 -   **Bindings**: Generated in `frontend/wailsjs/`. Run `wails generate module` to update if `App` struct changes.
 
 ## Instructions for Agents
@@ -42,7 +42,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 1.  **Always Verify**: After editing code, run `go mod tidy` or a build check to ensure no syntax errors.
 2.  **Wails Bindings**: If you modify `App` struct methods, you MUST run `wails generate module` to update frontend bindings.
 3.  **Cross-Platform Awareness**: Ensure `GOOS=windows` checks or build tags are respected.
-4.  **Dependency Management**: Use `pnpm` for all frontend dependency tasks.
+4.  **Dependency Management**: Use `npm` for all frontend dependency tasks.
 5.  **UI/UX**: The frontend listens to `conversion-progress` events. Ensure any new long-running tasks emit appropriate events.
 6.  **Config**: Configuration is handled by `viper`. `App` struct exposes settings to frontend.
 7.  **Cleanup**: Binary artifacts (e.g., `.exe` files, `dist/` folders) MUST be removed before committing.
@@ -51,5 +51,5 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 ## Common Issues / Solutions
 
 -   **Wails Generate Error**: Often due to build tags. Ensure `cmd/` files have appropriate `!windows` fallbacks if they import windows-specific packages.
--   **Vite Build**: Ensure `pnpm install` is run in `frontend/` before building.
+-   **Vite Build**: Ensure `npm install` is run in `frontend/` before building.
 -   **Viper Configuration**: Ensure `viper.SetDefault` is used for all critical configuration keys (especially binary paths) to prevent runtime errors when `config.yaml` is missing. Use `os.UserHomeDir()` for default paths.
