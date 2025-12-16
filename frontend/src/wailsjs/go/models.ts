@@ -29,6 +29,7 @@ export namespace main {
 	    defaultDestDir: string;
 	    excludePatterns: string[];
 	    videoQuality: string;
+	    maxFfmpegWorkers: number;
 
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -44,6 +45,7 @@ export namespace main {
 	        this.defaultDestDir = source["defaultDestDir"];
 	        this.excludePatterns = source["excludePatterns"];
 	        this.videoQuality = source["videoQuality"];
+	        this.maxFfmpegWorkers = source["maxFfmpegWorkers"];
 	    }
 	}
 
