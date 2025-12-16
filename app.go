@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/minjejeon/convert4share/converter"
 	"github.com/minjejeon/convert4share/windows"
@@ -23,6 +24,7 @@ type App struct {
 	pendingFiles []string
 	mu           sync.Mutex
 	isReady      bool
+	processTimer *time.Timer
 }
 
 type Settings struct {
@@ -398,15 +400,14 @@ func (a *App) shutdown(ctx context.Context) {
 
 func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceData) {
 	logger.Info("Second instance launched", "args", secondInstanceData.Args)
-	runtime.WindowUnminimise(a.ctx)
-	runtime.WindowShow(a.ctx)
-	runtime.WindowSetAlwaysOnTop(a.ctx, true)
-	runtime.WindowSetAlwaysOnTop(a.ctx, false)
 
 	exePath, err := os.Executable()
 	if err != nil {
 		logger.Error("Error getting executable path during second instance launch", "error", err)
 	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
 
 	if len(secondInstanceData.Args) > 0 {
 		files := secondInstanceData.Args
@@ -425,15 +426,28 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 		}
 		if len(actualFiles) > 0 {
 			logger.Info("Adding files from second instance", "files", actualFiles)
-			a.mu.Lock()
 			a.pendingFiles = append(a.pendingFiles, actualFiles...)
-			a.mu.Unlock()
-
-			a.processPendingFiles()
 		} else {
 			logger.Info("No valid files found in second instance args.")
 		}
 	} else {
 		logger.Info("Second instance launched with no args.")
 	}
+
+	// Debounce the processing to handle rapid-fire calls (e.g. from multi-file selection)
+	if a.processTimer != nil {
+		a.processTimer.Stop()
+	}
+	a.processTimer = time.AfterFunc(200*time.Millisecond, func() {
+		a.handleSecondInstance()
+	})
+}
+
+func (a *App) handleSecondInstance() {
+	runtime.WindowUnminimise(a.ctx)
+	runtime.WindowShow(a.ctx)
+	runtime.WindowSetAlwaysOnTop(a.ctx, true)
+	runtime.WindowSetAlwaysOnTop(a.ctx, false)
+
+	a.processPendingFiles()
 }
