@@ -6,6 +6,8 @@ export function AddFiles(arg1:string[]):Promise<void>;
 
 export function ConvertFiles(arg1:string[]):Promise<void>;
 
+export function CopyFileToClipboard(arg1:string):Promise<void>;
+
 export function GetContextMenuStatus():Promise<boolean>;
 
 export function GetSettings():Promise<main.Settings>;

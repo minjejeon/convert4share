@@ -5,7 +5,7 @@ import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
 import { SettingsView } from './components/Settings';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 interface ProgressData {
     file: string;
@@ -19,6 +19,7 @@ function App() {
     const [view, setView] = useState<'home' | 'settings'>('home');
     const [files, setFiles] = useState<FileItem[]>([]);
     const [isInstalled, setIsInstalled] = useState<boolean>(true);
+    const [isInstalling, setIsInstalling] = useState<boolean>(false);
 
     const addFile = (path: string) => {
         setFiles(prev => {
@@ -88,19 +89,28 @@ function App() {
     }, [files]);
 
     const handleInstall = async () => {
+        setIsInstalling(true);
         try {
             await InstallContextMenu();
             const interval = setInterval(() => {
                 GetContextMenuStatus().then(status => {
                     if (status) {
                         setIsInstalled(true);
+                        setIsInstalling(false);
                         clearInterval(interval);
                     }
                 });
             }, 1000);
-            setTimeout(() => clearInterval(interval), 10000);
+            setTimeout(() => {
+                clearInterval(interval);
+                GetContextMenuStatus().then(status => {
+                    if (status) setIsInstalled(true);
+                    setIsInstalling(false);
+                });
+            }, 10000);
         } catch (e) {
             console.error(e);
+            setIsInstalling(false);
         }
     };
 
@@ -119,9 +129,13 @@ function App() {
                             </div>
                             <button
                                 onClick={handleInstall}
-                                className="px-3 py-1.5 text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                                disabled={isInstalling}
+                                className={`px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors flex items-center gap-2 ${
+                                    isInstalling ? "bg-blue-400 cursor-wait" : "bg-blue-500 hover:bg-blue-600"
+                                }`}
                             >
-                                Install Now
+                                {isInstalling && <Loader2 className="w-3 h-3 animate-spin" />}
+                                {isInstalling ? "Installing..." : "Install Now"}
                             </button>
                         </div>
                     )}
