@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus, SelectBinaryDialog, DetectBinaries } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import { Loader2, Save, Monitor, Check, FolderOpen, Search } from 'lucide-react';
+import { Loader2, Save, Monitor, Check, FolderOpen, Search, Sliders, Cpu, Film, Layers } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SettingsViewProps {
@@ -112,17 +112,17 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
         <div className="max-w-2xl mx-auto space-y-8 pb-12">
             <div>
                 <h2 className="text-xl font-bold text-slate-100">Settings</h2>
-                <p className="text-slate-400 mt-1">Configure conversion parameters and paths.</p>
+                <p className="text-slate-400 mt-1">Configure conversion parameters and system integration.</p>
             </div>
 
             <div className="space-y-6">
                 {/* Integration Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
                      <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
                         <Monitor className="h-4 w-4 text-indigo-400" />
                         Windows Integration
                      </h3>
-                     <div className="flex items-center justify-between bg-slate-900/50 p-4 rounded-lg border border-slate-800">
+                     <div className="flex items-center justify-between bg-slate-900/50 p-4 rounded-lg border border-slate-800/50">
                         <div>
                             <p className="text-sm font-medium text-slate-200">Context Menu</p>
                             <p className="text-xs text-slate-400 mt-1">
@@ -133,10 +133,10 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                             onClick={handleToggleMenu}
                             disabled={togglingMenu}
                             className={cn(
-                                "px-3 py-1.5 text-xs font-medium rounded-md transition-colors border flex items-center justify-center min-w-[80px]",
+                                "px-4 py-2 text-xs font-semibold rounded-lg transition-all border flex items-center justify-center min-w-[90px] shadow-sm",
                                 isInstalled
-                                    ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
-                                    : "border-blue-500/30 text-blue-400 hover:bg-blue-500/10",
+                                    ? "border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/30"
+                                    : "border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/30",
                                 togglingMenu && "opacity-50 cursor-wait"
                             )}
                         >
@@ -146,13 +146,19 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                 </div>
 
                 {/* Video Options Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 space-y-4">
-                    <h3 className="text-sm font-semibold text-slate-200 mb-2">Video Options</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">Hardware Accelerator</span>
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors space-y-6">
+                    <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <Film className="h-4 w-4 text-purple-400" />
+                        Video Options
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                                <Cpu className="w-3 h-3" /> Hardware Accelerator
+                            </label>
                             <select
-                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.hardwareAccelerator}
                                 onChange={(e) => setSettings({ ...settings, hardwareAccelerator: e.target.value })}
                             >
@@ -160,139 +166,149 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                                 <option value="nvidia">NVIDIA (CUDA/NVENC)</option>
                                 <option value="amd">AMD (AMF)</option>
                             </select>
-                        </label>
+                        </div>
 
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">Video Quality Preset</span>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                                <Layers className="w-3 h-3" /> Quality Preset
+                            </label>
                             <select
-                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.videoQuality || "high"}
                                 onChange={(e) => setSettings({ ...settings, videoQuality: e.target.value })}
                             >
-                                <option value="high">High (5 Mbps, Slow/Quality)</option>
+                                <option value="high">High (5 Mbps, Quality)</option>
                                 <option value="medium">Medium (2.5 Mbps, Balanced)</option>
                                 <option value="low">Low (1 Mbps, Fast)</option>
                             </select>
-                        </label>
+                        </div>
 
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">Concurrent Jobs</span>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400">Concurrent Jobs</label>
                             <input
                                 type="number"
                                 min="1"
-                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.maxFfmpegWorkers || 1}
                                 onChange={(e) => setSettings({ ...settings, maxFfmpegWorkers: parseInt(e.target.value) || 1 })}
                             />
-                        </label>
+                        </div>
 
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">Max Resolution (Size)</span>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400">Max Resolution (Size)</label>
                              <input
                                 type="number"
-                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.maxSize}
                                 onChange={(e) => setSettings({ ...settings, maxSize: parseInt(e.target.value) || 0 })}
+                                placeholder="0 for original"
                             />
-                        </label>
+                        </div>
                     </div>
 
-                    <label className="block">
-                        <span className="text-sm font-medium text-slate-300">Custom FFmpeg Args</span>
+                    <div className="space-y-2 pt-2 border-t border-slate-700/50">
+                        <label className="text-xs font-medium text-slate-400">Custom FFmpeg Arguments</label>
                          <input
                             type="text"
-                            className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                            className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 font-mono text-xs transition-shadow"
                             value={settings.ffmpegCustomArgs}
                             onChange={(e) => setSettings({ ...settings, ffmpegCustomArgs: e.target.value })}
                             placeholder="-crf 23 -preset slow"
                         />
-                    </label>
+                    </div>
                 </div>
 
                 {/* External Tools Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-semibold text-slate-200">External Tools</h3>
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <Sliders className="h-4 w-4 text-emerald-400" />
+                            External Tools
+                        </h3>
                         <button
                             onClick={handleDetect}
-                            className="text-xs flex items-center gap-1.5 px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-300 transition-colors"
+                            className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700/50 text-slate-300 transition-colors shadow-sm"
                         >
                             <Search className="w-3 h-3" /> Auto-Detect
                         </button>
                     </div>
-                    <div className="space-y-4">
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">FFmpeg Binary</span>
-                            <div className="mt-1.5 flex gap-2">
+                    <div className="space-y-5">
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400">FFmpeg Binary Path</label>
+                            <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    className="block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                    className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
                                     value={settings.ffmpegBinary}
                                     onChange={(e) => setSettings({ ...settings, ffmpegBinary: e.target.value })}
                                 />
                                 <button
                                     onClick={() => handleBrowse('ffmpegBinary')}
-                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 border border-slate-600 transition-colors"
+                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 border border-slate-600 transition-colors shadow-sm"
                                     title="Browse..."
                                 >
                                     <FolderOpen className="w-4 h-4" />
                                 </button>
                             </div>
-                        </label>
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">Magick Binary</span>
-                            <div className="mt-1.5 flex gap-2">
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400">Magick Binary Path</label>
+                            <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    className="block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                    className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
                                     value={settings.magickBinary}
                                     onChange={(e) => setSettings({ ...settings, magickBinary: e.target.value })}
                                 />
                                 <button
                                     onClick={() => handleBrowse('magickBinary')}
-                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 border border-slate-600 transition-colors"
+                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 border border-slate-600 transition-colors shadow-sm"
                                     title="Browse..."
                                 >
                                     <FolderOpen className="w-4 h-4" />
                                 </button>
                             </div>
-                        </label>
+                        </div>
                     </div>
                 </div>
 
                 {/* Paths Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50">
-                     <h3 className="text-sm font-semibold text-slate-200 mb-4">Paths</h3>
-                     <div className="space-y-4">
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">Default Destination</span>
+                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+                     <h3 className="text-sm font-semibold text-slate-200 mb-6 flex items-center gap-2">
+                        <FolderOpen className="h-4 w-4 text-blue-400" />
+                        Paths & Filters
+                     </h3>
+                     <div className="space-y-5">
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400">Default Destination Directory</label>
                             <input
                                 type="text"
-                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono transition-shadow"
                                 value={settings.defaultDestDir}
                                 onChange={(e) => setSettings({ ...settings, defaultDestDir: e.target.value })}
                             />
-                        </label>
-                        <label className="block">
-                            <span className="text-sm font-medium text-slate-300">Exclude Patterns (Comma separated)</span>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-400">Exclude Patterns (comma separated)</label>
                              <input
                                 type="text"
-                                className="mt-1.5 block w-full rounded-md bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.excludePatterns?.join(', ')}
                                 onChange={(e) => setSettings({ ...settings, excludePatterns: e.target.value.split(',').map(s => s.trim()) })}
+                                placeholder="e.g. \Pictures\, \DCIM\"
                             />
-                        </label>
+                        </div>
                      </div>
                 </div>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end pt-4 sticky bottom-0 bg-slate-950/80 backdrop-blur-sm p-4 -mx-4 -mb-4 border-t border-white/5">
                     <button
                         onClick={handleSave}
                         disabled={saving || saved}
                         className={cn(
-                            "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all",
+                            "inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-semibold rounded-lg shadow-lg text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all",
                             saving && "opacity-75 cursor-wait",
-                            saved ? "bg-emerald-600 hover:bg-emerald-700" : "bg-indigo-600 hover:bg-indigo-700"
+                            saved ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20"
                         )}
                     >
                         {saving ? (
@@ -302,7 +318,7 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                         ) : (
                             <Save className="-ml-1 mr-2 h-4 w-4" />
                         )}
-                        {saved ? "Saved!" : "Save Changes"}
+                        {saved ? "Settings Saved" : "Save Changes"}
                     </button>
                 </div>
             </div>
