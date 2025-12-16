@@ -6,6 +6,7 @@ import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
 import { SettingsView } from './components/Settings';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { useTheme } from './hooks/useTheme';
 
 interface ProgressData {
     file: string;
@@ -20,6 +21,7 @@ function App() {
     const [files, setFiles] = useState<FileItem[]>([]);
     const [isInstalled, setIsInstalled] = useState<boolean>(true);
     const [isInstalling, setIsInstalling] = useState<boolean>(false);
+    const { theme, setTheme } = useTheme();
 
     const addFile = (path: string) => {
         setFiles(prev => {
@@ -126,14 +128,14 @@ function App() {
             {view === 'home' && (
                 <div className="max-w-3xl mx-auto pb-12 flex flex-col gap-8">
                      {!isInstalled && (
-                        <div className="rounded-xl bg-slate-800/60 p-4 border border-indigo-500/30 flex items-center justify-between shadow-sm backdrop-blur-sm">
+                        <div className="rounded-xl bg-white dark:bg-slate-800/60 p-4 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between shadow-sm backdrop-blur-sm">
                             <div className="flex items-center gap-4">
-                                <div className="p-2 bg-indigo-500/10 rounded-lg shrink-0">
-                                    <AlertCircle className="h-5 w-5 text-indigo-400" />
+                                <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg shrink-0">
+                                    <AlertCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-slate-200">Context Menu Integration</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">Install the right-click menu option for quick access.</p>
+                                    <h3 className="text-sm font-medium text-slate-900 dark:text-slate-200">Context Menu Integration</h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Install the right-click menu option for quick access.</p>
                                 </div>
                             </div>
                             <button
@@ -142,7 +144,7 @@ function App() {
                                 className={`px-4 py-2 text-xs font-semibold text-white rounded-lg transition-all flex items-center gap-2 shadow-sm ${
                                     isInstalling
                                         ? "bg-indigo-500/50 cursor-wait"
-                                        : "bg-indigo-600 hover:bg-indigo-500 hover:shadow-indigo-500/20"
+                                        : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/20"
                                 }`}
                             >
                                 {isInstalling && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -154,7 +156,7 @@ function App() {
                     <FileList files={files} onRemove={handleRemove} onCopy={handleCopy} onClearCompleted={handleClearCompleted} />
                 </div>
             )}
-            {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} />}
+            {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} theme={theme} onThemeChange={setTheme} />}
         </Layout>
     );
 }
