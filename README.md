@@ -27,12 +27,12 @@ The application allows you to configure the paths to these binaries in the Setti
 
 ## Building from Source
 
-To build the application from source, you need **Go** and **Node.js** (with **pnpm**) installed.
+To build the application from source, you need **Go** and **Node.js** (with **npm**) installed.
 
 1.  Install frontend dependencies:
     ```shell
     cd frontend
-    pnpm install
+    npm install
     cd ..
     ```
 
