@@ -6,6 +6,7 @@ import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
 import { SettingsView } from './components/Settings';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { useTheme } from './hooks/useTheme';
 
 interface ProgressData {
     file: string;
@@ -20,6 +21,7 @@ function App() {
     const [files, setFiles] = useState<FileItem[]>([]);
     const [isInstalled, setIsInstalled] = useState<boolean>(true);
     const [isInstalling, setIsInstalling] = useState<boolean>(false);
+    const { theme, setTheme } = useTheme();
 
     const addFile = (path: string) => {
         setFiles(prev => {
@@ -154,7 +156,7 @@ function App() {
                     <FileList files={files} onRemove={handleRemove} onCopy={handleCopy} onClearCompleted={handleClearCompleted} />
                 </div>
             )}
-            {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} />}
+            {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} theme={theme} onThemeChange={setTheme} />}
         </Layout>
     );
 }

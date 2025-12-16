@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus, SelectBinaryDialog, DetectBinaries } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import { Loader2, Save, Monitor, Check, FolderOpen, Search, Sliders, Cpu, Film, Layers } from 'lucide-react';
+import { Loader2, Save, Monitor, Check, FolderOpen, Search, Sliders, Cpu, Film, Layers, Moon, Sun, Laptop } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SettingsViewProps {
     isInstalled: boolean;
     onStatusChange: (status: boolean) => void;
+    theme: 'dark' | 'light' | 'system';
+    onThemeChange: (theme: 'dark' | 'light' | 'system') => void;
 }
 
-export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps) {
+export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange }: SettingsViewProps) {
     const [settings, setSettings] = useState<main.Settings | null>(null);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -142,6 +144,47 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                         >
                             {togglingMenu ? <Loader2 className="animate-spin h-4 w-4" /> : (isInstalled ? "Uninstall" : "Install")}
                         </button>
+                     </div>
+
+                     <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50">
+                        <div>
+                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Theme</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Customize the application appearance.
+                            </p>
+                        </div>
+                        <div className="flex bg-slate-200 dark:bg-slate-800 rounded-lg p-1 gap-1">
+                            <button
+                                onClick={() => onThemeChange('light')}
+                                className={cn(
+                                    "p-1.5 rounded-md transition-all",
+                                    theme === 'light' ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                                )}
+                                title="Light"
+                            >
+                                <Sun className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => onThemeChange('dark')}
+                                className={cn(
+                                    "p-1.5 rounded-md transition-all",
+                                    theme === 'dark' ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                                )}
+                                title="Dark"
+                            >
+                                <Moon className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => onThemeChange('system')}
+                                className={cn(
+                                    "p-1.5 rounded-md transition-all",
+                                    theme === 'system' ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                                )}
+                                title="System"
+                            >
+                                <Laptop className="w-4 h-4" />
+                            </button>
+                        </div>
                      </div>
                 </div>
 
