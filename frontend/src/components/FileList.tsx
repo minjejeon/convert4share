@@ -19,107 +19,107 @@ interface FileListProps {
     onClearCompleted: () => void;
 }
 
-// Optimized: Extract FileItemRow and wrap with React.memo to prevent
-// re-rendering of all items when only one item's progress updates.
 const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove: (id: string) => void; onCopy: (path: string) => void }) => {
-    // Extract filename and directory for better UX
-    // We handle both Windows (\) and Unix (/) separators
     const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
     const fileName = lastSeparatorIndex >= 0 ? file.path.substring(lastSeparatorIndex + 1) : file.path;
     const dirName = lastSeparatorIndex >= 0 ? file.path.substring(0, lastSeparatorIndex) : '';
 
     return (
         <div
-            className="flex items-center gap-4 bg-slate-800/40 hover:bg-slate-800/70 rounded-lg p-4 border border-slate-700/50 hover:border-slate-600 transition-all duration-200 group animate-in fade-in slide-in-from-bottom-2"
+            className="group flex items-center gap-4 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-200 animate-in fade-in slide-in-from-bottom-2"
         >
-            <div className="shrink-0 p-1.5 rounded-md bg-slate-800 ring-1 ring-slate-700/50 shadow-sm overflow-hidden w-[52px] h-[52px] flex items-center justify-center">
+            {/* Thumbnail / Icon */}
+            <div className="shrink-0 relative overflow-hidden w-12 h-12 rounded-lg bg-slate-900/50 ring-1 ring-white/5 flex items-center justify-center">
                 {file.thumbnail ? (
-                     <img src={file.thumbnail} alt={fileName} className="w-full h-full object-cover rounded-sm" />
+                     <img src={file.thumbnail} alt={fileName} className="w-full h-full object-cover" />
                 ) : (
                     fileName.toLowerCase().endsWith('.mov') ? (
-                        <FileVideo className="w-6 h-6 text-indigo-400" />
+                        <FileVideo className="w-6 h-6 text-indigo-400/80" />
                     ) : (
-                        <FileImage className="w-6 h-6 text-purple-400" />
+                        <FileImage className="w-6 h-6 text-purple-400/80" />
                     )
                 )}
             </div>
 
-            <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between mb-1.5 gap-4">
-                    <div className="min-w-0 flex-1 flex flex-col">
-                        <h3 className="text-sm font-medium text-slate-200 truncate" title={fileName}>
-                            {fileName}
-                        </h3>
-                        {dirName && (
-                             <p className="text-xs text-slate-500 truncate" title={dirName}>
-                                {dirName}
-                             </p>
-                        )}
+            {/* Info & Progress */}
+            <div className="min-w-0 flex-1 flex flex-col justify-center gap-2">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-sm font-medium text-slate-200 truncate" title={fileName}>
+                                {fileName}
+                            </h3>
+                            {dirName && (
+                                <span className="text-[10px] text-slate-500 truncate max-w-[150px]" title={dirName}>
+                                    {dirName}
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     <span className={cn(
-                        "text-xs font-medium px-2 py-0.5 rounded-full capitalize shrink-0 self-start mt-0.5",
-                        file.status === 'done' && "bg-emerald-500/10 text-emerald-400",
-                        file.status === 'processing' && "bg-blue-500/10 text-blue-400",
-                        file.status === 'error' && "bg-red-500/10 text-red-400",
-                        file.status === 'queued' && "bg-slate-700 text-slate-400",
+                        "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0",
+                        file.status === 'done' && "text-emerald-400 bg-emerald-500/10",
+                        file.status === 'processing' && "text-blue-400 bg-blue-500/10",
+                        file.status === 'error' && "text-red-400 bg-red-500/10",
+                        file.status === 'queued' && "text-slate-500 bg-slate-700/50",
                     )}>
                         {file.status === 'queued' ? 'Waiting' : file.status}
                     </span>
                 </div>
 
-                <div
-                    className="h-2 w-full bg-slate-700 rounded-full overflow-hidden"
-                    role="progressbar"
-                    aria-valuenow={file.progress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`Progress for ${fileName}`}
-                    aria-valuetext={`${file.status}: ${Math.round(file.progress)}%`}
-                >
-                    <div
-                        className={cn(
-                            "h-full transition-all duration-300 ease-out",
-                            file.status === 'error' ? "bg-red-500" : "bg-indigo-500",
-                            file.status === 'done' && "bg-emerald-500"
-                        )}
-                        style={{ width: `${file.progress}%` }}
-                    />
+                <div className="relative">
+                     <div
+                        className="h-1.5 w-full bg-slate-700/50 rounded-full overflow-hidden"
+                        role="progressbar"
+                        aria-valuenow={file.progress}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                    >
+                        <div
+                            className={cn(
+                                "h-full transition-all duration-300 ease-out rounded-full",
+                                file.status === 'error' ? "bg-red-500" : "bg-indigo-500",
+                                file.status === 'done' && "bg-emerald-500"
+                            )}
+                            style={{ width: `${file.progress}%` }}
+                        />
+                    </div>
+                    {file.error && (
+                        <p className="absolute top-2.5 left-0 text-xs text-red-400 flex items-center gap-1.5 animate-in fade-in">
+                            <AlertCircle className="w-3 h-3" />
+                            {file.error}
+                        </p>
+                    )}
                 </div>
-
-                {file.error && (
-                    <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1.5">
-                        <AlertCircle className="w-3 h-3" />
-                        {file.error}
-                    </p>
-                )}
             </div>
 
-            <div className="shrink-0 flex items-center gap-2">
+            {/* Actions */}
+            <div className="shrink-0 flex items-center gap-1 pl-2 border-l border-white/5">
                 {file.status === 'done' && file.destFile ? (
                     <button
                         onClick={() => onCopy(file.destFile!)}
-                        className="p-1.5 hover:bg-slate-700 rounded-full text-slate-400 hover:text-indigo-400 transition-colors"
+                        className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors"
                         title="Copy File"
                     >
                         <Copy className="w-4 h-4" />
                     </button>
                 ) : (
-                    <div className="w-7 h-7" aria-hidden="true" />
+                    <div className="w-8 h-8" />
                 )}
 
                 <button
                     onClick={() => onRemove(file.id)}
-                    className="p-1.5 hover:bg-slate-700 rounded-full text-slate-400 hover:text-red-400 transition-colors"
-                    title="Remove from queue"
+                    className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                    title="Remove"
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
 
-                <div className="w-5 h-5 flex items-center justify-center text-slate-500">
-                    {file.status === 'processing' && <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />}
-                    {file.status === 'done' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
-                    {file.status === 'error' && <XCircle className="w-5 h-5 text-red-400" />}
+                <div className="w-8 h-8 flex items-center justify-center text-slate-500 ml-1">
+                    {file.status === 'processing' && <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />}
+                    {file.status === 'done' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                    {file.status === 'error' && <XCircle className="w-5 h-5 text-red-500" />}
                 </div>
             </div>
         </div>
@@ -135,11 +135,11 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted }: FileList
     const completedFiles = files.filter(f => f.status === 'done');
 
     return (
-        <div className="space-y-8 mt-8">
+        <div className="space-y-8">
             {activeFiles.length > 0 && (
                 <div className="space-y-3">
-                     <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
-                        Queue <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md text-[10px]">{activeFiles.length}</span>
+                     <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1 flex items-center gap-2">
+                        Queue <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded text-[10px] min-w-[20px] text-center">{activeFiles.length}</span>
                     </h2>
                     <div className="space-y-2">
                         {activeFiles.map(file => (
@@ -151,15 +151,15 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted }: FileList
 
             {completedFiles.length > 0 && (
                 <div className="space-y-3">
-                    <div className="flex items-center justify-between mb-3 px-1">
-                        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                            Completed <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded-md text-[10px]">{completedFiles.length}</span>
+                    <div className="flex items-center justify-between px-1">
+                        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            Completed <span className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded text-[10px] min-w-[20px] text-center">{completedFiles.length}</span>
                         </h2>
                         <button
                             onClick={onClearCompleted}
-                            className="text-xs font-medium text-slate-500 hover:text-red-400 transition-colors flex items-center gap-1"
+                            className="text-[10px] font-medium text-slate-500 hover:text-red-400 transition-colors flex items-center gap-1.5 uppercase tracking-wide px-2 py-1 hover:bg-slate-800/50 rounded"
                         >
-                            <Trash2 className="w-3 h-3" /> Clear All
+                            <Trash2 className="w-3 h-3" /> Clear History
                         </button>
                     </div>
                     <div className="space-y-2">
