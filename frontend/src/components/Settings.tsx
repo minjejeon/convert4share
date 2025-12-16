@@ -111,21 +111,21 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
     return (
         <div className="max-w-2xl mx-auto space-y-8 pb-12">
             <div>
-                <h2 className="text-xl font-bold text-slate-100">Settings</h2>
-                <p className="text-slate-400 mt-1">Configure conversion parameters and system integration.</p>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Settings</h2>
+                <p className="text-slate-500 dark:text-slate-400 mt-1">Configure conversion parameters and system integration.</p>
             </div>
 
             <div className="space-y-6">
                 {/* Integration Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
-                     <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                        <Monitor className="h-4 w-4 text-indigo-400" />
+                <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors shadow-sm dark:shadow-none">
+                     <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                        <Monitor className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                         Windows Integration
                      </h3>
-                     <div className="flex items-center justify-between bg-slate-900/50 p-4 rounded-lg border border-slate-800/50">
+                     <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50">
                         <div>
-                            <p className="text-sm font-medium text-slate-200">Context Menu</p>
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Context Menu</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 {isInstalled ? "Currently installed. Right-click files to convert." : "Not installed. Install to add to right-click menu."}
                             </p>
                         </div>
@@ -135,8 +135,8 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                             className={cn(
                                 "px-4 py-2 text-xs font-semibold rounded-lg transition-all border flex items-center justify-center min-w-[90px] shadow-sm",
                                 isInstalled
-                                    ? "border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/30"
-                                    : "border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/30",
+                                    ? "border-red-500/20 text-red-500 dark:text-red-400 hover:bg-red-500/10 hover:border-red-500/30"
+                                    : "border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/30",
                                 togglingMenu && "opacity-50 cursor-wait"
                             )}
                         >
@@ -146,19 +146,19 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                 </div>
 
                 {/* Video Options Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors space-y-6">
-                    <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                        <Film className="h-4 w-4 text-purple-400" />
+                <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors space-y-6 shadow-sm dark:shadow-none">
+                    <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <Film className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                         Video Options
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                 <Cpu className="w-3 h-3" /> Hardware Accelerator
                             </label>
                             <select
-                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
+                                className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.hardwareAccelerator}
                                 onChange={(e) => setSettings({ ...settings, hardwareAccelerator: e.target.value })}
                             >
@@ -169,11 +169,11 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                 <Layers className="w-3 h-3" /> Quality Preset
                             </label>
                             <select
-                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
+                                className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.videoQuality || "high"}
                                 onChange={(e) => setSettings({ ...settings, videoQuality: e.target.value })}
                             >
@@ -184,21 +184,21 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">Concurrent Jobs</label>
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Concurrent Jobs</label>
                             <input
                                 type="number"
                                 min="1"
-                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
+                                className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.maxFfmpegWorkers || 1}
                                 onChange={(e) => setSettings({ ...settings, maxFfmpegWorkers: parseInt(e.target.value) || 1 })}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">Max Resolution (Size)</label>
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Max Resolution (Size)</label>
                              <input
                                 type="number"
-                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
+                                className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.maxSize}
                                 onChange={(e) => setSettings({ ...settings, maxSize: parseInt(e.target.value) || 0 })}
                                 placeholder="0 for original"
@@ -206,11 +206,11 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                         </div>
                     </div>
 
-                    <div className="space-y-2 pt-2 border-t border-slate-700/50">
-                        <label className="text-xs font-medium text-slate-400">Custom FFmpeg Arguments</label>
+                    <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700/50">
+                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Custom FFmpeg Arguments</label>
                          <input
                             type="text"
-                            className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 font-mono text-xs transition-shadow"
+                            className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 font-mono text-xs transition-shadow"
                             value={settings.ffmpegCustomArgs}
                             onChange={(e) => setSettings({ ...settings, ffmpegCustomArgs: e.target.value })}
                             placeholder="-crf 23 -preset slow"
@@ -219,32 +219,32 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                 </div>
 
                 {/* External Tools Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+                <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors shadow-sm dark:shadow-none">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                            <Sliders className="h-4 w-4 text-emerald-400" />
+                        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <Sliders className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             External Tools
                         </h3>
                         <button
                             onClick={handleDetect}
-                            className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700/50 text-slate-300 transition-colors shadow-sm"
+                            className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 transition-colors shadow-sm"
                         >
                             <Search className="w-3 h-3" /> Auto-Detect
                         </button>
                     </div>
                     <div className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">FFmpeg Binary Path</label>
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">FFmpeg Binary Path</label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
+                                    className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
                                     value={settings.ffmpegBinary}
                                     onChange={(e) => setSettings({ ...settings, ffmpegBinary: e.target.value })}
                                 />
                                 <button
                                     onClick={() => handleBrowse('ffmpegBinary')}
-                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 border border-slate-600 transition-colors shadow-sm"
+                                    className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
                                     title="Browse..."
                                 >
                                     <FolderOpen className="w-4 h-4" />
@@ -252,17 +252,17 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">Magick Binary Path</label>
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Magick Binary Path</label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
+                                    className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
                                     value={settings.magickBinary}
                                     onChange={(e) => setSettings({ ...settings, magickBinary: e.target.value })}
                                 />
                                 <button
                                     onClick={() => handleBrowse('magickBinary')}
-                                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 border border-slate-600 transition-colors shadow-sm"
+                                    className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
                                     title="Browse..."
                                 >
                                     <FolderOpen className="w-4 h-4" />
@@ -273,26 +273,26 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                 </div>
 
                 {/* Paths Card */}
-                <div className="bg-slate-800/40 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
-                     <h3 className="text-sm font-semibold text-slate-200 mb-6 flex items-center gap-2">
-                        <FolderOpen className="h-4 w-4 text-blue-400" />
+                <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors shadow-sm dark:shadow-none">
+                     <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2">
+                        <FolderOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         Paths & Filters
                      </h3>
                      <div className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">Default Destination Directory</label>
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Default Destination Directory</label>
                             <input
                                 type="text"
-                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono transition-shadow"
+                                className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono transition-shadow"
                                 value={settings.defaultDestDir}
                                 onChange={(e) => setSettings({ ...settings, defaultDestDir: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">Exclude Patterns (comma separated)</label>
+                            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Exclude Patterns (comma separated)</label>
                              <input
                                 type="text"
-                                className="block w-full rounded-lg bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
+                                className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                                 value={settings.excludePatterns?.join(', ')}
                                 onChange={(e) => setSettings({ ...settings, excludePatterns: e.target.value.split(',').map(s => s.trim()) })}
                                 placeholder="e.g. \Pictures\, \DCIM\"
@@ -301,7 +301,7 @@ export function SettingsView({ isInstalled, onStatusChange }: SettingsViewProps)
                      </div>
                 </div>
 
-                <div className="flex justify-end pt-4 sticky bottom-0 bg-slate-950/80 backdrop-blur-sm p-4 -mx-4 -mb-4 border-t border-white/5">
+                <div className="flex justify-end pt-4 sticky bottom-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-sm p-4 -mx-4 -mb-4 border-t border-slate-200 dark:border-white/5">
                     <button
                         onClick={handleSave}
                         disabled={saving || saved}
