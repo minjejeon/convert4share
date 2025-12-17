@@ -1,0 +1,97 @@
+
+> frontend@0.0.0 dev
+> vite
+
+
+  VITE v7.2.7  ready in 396 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+4:24:15 AM [vite] (client) hmr update /src/components/Layout.tsx, /src/index.css
+4:24:52 AM [vite] (client) hmr update /src/components/FileList.tsx, /src/index.css
+4:25:00 AM [vite] (client) Pre-transform error: /app/frontend/src/components/FileList.tsx: Unexpected token, expected "}" (234:12)
+
+  232 |                     />
+  233 |                 )}
+> 234 |             </AutoSizer>
+      |             ^
+  235 |         </div>
+  236 |     );
+  237 | }
+  Plugin: vite:react-babel
+  File: /app/frontend/src/components/FileList.tsx:234:12
+  232 |                      />
+  233 |                  )}
+  234 |              </AutoSizer>
+      |              ^
+  235 |          </div>
+  236 |      );
+4:25:00 AM [vite] Internal server error: /app/frontend/src/components/FileList.tsx: Unexpected token, expected "}" (234:12)
+
+  232 |                     />
+  233 |                 )}
+> 234 |             </AutoSizer>
+      |             ^
+  235 |         </div>
+  236 |     );
+  237 | }
+  Plugin: vite:react-babel
+  File: /app/frontend/src/components/FileList.tsx:234:12
+  232 |                      />
+  233 |                  )}
+  234 |              </AutoSizer>
+      |              ^
+  235 |          </div>
+  236 |      );
+      at constructor (/app/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+      at TypeScriptParserMixin.raise (/app/frontend/node_modules/@babel/parser/lib/index.js:6624:19)
+      at TypeScriptParserMixin.unexpected (/app/frontend/node_modules/@babel/parser/lib/index.js:6644:16)
+      at TypeScriptParserMixin.expect (/app/frontend/node_modules/@babel/parser/lib/index.js:6924:12)
+      at TypeScriptParserMixin.jsxParseExpressionContainer (/app/frontend/node_modules/@babel/parser/lib/index.js:4666:10)
+      at TypeScriptParserMixin.jsxParseElementAt (/app/frontend/node_modules/@babel/parser/lib/index.js:4740:36)
+      at TypeScriptParserMixin.jsxParseElementAt (/app/frontend/node_modules/@babel/parser/lib/index.js:4727:32)
+      at TypeScriptParserMixin.jsxParseElement (/app/frontend/node_modules/@babel/parser/lib/index.js:4778:17)
+      at TypeScriptParserMixin.parseExprAtom (/app/frontend/node_modules/@babel/parser/lib/index.js:4788:19)
+      at TypeScriptParserMixin.parseExprSubscripts (/app/frontend/node_modules/@babel/parser/lib/index.js:11145:23)
+      at TypeScriptParserMixin.parseUpdate (/app/frontend/node_modules/@babel/parser/lib/index.js:11130:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/app/frontend/node_modules/@babel/parser/lib/index.js:11110:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/app/frontend/node_modules/@babel/parser/lib/index.js:9890:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/app/frontend/node_modules/@babel/parser/lib/index.js:10963:61)
+      at TypeScriptParserMixin.parseExprOps (/app/frontend/node_modules/@babel/parser/lib/index.js:10968:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/app/frontend/node_modules/@babel/parser/lib/index.js:10945:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/app/frontend/node_modules/@babel/parser/lib/index.js:10895:21)
+      at /app/frontend/node_modules/@babel/parser/lib/index.js:9828:39
+      at TypeScriptParserMixin.tryParse (/app/frontend/node_modules/@babel/parser/lib/index.js:6932:20)
+      at TypeScriptParserMixin.parseMaybeAssign (/app/frontend/node_modules/@babel/parser/lib/index.js:9828:18)
+      at /app/frontend/node_modules/@babel/parser/lib/index.js:10864:39
+      at TypeScriptParserMixin.allowInAnd (/app/frontend/node_modules/@babel/parser/lib/index.js:12500:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/app/frontend/node_modules/@babel/parser/lib/index.js:10864:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (/app/frontend/node_modules/@babel/parser/lib/index.js:12567:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/app/frontend/node_modules/@babel/parser/lib/index.js:11747:28)
+      at TypeScriptParserMixin.parseExprAtom (/app/frontend/node_modules/@babel/parser/lib/index.js:11395:23)
+      at TypeScriptParserMixin.parseExprAtom (/app/frontend/node_modules/@babel/parser/lib/index.js:4793:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/app/frontend/node_modules/@babel/parser/lib/index.js:11145:23)
+      at TypeScriptParserMixin.parseUpdate (/app/frontend/node_modules/@babel/parser/lib/index.js:11130:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/app/frontend/node_modules/@babel/parser/lib/index.js:11110:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/app/frontend/node_modules/@babel/parser/lib/index.js:9890:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/app/frontend/node_modules/@babel/parser/lib/index.js:10963:61)
+      at TypeScriptParserMixin.parseExprOps (/app/frontend/node_modules/@babel/parser/lib/index.js:10968:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/app/frontend/node_modules/@babel/parser/lib/index.js:10945:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/app/frontend/node_modules/@babel/parser/lib/index.js:10895:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/app/frontend/node_modules/@babel/parser/lib/index.js:9839:20)
+      at TypeScriptParserMixin.parseExpressionBase (/app/frontend/node_modules/@babel/parser/lib/index.js:10848:23)
+      at /app/frontend/node_modules/@babel/parser/lib/index.js:10844:39
+      at TypeScriptParserMixin.allowInAnd (/app/frontend/node_modules/@babel/parser/lib/index.js:12495:16)
+      at TypeScriptParserMixin.parseExpression (/app/frontend/node_modules/@babel/parser/lib/index.js:10844:17)
+      at TypeScriptParserMixin.parseReturnStatement (/app/frontend/node_modules/@babel/parser/lib/index.js:13218:28)
+      at TypeScriptParserMixin.parseStatementContent (/app/frontend/node_modules/@babel/parser/lib/index.js:12874:21)
+      at TypeScriptParserMixin.parseStatementContent (/app/frontend/node_modules/@babel/parser/lib/index.js:9569:18)
+      at TypeScriptParserMixin.parseStatementLike (/app/frontend/node_modules/@babel/parser/lib/index.js:12843:17)
+      at TypeScriptParserMixin.parseStatementListItem (/app/frontend/node_modules/@babel/parser/lib/index.js:12823:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/app/frontend/node_modules/@babel/parser/lib/index.js:13392:61)
+      at TypeScriptParserMixin.parseBlockBody (/app/frontend/node_modules/@babel/parser/lib/index.js:13385:10)
+      at TypeScriptParserMixin.parseBlock (/app/frontend/node_modules/@babel/parser/lib/index.js:13373:10)
+      at TypeScriptParserMixin.parseFunctionBody (/app/frontend/node_modules/@babel/parser/lib/index.js:12174:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (/app/frontend/node_modules/@babel/parser/lib/index.js:12160:10)
+4:26:46 AM [vite] (client) hmr update /src/components/FileList.tsx, /src/index.css
+4:27:50 AM [vite] (client) hmr update /src/components/FileList.tsx, /src/index.css

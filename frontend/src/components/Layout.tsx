@@ -9,8 +9,8 @@ interface LayoutProps {
 
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30">
-            <header className="h-14 border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md sticky top-0 z-50 select-none drag-region">
+        <div className="h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 overflow-hidden">
+            <header className="h-14 border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md sticky top-0 z-50 select-none drag-region shrink-0">
                 <div className="flex items-center gap-2.5">
                     <div className="bg-indigo-50 dark:bg-indigo-500/10 p-1.5 rounded-lg ring-1 ring-inset ring-indigo-500/20">
                         <CheckCircle2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -41,7 +41,7 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
                     </button>
                 </nav>
             </header>
-            <main className="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            <main className="flex-1 overflow-hidden relative">
                 {children}
             </main>
         </div>
