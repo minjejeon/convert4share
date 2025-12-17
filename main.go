@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/minjejeon/convert4share/cmd"
@@ -68,8 +69,20 @@ func main() {
 
 	app := NewApp()
 
+	exePath, err := os.Executable()
+	if err != nil {
+		logger.Error("Error getting executable path", "error", err)
+	}
+
 	if len(os.Args) > 1 {
 		for _, arg := range os.Args[1:] {
+			if exePath != "" {
+				if absArg, err := filepath.Abs(arg); err == nil && strings.EqualFold(absArg, exePath) {
+					logger.Info("Skipping executable path in args", "arg", arg)
+					continue
+				}
+			}
+
 			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 				if absArg, err := filepath.Abs(arg); err == nil {
 					app.pendingFiles = append(app.pendingFiles, absArg)
@@ -80,7 +93,7 @@ func main() {
 		}
 	}
 
-	err := wails.Run(&options.App{
+	err = wails.Run(&options.App{
 		Title:  "Convert4Share",
 		Width:  1024,
 		Height: 768,

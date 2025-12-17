@@ -23,6 +23,7 @@ type App struct {
 	cfg          *converter.Config
 	pendingFiles []string
 	mu           sync.Mutex
+	destMu       sync.Mutex
 	isReady      bool
 	processTimer *time.Timer
 	jobCancels   map[string]context.CancelFunc
@@ -224,6 +225,7 @@ func (a *App) CancelJob(id string) {
 		cancel()
 		delete(a.jobCancels, id)
 	}
+	a.pauseCond.Broadcast()
 }
 
 func (a *App) PauseQueue() {
@@ -386,11 +388,24 @@ func (a *App) ConvertFiles(files []string) {
 				defer wg.Done()
 
 				a.mu.Lock()
-				for a.isPaused {
-					a.pauseCond.Wait()
-				}
 				jobCtx, cancel := context.WithCancel(a.ctx)
 				a.jobCancels[src] = cancel
+
+				for a.isPaused {
+					if jobCtx.Err() != nil {
+						delete(a.jobCancels, src)
+						a.mu.Unlock()
+						cancel()
+						return
+					}
+					a.pauseCond.Wait()
+				}
+				if jobCtx.Err() != nil {
+					delete(a.jobCancels, src)
+					a.mu.Unlock()
+					cancel()
+					return
+				}
 				a.mu.Unlock()
 
 				defer func() {
@@ -404,7 +419,7 @@ func (a *App) ConvertFiles(files []string) {
 				var dest string
 
 				if extension == ".mov" {
-					dest, err = resolveDestination(destDir, stem, ".mp4", collisionOption)
+					dest, err = a.resolveDestination(destDir, stem, ".mp4", collisionOption)
 					if err != nil {
 						reporter(src, "", 100, "error", err.Error())
 						return
@@ -423,7 +438,7 @@ func (a *App) ConvertFiles(files []string) {
 						reporter(src, dest, progress, "processing", "")
 					})
 				} else if extension == ".heic" {
-					dest, err = resolveDestination(destDir, stem, ".jpg", collisionOption)
+					dest, err = a.resolveDestination(destDir, stem, ".jpg", collisionOption)
 					if err != nil {
 						reporter(src, "", 100, "error", err.Error())
 						return
@@ -460,8 +475,21 @@ func (a *App) ConvertFiles(files []string) {
 	}()
 }
 
-func resolveDestination(dir, name, ext, collisionOption string) (string, error) {
+func (a *App) resolveDestination(dir, name, ext, collisionOption string) (string, error) {
+	a.destMu.Lock()
+	defer a.destMu.Unlock()
+
 	dest := filepath.Join(dir, name+ext)
+
+	// Helper to create empty file atomically
+	createPlaceholder := func(path string) bool {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL, 0666)
+		if err == nil {
+			f.Close()
+			return true
+		}
+		return false
+	}
 
 	if collisionOption == "overwrite" {
 		return dest, nil
@@ -469,11 +497,15 @@ func resolveDestination(dir, name, ext, collisionOption string) (string, error) 
 
 	info, err := os.Stat(dest)
 	if os.IsNotExist(err) {
-		return dest, nil
+		if createPlaceholder(dest) {
+			return dest, nil
+		}
+		// Refresh info if creation failed (race lost)
+		info, err = os.Stat(dest)
 	}
 
 	// If file exists and is 0 bytes, overwrite it
-	if err == nil && info.Size() == 0 {
+	if err == nil && info != nil && info.Size() == 0 {
 		return dest, nil
 	}
 
@@ -484,7 +516,7 @@ func resolveDestination(dir, name, ext, collisionOption string) (string, error) 
 	// Default to "rename"
 	for i := 1; ; i++ {
 		d := filepath.Join(dir, fmt.Sprintf("%s (%d)%s", name, i, ext))
-		if _, err := os.Stat(d); os.IsNotExist(err) {
+		if createPlaceholder(d) {
 			return d, nil
 		}
 	}
