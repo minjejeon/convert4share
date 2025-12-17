@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -33,7 +34,8 @@ func initLogger() {
 		return
 	}
 
-	logPath := filepath.Join(filepath.Dir(exePath), "convert4share-debug.log")
+	// Use PID in log filename to prevent file locking issues when multiple instances start simultaneously
+	logPath := filepath.Join(filepath.Dir(exePath), fmt.Sprintf("convert4share-debug-%d.log", os.Getpid()))
 	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		// Can't open log file, log to stderr
@@ -109,7 +111,7 @@ func main() {
 			app,
 		},
 		SingleInstanceLock: &options.SingleInstanceLock{
-			UniqueId:               "50bfe626-4f09-4128-bbf1-c2612babf410",
+			UniqueId:               "3310d829-dc96-4613-af1a-a5353d9f07a6",
 			OnSecondInstanceLaunch: app.OnSecondInstanceLaunch,
 		},
 		Windows: &windows.Options{

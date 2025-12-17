@@ -582,6 +582,8 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
+	logger.Info("Processing second instance args", "count", len(secondInstanceData.Args))
+
 	if len(secondInstanceData.Args) > 0 {
 		files := secondInstanceData.Args
 		var actualFiles []string
@@ -618,7 +620,7 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 	if a.processTimer != nil {
 		a.processTimer.Stop()
 	}
-	a.processTimer = time.AfterFunc(200*time.Millisecond, func() {
+	a.processTimer = time.AfterFunc(500*time.Millisecond, func() {
 		a.handleSecondInstance()
 	})
 }
