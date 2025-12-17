@@ -1,5 +1,13 @@
 # Configuration for Convert4Share
 
+# Path to the ImageMagick executable.
+# If not set or invalid, the application will attempt to auto-detect it.
+magickBinary: "magick"
+
+# Path to the FFmpeg executable.
+# If not set or invalid, the application will attempt to auto-detect it.
+ffmpegBinary: "ffmpeg"
+
 # A list of path patterns. If a source file's path contains one of these strings,
 # the output will be saved to the `defaultDestDir` instead of the source directory.
 excludeStringPatterns: []
@@ -16,10 +24,15 @@ defaultDestDir: "$HOMEDRIVE/$HOMEPATH/Pictures"
 
 # Hardware accelerator to use for video encoding.
 # Supported values: "amd", "nvidia", "none".
-# If this key is missing or the file doesn't exist, the application will
-# attempt to auto-detect the GPU and create a config file.
 # If set to "none" or an unknown value, the software encoder (libx264) will be used.
 hardwareAccelerator: "none"
+
+# Video quality preset.
+# Supported values: "high", "medium", "low".
+# - high: ~5Mbps bitrate (Default)
+# - medium: ~2.5Mbps bitrate
+# - low: ~1Mbps bitrate
+videoQuality: "high"
 
 # Video scaling option for ffmpeg.
 # The video will be resized to fit within a `maxSize` x `maxSize` square,
@@ -34,6 +47,14 @@ maxMagickWorkers: 5
 # Number of concurrent workers for video conversion.
 # It is recommended to keep this at 1 to ensure stability and avoid excessive resource usage.
 maxFfmpegWorkers: 1
+
+# File collision resolution option.
+# Determines what happens when the destination file already exists.
+# Supported values:
+# - "rename": Auto-renames the new file (e.g., file (1).mp4). (Default)
+# - "overwrite": Overwrites the existing file.
+# - "error": Skips the file and reports an error.
+collisionOption: "rename"
 
 # Additional custom arguments for ffmpeg.
 # These arguments will be added to the ffmpeg command line.
