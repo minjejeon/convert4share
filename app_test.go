@@ -7,6 +7,7 @@ import (
 )
 
 func TestResolveDestination(t *testing.T) {
+	app := NewApp()
 	// Create a temp directory
 	tempDir, err := os.MkdirTemp("", "convert4share-test")
 	if err != nil {
@@ -19,7 +20,7 @@ func TestResolveDestination(t *testing.T) {
 	ext := ".mp4"
 	expected := filepath.Join(tempDir, "testfile.mp4")
 
-	dest, err := resolveDestination(tempDir, name, ext, "rename")
+	dest, err := app.resolveDestination(tempDir, name, ext, "rename")
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -34,7 +35,7 @@ func TestResolveDestination(t *testing.T) {
 	}
 
 	expectedRename := filepath.Join(tempDir, "testfile (1).mp4")
-	dest, err = resolveDestination(tempDir, name, ext, "rename")
+	dest, err = app.resolveDestination(tempDir, name, ext, "rename")
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -47,7 +48,7 @@ func TestResolveDestination(t *testing.T) {
 		t.Fatalf("Failed to create file: %v", err)
 	}
     expectedRename2 := filepath.Join(tempDir, "testfile (2).mp4")
-	dest, err = resolveDestination(tempDir, name, ext, "rename")
+	dest, err = app.resolveDestination(tempDir, name, ext, "rename")
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -57,7 +58,7 @@ func TestResolveDestination(t *testing.T) {
 
 
 	// Case 3: File exists, overwrite
-	dest, err = resolveDestination(tempDir, name, ext, "overwrite")
+	dest, err = app.resolveDestination(tempDir, name, ext, "overwrite")
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
@@ -66,7 +67,7 @@ func TestResolveDestination(t *testing.T) {
 	}
 
 	// Case 4: File exists, error
-	_, err = resolveDestination(tempDir, name, ext, "error")
+	_, err = app.resolveDestination(tempDir, name, ext, "error")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -74,7 +75,7 @@ func TestResolveDestination(t *testing.T) {
     // Case 5: File does not exist, error option (should proceed)
     // Delete the file first
     os.Remove(expected)
-    dest, err = resolveDestination(tempDir, name, ext, "error")
+    dest, err = app.resolveDestination(tempDir, name, ext, "error")
     if err != nil {
         t.Errorf("Unexpected error: %v", err)
     }
@@ -86,7 +87,7 @@ func TestResolveDestination(t *testing.T) {
 	if err := os.WriteFile(expected, []byte(""), 0644); err != nil {
 		t.Fatalf("Failed to create 0-byte file: %v", err)
 	}
-	dest, err = resolveDestination(tempDir, name, ext, "rename")
+	dest, err = app.resolveDestination(tempDir, name, ext, "rename")
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
