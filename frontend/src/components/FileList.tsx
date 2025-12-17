@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2 } from 'lucide-react';
+import React, { memo, useState } from 'react';
+import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export interface FileItem {
@@ -20,9 +20,16 @@ interface FileListProps {
 }
 
 const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove: (id: string) => void; onCopy: (path: string) => void }) => {
+    const [isCopied, setIsCopied] = useState(false);
     const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
     const fileName = lastSeparatorIndex >= 0 ? file.path.substring(lastSeparatorIndex + 1) : file.path;
     const dirName = lastSeparatorIndex >= 0 ? file.path.substring(0, lastSeparatorIndex) : '';
+
+    const handleCopy = () => {
+        onCopy(file.destFile!);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
 
     return (
         <div
@@ -98,11 +105,17 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
             <div className="shrink-0 flex items-center gap-1 pl-2 border-l border-slate-200 dark:border-white/5">
                 {file.status === 'done' && file.destFile ? (
                     <button
-                        onClick={() => onCopy(file.destFile!)}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        title="Copy File"
+                        onClick={handleCopy}
+                        className={cn(
+                            "p-2 rounded-lg transition-colors",
+                            isCopied
+                                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+                                : "text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                        )}
+                        title={isCopied ? "Copied!" : "Copy File"}
+                        aria-label="Copy file to clipboard"
                     >
-                        <Copy className="w-4 h-4" />
+                        {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </button>
                 ) : (
                     <div className="w-8 h-8" />
@@ -112,6 +125,7 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                     onClick={() => onRemove(file.id)}
                     className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                     title="Remove"
+                    aria-label="Remove file from queue"
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
