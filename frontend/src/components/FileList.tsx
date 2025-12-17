@@ -213,9 +213,9 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, 
                                     onChange={(e) => setSortField(e.target.value as any)}
                                     className="bg-transparent text-[10px] font-medium uppercase tracking-wide text-slate-600 dark:text-slate-300 px-2 py-0.5 outline-none border-none cursor-pointer hover:bg-white/50 dark:hover:bg-black/20 rounded"
                                 >
-                                    <option value="completed">Completed Time</option>
-                                    <option value="added">Created Time</option>
-                                    <option value="name">Name</option>
+                                    <option className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200" value="completed">Completed Time</option>
+                                    <option className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200" value="added">Created Time</option>
+                                    <option className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200" value="name">Name</option>
                                 </select>
                                 <button
                                     onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
