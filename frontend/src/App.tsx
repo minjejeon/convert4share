@@ -5,7 +5,7 @@ import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
 import { SettingsView } from './components/Settings';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, UploadCloud } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
 interface ProgressData {
@@ -21,6 +21,7 @@ function App() {
     const [files, setFiles] = useState<FileItem[]>([]);
     const [isInstalled, setIsInstalled] = useState<boolean>(true);
     const [isInstalling, setIsInstalling] = useState<boolean>(false);
+    const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
     const { theme, setTheme } = useTheme();
 
     const addFile = (path: string) => {
@@ -77,10 +78,19 @@ function App() {
             }));
         });
 
+        const handleWindowDragEnter = (e: DragEvent) => {
+            if (e.dataTransfer?.types.includes('Files')) {
+                setIsDraggingGlobal(true);
+            }
+        };
+
+        window.addEventListener('dragenter', handleWindowDragEnter);
+
         return () => {
             cleanupFileAdded();
             cleanupFilesReceived();
             cleanupProgress();
+            window.removeEventListener('dragenter', handleWindowDragEnter);
         };
     }, []);
 
@@ -123,8 +133,34 @@ function App() {
         }
     };
 
+    const handleGlobalDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDraggingGlobal(false);
+        if (e.dataTransfer.files.length > 0) {
+            const paths = Array.from(e.dataTransfer.files).map((f: any) => f.path || f.name);
+            paths.filter(p => p).forEach(addFile);
+        }
+    };
+
     return (
         <Layout currentView={view} onNavigate={setView}>
+            {isDraggingGlobal && (
+                <div
+                    className="fixed inset-0 z-[100] bg-indigo-500/10 backdrop-blur-sm border-4 border-indigo-500 border-dashed m-4 rounded-2xl flex items-center justify-center animate-in fade-in duration-200"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDragLeave={() => setIsDraggingGlobal(false)}
+                    onDrop={handleGlobalDrop}
+                >
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-full shadow-2xl pointer-events-none transform transition-transform animate-bounce">
+                        <UploadCloud className="w-16 h-16 text-indigo-500" />
+                    </div>
+                    <div className="absolute bottom-1/4 pointer-events-none bg-white/90 dark:bg-slate-900/90 px-6 py-3 rounded-full shadow-lg backdrop-blur-md">
+                         <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Drop files anywhere</h2>
+                    </div>
+                </div>
+            )}
+
             {view === 'home' && (
                 <div className="max-w-3xl mx-auto pb-12 flex flex-col gap-8">
                      {!isInstalled && (
@@ -152,7 +188,10 @@ function App() {
                             </button>
                         </div>
                     )}
-                    <DropZone />
+                    <DropZone
+                        onFilesAdded={(paths) => paths.forEach(addFile)}
+                        isCompact={files.length > 0}
+                    />
                     <FileList files={files} onRemove={handleRemove} onCopy={handleCopy} onClearCompleted={handleClearCompleted} />
                 </div>
             )}
