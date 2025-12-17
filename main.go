@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/minjejeon/convert4share/cmd"
+	"github.com/minjejeon/convert4share/internal/share"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -67,6 +68,11 @@ func main() {
 	logger.Info("--------------------")
 	logger.Info("App launched", "time", time.Now().String())
 	logger.Info("Arguments", "args", os.Args)
+
+	// Check for Share Target activation (WinRT)
+	if share.CheckActivation() {
+		logger.Info("Share Target activation detected", "new_args", os.Args)
+	}
 
 	if len(os.Args) > 1 {
 		switch os.Args[1] {

@@ -12,6 +12,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 -   **Backend**: Go (Wails framework)
 -   **Frontend**: React, TypeScript, Vite, Tailwind CSS (v4)
 -   **Package Manager**: `npm` (Enforced. Do not use `pnpm` or `yarn` for frontend dependencies).
+-   **Task Runner**: `Taskfile` (Taskfile.yml) for common operations.
 -   **OS**: Windows (Target), but development environment might be Linux/macOS (requiring conditional builds).
 
 ## Architecture & Coding Guidelines
@@ -50,6 +51,10 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 -   **Context Menu**: Uses `SystemFileAssociations` (Classic) and `OpenWithProgids` (Win11).
 -   **Clipboard**: `CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`.
     -   **Escaping**: Sanitize paths in PowerShell commands by replacing `'` with `''`.
+-   **Packaging & Share Target**:
+    -   **MSIX**: Use `packaging/Package.appxmanifest`.
+    -   **WinRT Bindings**: Run `task gen-winrt` (or `go generate ./internal/winrt`) to generate bindings.
+    -   **Activation**: `internal/share/share_windows.go` handles Share Target activation. Build with `task build-winrt` (or `-tags winrt`).
 
 ## Instructions for Agents
 

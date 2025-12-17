@@ -1,0 +1,28 @@
+version: '3'
+
+tasks:
+  dev:
+    desc: Run Wails in dev mode
+    cmds:
+      - wails dev
+
+  build:
+    desc: Build the application
+    cmds:
+      - wails build
+
+  deps:
+    desc: Install dependencies
+    cmds:
+      - go mod tidy
+      - cd frontend && npm install
+
+  gen-winrt:
+    desc: Generate WinRT bindings (Requires Windows SDK)
+    cmds:
+      - go generate ./internal/winrt
+
+  build-winrt:
+    desc: Build with Share Target support
+    cmds:
+      - wails build -tags winrt

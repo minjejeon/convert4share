@@ -10,7 +10,10 @@ require (
 	golang.org/x/sys v0.30.0
 )
 
-require github.com/wailsapp/wails/v2 v2.11.0
+require (
+	github.com/saltosystems/winrt-go v0.0.0-20241223121953-98e32661f6ff
+	github.com/wailsapp/wails/v2 v2.11.0
+)
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect
