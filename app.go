@@ -445,6 +445,9 @@ func (a *App) ConvertFiles(files []string) {
 				}
 
 				if err != nil {
+					if dest != "" {
+						os.Remove(dest)
+					}
 					reporter(src, dest, 100, "error", err.Error())
 				} else {
 					reporter(src, dest, 100, "done", "")

@@ -30,8 +30,8 @@ type Config struct {
 type ProgressCallback func(progress int)
 
 var (
-	durationRegex = regexp.MustCompile(`Duration: (\d+):(\d{2}):(\d{2})\.(\d{2})`)
-	timeRegex     = regexp.MustCompile(`time=(\d+):(\d{2}):(\d{2})\.(\d{2})`)
+	durationRegex = regexp.MustCompile(`Duration: (\d+):(\d{2}):(\d{2})\.(\d+)`)
+	timeRegex     = regexp.MustCompile(`time=(\d+):(\d{2}):(\d{2})\.(\d+)`)
 )
 
 func (c *Config) Magick(ctx context.Context, orig, dest string) error {
@@ -200,8 +200,17 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 					h, _ := strconv.Atoi(matches[1])
 					m, _ := strconv.Atoi(matches[2])
 					s, _ := strconv.Atoi(matches[3])
-					ms, _ := strconv.Atoi(matches[4])
-					duration = time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(ms*10)*time.Millisecond
+
+					fractionStr := matches[4]
+					if len(fractionStr) > 9 {
+						fractionStr = fractionStr[:9]
+					}
+					for len(fractionStr) < 9 {
+						fractionStr += "0"
+					}
+					nanos, _ := strconv.Atoi(fractionStr)
+
+					duration = time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(nanos)*time.Nanosecond
 					log.Printf("Detected video duration: %s", duration)
 				}
 			}
@@ -212,8 +221,17 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 					h, _ := strconv.Atoi(matches[1])
 					m, _ := strconv.Atoi(matches[2])
 					s, _ := strconv.Atoi(matches[3])
-					ms, _ := strconv.Atoi(matches[4])
-					currentTime := time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(ms*10)*time.Millisecond
+
+					fractionStr := matches[4]
+					if len(fractionStr) > 9 {
+						fractionStr = fractionStr[:9]
+					}
+					for len(fractionStr) < 9 {
+						fractionStr += "0"
+					}
+					nanos, _ := strconv.Atoi(fractionStr)
+
+					currentTime := time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(nanos)*time.Nanosecond
 
 					progress := int((float64(currentTime) / float64(duration)) * 100)
 					if progress > 100 {
