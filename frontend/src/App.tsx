@@ -28,7 +28,7 @@ function App() {
     const addFile = (path: string) => {
         setFiles(prev => {
             if (prev.some(f => f.path === path)) return prev;
-            return [...prev, { id: path, path, status: 'queued', progress: 0 }];
+            return [...prev, { id: path, path, status: 'queued', progress: 0, addedAt: Date.now() }];
         });
 
         // Fetch thumbnail
@@ -68,12 +68,15 @@ function App() {
         const cleanupProgress = EventsOn("conversion-progress", (data: ProgressData) => {
             setFiles(prev => prev.map(f => {
                 if (f.id === data.file) {
+                    const now = Date.now();
+                    const isDone = data.status === 'done';
                     return {
                         ...f,
                         status: data.status,
                         progress: data.progress,
                         error: data.error,
-                        destFile: data.destFile
+                        destFile: data.destFile,
+                        completedAt: isDone && !f.completedAt ? now : f.completedAt
                     };
                 }
                 return f;
