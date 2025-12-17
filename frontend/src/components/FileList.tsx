@@ -98,10 +98,12 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                             />
                         </div>
                         {file.error && (
-                            <p className="absolute top-2.5 left-0 text-xs text-red-500 dark:text-red-400 flex items-center gap-1.5 animate-in fade-in">
-                                <AlertCircle className="w-3 h-3" />
-                                {file.error}
-                            </p>
+                            <div className="mt-2 w-full text-xs text-red-500 dark:text-red-400 flex items-start gap-1.5 animate-in fade-in" title={file.error}>
+                                <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                                <span className="break-all line-clamp-3">
+                                    {file.error}
+                                </span>
+                            </div>
                         )}
                     </div>
                 </div>
