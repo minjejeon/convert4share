@@ -26,3 +26,23 @@ tasks:
     desc: Build with Share Target support
     cmds:
       - wails build -tags winrt
+
+  release:
+    desc: Build for release with optimizations and WinRT support
+    deps: [gen-winrt]
+    cmds:
+      - wails build -platform windows/amd64 -clean -ldflags "-s -w" -tags winrt
+
+  package:
+    desc: Create MSIX package (Requires Windows SDK)
+    deps: [release]
+    cmds:
+      - powershell -Command "if (Test-Path dist/msix) { Remove-Item -Recurse -Force dist/msix }"
+      - powershell -Command "New-Item -ItemType Directory -Force -Path dist/msix/Assets"
+      - powershell -Command "Copy-Item build/bin/convert4share.exe -Destination dist/msix/"
+      - powershell -Command "Copy-Item packaging/Package.appxmanifest -Destination dist/msix/AppxManifest.xml"
+      - powershell -Command "Copy-Item build/appicon.png -Destination dist/msix/Assets/StoreLogo.png"
+      - powershell -Command "Copy-Item build/appicon.png -Destination dist/msix/Assets/Square150x150Logo.png"
+      - powershell -Command "Copy-Item build/appicon.png -Destination dist/msix/Assets/Square44x44Logo.png"
+      - powershell -Command "MakeAppx pack /d dist/msix /p dist/Convert4Share.msix /o"
+      - echo "MSIX package created at dist/Convert4Share.msix"
