@@ -161,25 +161,6 @@ const Header = ({ title, count, children }: any) => (
     </div>
 );
 
-const getGroupKey = (file: FileItem, field: 'name' | 'added' | 'completed') => {
-    if (field === 'name') {
-        const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
-        const fileName = lastSeparatorIndex >= 0 ? file.path.substring(lastSeparatorIndex + 1) : file.path;
-        return fileName.charAt(0).toUpperCase();
-    }
-    const ts = field === 'added' ? file.addedAt : file.completedAt;
-    if (!ts) return 'Unknown';
-    const d = new Date(ts);
-    const now = new Date();
-    d.setHours(0, 0, 0, 0);
-    now.setHours(0, 0, 0, 0);
-    const diff = Math.round((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    return d.toLocaleDateString();
-};
-
 export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, onPause, onResume }: FileListProps) {
     const activeFiles = files.filter(f => f.status !== 'done');
     const [sortField, setSortField] = useState<'name' | 'added' | 'completed'>('completed');
@@ -253,22 +234,9 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, 
                             </button>
                         </div>
                     </Header>
-                    {completedFiles.map((file, index) => {
-                        const groupKey = getGroupKey(file, sortField);
-                        const prevGroupKey = index > 0 ? getGroupKey(completedFiles[index - 1], sortField) : null;
-                        const showHeader = groupKey !== prevGroupKey;
-
-                        return (
-                            <React.Fragment key={file.id}>
-                                {showHeader && (
-                                    <div className="px-3 py-1.5 mt-2 mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider sticky top-0 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-sm z-10 shadow-sm border-y border-slate-100 dark:border-slate-800/50">
-                                        {groupKey}
-                                    </div>
-                                )}
-                                <FileItemRow file={file} onRemove={onRemove} onCopy={onCopy} />
-                            </React.Fragment>
-                        );
-                    })}
+                    {completedFiles.map(file => (
+                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                    ))}
                 </div>
              )}
         </div>
