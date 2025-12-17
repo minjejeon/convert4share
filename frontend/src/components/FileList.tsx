@@ -2,7 +2,7 @@ import React, { memo, useState, useMemo } from 'react';
 import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check, Pause, Play } from 'lucide-react';
 import { cn } from '../lib/utils';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { List } from 'react-window';
+import { VariableSizeList as List } from 'react-window';
 
 export interface FileItem {
     id: string; // usually path
@@ -158,32 +158,36 @@ const Header = ({ title, count, style, children }: any) => (
     </div>
 );
 
+type ListItemData =
+    | { type: 'header-queue'; count: number }
+    | { type: 'header-completed'; count: number }
+    | { type: 'file'; file: FileItem };
+
 export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, onPause, onResume }: FileListProps) {
     const activeFiles = files.filter(f => f.status !== 'done');
     const completedFiles = files.filter(f => f.status === 'done');
 
-    const itemData = useMemo(() => {
-        const items = [];
+    const itemData: ListItemData[] = useMemo(() => {
+        const items: ListItemData[] = [];
         if (activeFiles.length > 0) {
             items.push({ type: 'header-queue', count: activeFiles.length });
-            items.push(...activeFiles.map(f => ({ type: 'file', file: f })));
+            items.push(...activeFiles.map(f => ({ type: 'file', file: f } as const)));
         }
         if (completedFiles.length > 0) {
             items.push({ type: 'header-completed', count: completedFiles.length });
-            items.push(...completedFiles.map(f => ({ type: 'file', file: f })));
+            items.push(...completedFiles.map(f => ({ type: 'file', file: f } as const)));
         }
         return items;
     }, [files]);
 
     const getItemSize = (index: number) => {
         const item = itemData[index];
-        // @ts-ignore
         if (item.type.startsWith('header')) return 40;
         return 96; // Row height + padding (approx)
     };
 
-    const Row = ({ index, style, items }: any) => {
-        const item = items[index];
+    const Row = ({ index, style }: any) => {
+        const item = itemData[index];
         if (item.type === 'header-queue') {
             return (
                 <Header title="Queue" count={item.count} style={style}>
@@ -217,16 +221,17 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, 
     return (
         <div className="h-full w-full">
             <AutoSizer>
-                {({ height, width }) => (
+                {({ height, width }: { height: number; width: number }) => (
+                    // @ts-ignore
                     <List
                         height={height}
                         width={width}
-                        rowCount={itemData.length}
-                        rowHeight={getItemSize}
-                        rowProps={{ items: itemData }}
-                        rowComponent={Row}
+                        itemCount={itemData.length}
+                        itemSize={getItemSize}
                         overscanCount={5}
-                    />
+                    >
+                        {Row}
+                    </List>
                 )}
             </AutoSizer>
         </div>
