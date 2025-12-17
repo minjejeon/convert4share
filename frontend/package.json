@@ -10,14 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@types/react-virtualized-auto-sizer": "^1.0.4",
     "@wailsapp/runtime": "file:src/wailsjs/runtime",
     "clsx": "^2.1.1",
     "lucide-react": "^0.560.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-virtualized-auto-sizer": "^1.0.26",
-    "react-window": "^2.2.3",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

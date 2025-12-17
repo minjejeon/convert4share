@@ -91,7 +91,7 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 			"-c:v", "h264_amf",
 			"-b:v", bitrate,
 			"-quality", amdQuality,
-			"-vf", strings.Replace(scaleArg, "scale", "vpp_amf", 1),
+			"-vf", scaleArg,
 		)
 
 		// Recommended settings from https://github.com/GPUOpen-LibrariesAndSDKs/AMF/wiki/Recommended-FFmpeg-Encoder-Settings

@@ -1,9 +1,7 @@
 // @ts-nocheck
-import React, { memo, useState, useMemo } from 'react';
+import React, { memo, useState } from 'react';
 import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check, Pause, Play } from 'lucide-react';
 import { cn } from '../lib/utils';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { List } from 'react-window';
 
 export interface FileItem {
     id: string; // usually path
@@ -25,7 +23,7 @@ interface FileListProps {
     onResume?: () => void;
 }
 
-const FileItemRow = memo(({ file, onRemove, onCopy, style }: { file: FileItem; onRemove: (id: string) => void; onCopy: (path: string) => void, style?: React.CSSProperties }) => {
+const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove: (id: string) => void; onCopy: (path: string) => void }) => {
     const [isCopied, setIsCopied] = useState(false);
     const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
     const fileName = lastSeparatorIndex >= 0 ? file.path.substring(lastSeparatorIndex + 1) : file.path;
@@ -38,7 +36,7 @@ const FileItemRow = memo(({ file, onRemove, onCopy, style }: { file: FileItem; o
     };
 
     return (
-        <div style={style} className="px-1 pb-2">
+        <div className="px-1 pb-2">
             <div
                 className="group flex items-center gap-4 bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-all duration-200 h-full shadow-sm dark:shadow-none"
             >
@@ -150,8 +148,8 @@ const FileItemRow = memo(({ file, onRemove, onCopy, style }: { file: FileItem; o
 
 FileItemRow.displayName = 'FileItemRow';
 
-const Header = ({ title, count, style, children }: any) => (
-    <div style={style} className="flex items-center justify-between px-2 pb-2 pt-2">
+const Header = ({ title, count, children }: any) => (
+    <div className="flex items-center justify-between px-2 pb-2 pt-2">
         <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
             {title} <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded text-[10px] min-w-[20px] text-center">{count}</span>
         </h2>
@@ -159,80 +157,46 @@ const Header = ({ title, count, style, children }: any) => (
     </div>
 );
 
-type ListItemData =
-    | { type: 'header-queue'; count: number }
-    | { type: 'header-completed'; count: number }
-    | { type: 'file'; file: FileItem };
-
 export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, onPause, onResume }: FileListProps) {
     const activeFiles = files.filter(f => f.status !== 'done');
     const completedFiles = files.filter(f => f.status === 'done');
 
-    const itemData: ListItemData[] = useMemo(() => {
-        const items: ListItemData[] = [];
-        if (activeFiles.length > 0) {
-            items.push({ type: 'header-queue', count: activeFiles.length });
-            items.push(...activeFiles.map(f => ({ type: 'file', file: f } as const)));
-        }
-        if (completedFiles.length > 0) {
-            items.push({ type: 'header-completed', count: completedFiles.length });
-            items.push(...completedFiles.map(f => ({ type: 'file', file: f } as const)));
-        }
-        return items;
-    }, [files]);
-
-    const getItemSize = (index: number) => {
-        const item = itemData[index];
-        if (item.type.startsWith('header')) return 40;
-        return 96; // Row height + padding (approx)
-    };
-
-    const Row = ({ index, style }: any) => {
-        const item = itemData[index];
-        if (item.type === 'header-queue') {
-            return (
-                <Header title="Queue" count={item.count} style={style}>
-                    <button
-                        onClick={isPaused ? onResume : onPause}
-                        className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-indigo-600 dark:text-indigo-400 transition-colors"
-                    >
-                        {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
-                        {isPaused ? "Resume" : "Pause"}
-                    </button>
-                </Header>
-            );
-        }
-        if (item.type === 'header-completed') {
-            return (
-                <Header title="Completed" count={item.count} style={style}>
-                    <button
-                        onClick={onClearCompleted}
-                        className="text-[10px] font-medium text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1.5 uppercase tracking-wide px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded"
-                    >
-                        <Trash2 className="w-3 h-3" /> Clear History
-                    </button>
-                </Header>
-            );
-        }
-        return <FileItemRow file={item.file} onRemove={onRemove} onCopy={onCopy} style={style} />;
-    };
-
     if (files.length === 0) return null;
 
     return (
-        <div className="h-full w-full">
-            <AutoSizer>
-                {({ height, width }: { height: number; width: number }) => (
-                    <List
-                        style={{ height, width }}
-                        rowCount={itemData.length}
-                        rowHeight={getItemSize}
-                        overscanCount={5}
-                        rowComponent={Row}
-                        rowProps={{}}
-                    />
-                )}
-            </AutoSizer>
+        <div className="h-full w-full overflow-y-auto custom-scrollbar">
+             {activeFiles.length > 0 && (
+                <div className="mb-4">
+                    <Header title="Queue" count={activeFiles.length}>
+                        <button
+                            onClick={isPaused ? onResume : onPause}
+                            className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-indigo-600 dark:text-indigo-400 transition-colors"
+                        >
+                            {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+                            {isPaused ? "Resume" : "Pause"}
+                        </button>
+                    </Header>
+                    {activeFiles.map(file => (
+                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                    ))}
+                </div>
+             )}
+
+             {completedFiles.length > 0 && (
+                <div className="mb-4">
+                    <Header title="Completed" count={completedFiles.length}>
+                        <button
+                            onClick={onClearCompleted}
+                            className="text-[10px] font-medium text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1.5 uppercase tracking-wide px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded"
+                        >
+                            <Trash2 className="w-3 h-3" /> Clear History
+                        </button>
+                    </Header>
+                    {completedFiles.map(file => (
+                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                    ))}
+                </div>
+             )}
         </div>
     );
 }
