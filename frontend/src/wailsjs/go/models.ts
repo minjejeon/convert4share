@@ -30,6 +30,7 @@ export namespace main {
 	    excludePatterns: string[];
 	    videoQuality: string;
 	    maxFfmpegWorkers: number;
+	    collisionOption: string;
 
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -46,6 +47,7 @@ export namespace main {
 	        this.excludePatterns = source["excludePatterns"];
 	        this.videoQuality = source["videoQuality"];
 	        this.maxFfmpegWorkers = source["maxFfmpegWorkers"];
+	        this.collisionOption = source["collisionOption"];
 	    }
 	}
 
