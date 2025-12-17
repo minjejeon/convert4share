@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus, SelectBinaryDialog, DetectBinaries } from '../wailsjs/go/main/App';
+import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus, SelectBinaryDialog, DetectBinaries, InstallTool } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import { Loader2, Save, Monitor, Check, FolderOpen, Search, Sliders, Cpu, Film, Layers, Moon, Sun, Laptop, FileText, Info } from 'lucide-react';
+import { Loader2, Save, Monitor, Check, FolderOpen, Search, Sliders, Cpu, Film, Layers, Moon, Sun, Laptop, FileText, Info, Download } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { LicenseViewer } from './LicenseViewer';
 
@@ -19,6 +19,7 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
     const [loading, setLoading] = useState(true);
     const [togglingMenu, setTogglingMenu] = useState(false);
     const [showLicenses, setShowLicenses] = useState(false);
+    const [installing, setInstalling] = useState<string | null>(null);
 
     useEffect(() => {
         GetSettings().then((s) => {
@@ -74,6 +75,21 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
             setSaved(true);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleInstall = async (tool: string) => {
+        setInstalling(tool);
+        try {
+            await InstallTool(tool);
+            await handleDetect();
+            setSaved(true);
+        } catch (e) {
+            console.error(e);
+            const message = e instanceof Error ? e.message : String(e);
+            alert("Installation failed. Please try installing manually via 'winget install " + (tool === 'ffmpeg' ? 'Gyan.FFmpeg' : 'ImageMagick.ImageMagick') + "' in PowerShell.\n\nError: " + message);
+        } finally {
+            setInstalling(null);
         }
     };
 
@@ -294,6 +310,14 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
                                 >
                                     <FolderOpen className="w-4 h-4" />
                                 </button>
+                                <button
+                                    onClick={() => handleInstall('ffmpeg')}
+                                    disabled={!!installing}
+                                    className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
+                                    title="Install via WinGet"
+                                >
+                                    {installing === 'ffmpeg' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                                </button>
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -311,6 +335,14 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
                                     title="Browse..."
                                 >
                                     <FolderOpen className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => handleInstall('magick')}
+                                    disabled={!!installing}
+                                    className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
+                                    title="Install via WinGet"
+                                >
+                                    {installing === 'magick' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                                 </button>
                             </div>
                         </div>
