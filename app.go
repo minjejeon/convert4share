@@ -40,6 +40,7 @@ type Settings struct {
 	ExcludePatterns     []string `json:"excludePatterns"`
 	VideoQuality        string   `json:"videoQuality"`
 	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
+	CollisionOption     string   `json:"collisionOption"`
 }
 
 type JobStatus struct {
@@ -84,6 +85,7 @@ func (a *App) initConfig() {
 	viper.SetDefault("maxFfmpegWorkers", 1)
 	viper.SetDefault("hardwareAccelerator", "none")
 	viper.SetDefault("videoQuality", "high")
+	viper.SetDefault("collisionOption", "rename")
 
 	defaultDest := "$HOMEDRIVE/$HOMEPATH/Pictures"
 	if home, err := os.UserHomeDir(); err == nil {
@@ -123,6 +125,7 @@ func (a *App) GetSettings() Settings {
 		ExcludePatterns:     viper.GetStringSlice("excludeStringPatterns"),
 		VideoQuality:        viper.GetString("videoQuality"),
 		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
+		CollisionOption:     viper.GetString("collisionOption"),
 	}
 }
 
@@ -152,6 +155,7 @@ func (a *App) SaveSettings(s Settings) error {
 	viper.Set("excludeStringPatterns", s.ExcludePatterns)
 	viper.Set("videoQuality", s.VideoQuality)
 	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
+	viper.Set("collisionOption", s.CollisionOption)
 
 	exePath, err := os.Executable()
 	if err != nil {
@@ -298,6 +302,7 @@ func (a *App) ConvertFiles(files []string) {
 			FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
 			VideoQuality:        viper.GetString("videoQuality"),
 		}
+		collisionOption := viper.GetString("collisionOption")
 
 		reporter := func(file string, destFile string, percent int, status string, errMsg string) {
 			runtime.EventsEmit(a.ctx, "conversion-progress", JobStatus{
@@ -368,18 +373,13 @@ func (a *App) ConvertFiles(files []string) {
 				var err error
 				var dest string
 
-				getUniqueDest := func(dir, name, ext string) string {
-					d := filepath.Join(dir, name+ext)
-					for i := 1; ; i++ {
-						if _, e := os.Stat(d); os.IsNotExist(e) {
-							return d
-						}
-						d = filepath.Join(dir, fmt.Sprintf("%s (%d)%s", name, i, ext))
-					}
-				}
-
 				if extension == ".mov" {
-					dest = getUniqueDest(destDir, stem, ".mp4")
+					dest, err = resolveDestination(destDir, stem, ".mp4", collisionOption)
+					if err != nil {
+						reporter(src, "", 100, "error", err.Error())
+						return
+					}
+
 					reporter(src, dest, 0, "processing", "")
 
 					select {
@@ -393,7 +393,12 @@ func (a *App) ConvertFiles(files []string) {
 						reporter(src, dest, progress, "processing", "")
 					})
 				} else if extension == ".heic" {
-					dest = getUniqueDest(destDir, stem, ".jpg")
+					dest, err = resolveDestination(destDir, stem, ".jpg", collisionOption)
+					if err != nil {
+						reporter(src, "", 100, "error", err.Error())
+						return
+					}
+
 					reporter(src, dest, 0, "processing", "")
 
 					select {
@@ -420,6 +425,30 @@ func (a *App) ConvertFiles(files []string) {
 		wg.Wait()
 		runtime.EventsEmit(a.ctx, "all-jobs-done", true)
 	}()
+}
+
+func resolveDestination(dir, name, ext, collisionOption string) (string, error) {
+	dest := filepath.Join(dir, name+ext)
+
+	if collisionOption == "overwrite" {
+		return dest, nil
+	}
+
+	if _, err := os.Stat(dest); os.IsNotExist(err) {
+		return dest, nil
+	}
+
+	if collisionOption == "error" {
+		return "", fmt.Errorf("file already exists: %s", dest)
+	}
+
+	// Default to "rename"
+	for i := 1; ; i++ {
+		d := filepath.Join(dir, fmt.Sprintf("%s (%d)%s", name, i, ext))
+		if _, err := os.Stat(d); os.IsNotExist(err) {
+			return d, nil
+		}
+	}
 }
 
 func (a *App) AddFiles(files []string) {
