@@ -29,6 +29,8 @@ type App struct {
 	jobCancels   map[string]context.CancelFunc
 	isPaused     bool
 	pauseCond    *sync.Cond
+	ffmpegSem    chan struct{}
+	magickSem    chan struct{}
 }
 
 type Settings struct {
@@ -127,6 +129,30 @@ func (a *App) initConfig() {
 			viper.Set("magickBinary", path)
 		}
 	}
+
+	a.updateSemaphores()
+}
+
+func (a *App) updateSemaphores() {
+	maxFfmpeg := viper.GetInt("maxFfmpegWorkers")
+	if maxFfmpeg < 1 {
+		maxFfmpeg = 1
+	}
+
+	maxMagick := viper.GetInt("maxMagickWorkers")
+	if maxMagick < 1 {
+		maxMagick = 1
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if a.ffmpegSem == nil || cap(a.ffmpegSem) != maxFfmpeg {
+		a.ffmpegSem = make(chan struct{}, maxFfmpeg)
+	}
+	if a.magickSem == nil || cap(a.magickSem) != maxMagick {
+		a.magickSem = make(chan struct{}, maxMagick)
+	}
 }
 
 func (a *App) processPendingFiles() {
@@ -195,7 +221,11 @@ func (a *App) SaveSettings(s Settings) error {
 	exeDir := filepath.Dir(exePath)
 	configPath := filepath.Join(exeDir, "config.yaml")
 
-	return viper.WriteConfigAs(configPath)
+	err = viper.WriteConfigAs(configPath)
+	if err == nil {
+		a.updateSemaphores()
+	}
+	return err
 }
 
 func (a *App) SelectBinaryDialog() string {
@@ -347,17 +377,10 @@ func (a *App) ConvertFiles(files []string) {
 			})
 		}
 
-		maxFfmpeg := viper.GetInt("maxFfmpegWorkers")
-		maxMagick := viper.GetInt("maxMagickWorkers")
-		if maxFfmpeg < 1 {
-			maxFfmpeg = 1
-		}
-		if maxMagick < 1 {
-			maxMagick = 1
-		}
-
-		ffmpegSem := make(chan struct{}, maxFfmpeg)
-		magickSem := make(chan struct{}, maxMagick)
+		a.mu.Lock()
+		ffmpegSem := a.ffmpegSem
+		magickSem := a.magickSem
+		a.mu.Unlock()
 
 		for _, f := range files {
 			fpath := f
