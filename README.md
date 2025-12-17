@@ -9,12 +9,21 @@ It features a modern GUI and is built to be seamlessly integrated with the Windo
 - **File Conversion**:
   - Converts `.mov` (QuickTime Video) files to `.mp4` (H.264/AAC).
   - Converts `.heic` (High-Efficiency Image Format) files to `.jpg`.
-- **Hardware Acceleration**: Automatically detects AMD/NVIDIA GPUs on Windows (during installation) and utilizes hardware encoders (`h264_amf`, `h264_nvenc`) for faster video conversion.
-- **Concurrent Processing**: Boosts performance by processing multiple image conversions in parallel. Video conversions are processed one at a time to ensure stability.
+- **Drag & Drop Interface**:
+  - Simply drag files onto the application window to add them to the conversion queue.
+- **Hardware Acceleration**:
+  - Automatically detects AMD/NVIDIA GPUs on Windows (during installation) and utilizes hardware encoders (`h264_amf`, `h264_nvenc`) for faster video conversion.
+- **Quality Presets**:
+  - Supports 'High', 'Medium', and 'Low' quality presets for video conversion, dynamically adjusting bitrates (5Mbps, 2.5Mbps, 1Mbps) and hardware flags.
+- **Concurrent Processing**:
+  - Boosts performance by processing multiple image conversions in parallel (configurable limit). Video conversions are processed one at a time to ensure stability.
 - **Smart Output Path**:
   - Configurable "exclude patterns" allow you to divert output to a specific directory (e.g., `Pictures`) if the source path contains certain keywords (e.g., `Cloud`).
   - Otherwise, the converted file is saved in the same directory as the original file.
-- **Single Instance Execution**: Ensures that only one instance of the application runs at a time. If you select multiple files to convert, they are queued and processed by the single master instance.
+- **Theme Support**:
+  - Fully supports Light and Dark modes (defaults to Dark), matching your system preference or manual toggle.
+- **Single Instance Execution**:
+  - Ensures that only one instance of the application runs at a time. If you select multiple files to convert, they are queued and processed by the single master instance.
 
 ## Prerequisites
 
@@ -23,7 +32,7 @@ For `Convert4Share` to function correctly, the following tools are required:
 - **FFmpeg**: Required for video conversion.
 - **ImageMagick**: Required for image conversion.
 
-The application allows you to configure the paths to these binaries in the Settings if they are not in your system `PATH`.
+The application automatically attempts to detect these binaries in your system `PATH`, as well as standard `WinGet` installation locations. You can also manually configure the paths in the Settings if they are not detected.
 
 ## Building from Source
 
@@ -41,9 +50,11 @@ To build the application from source, you need **Go** and **Node.js** (with **np
     wails build
     ```
 
+    *Note: Ensure the `frontend/dist` directory is generated if running `go build` directly.*
+
 ## How to Use
 
-The tool is designed to be used from the command line or, more conveniently, through the Windows File Explorer.
+The tool is designed to be used from the command line, via Drag & Drop, or through the Windows File Explorer.
 
 ### Command Line
 
@@ -64,7 +75,7 @@ The application can be integrated directly into the Windows context menu for `.m
 2.  Go to the **Settings** page.
 3.  Under the "Windows Integration" section, click the **Install** button.
 
-Alternatively, via CLI:
+Alternatively, via CLI (requires Admin):
 ```shell
 convert4share.exe install
 ```

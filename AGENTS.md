@@ -10,46 +10,58 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 ## Tech Stack
 
 -   **Backend**: Go (Wails framework)
--   **Frontend**: React, TypeScript, Vite, Tailwind CSS
+-   **Frontend**: React, TypeScript, Vite, Tailwind CSS (v4)
 -   **Package Manager**: `npm` (Enforced. Do not use `pnpm` or `yarn` for frontend dependencies).
 -   **OS**: Windows (Target), but development environment might be Linux/macOS (requiring conditional builds).
 
-## Architecture Guidelines
+## Architecture & Coding Guidelines
 
-1.  **Wails Integration**:
-    -   `main.go`: Entry point. Checks for CLI args (`install`, `uninstall`). If none, launches Wails `Run()`.
-    -   `app.go`: Contains the `App` struct bound to Wails. Exposes methods to Frontend (`ConvertFiles`, `SaveSettings` etc.).
-    -   `frontend/`: Contains the standard Vite+React project.
+### 1. Wails Integration
+-   `main.go`: Entry point. Checks for CLI args (`install`, `uninstall`). If none, launches Wails `Run()`.
+-   **Bindings**: Located in `frontend/src/wailsjs/`. This directory is often gitignored.
+    -   **Important**: If you modify `App` struct methods or `models` in Go, you **MUST** run `wails generate module` to update the frontend bindings.
+    -   **Verification**: When verifying frontend changes in a browser environment (without the Wails runtime), you must mock these bindings (e.g., inject `window.go.main.App` via Playwright).
+-   **Events**: The frontend listens to `conversion-progress` events. Ensure any new long-running tasks emit appropriate events.
+-   **Window Management**: To bring the window to front on a second instance launch, use `runtime.WindowUnminimise`, `runtime.WindowShow`, and toggle `runtime.WindowSetAlwaysOnTop`.
 
-2.  **Platform Specifics**:
-    -   The app relies heavily on Windows features (Context Menu Registry, `powershell` for GPU detection).
-    -   **Context Menu**: Uses `SystemFileAssociations` for Windows 10/Classic menu and `OpenWithProgids` for Windows 11 Modern menu integration.
-    -   Use `//go:build windows` for code that imports `windows` or `golang.org/x/sys/windows`.
-    -   Provide dummy implementations for other OSs (e.g., `//go:build !windows`) to allow cross-platform compilation/checking.
+### 2. Frontend Development
+-   **Tailwind CSS**: Uses **v4** syntax with `darkMode: 'selector'`. To toggle themes, add/remove the `dark` class on the root HTML element.
+    -   Styles follow a "Light Mode Default" strategy (`bg-white` vs `dark:bg-slate-800`).
+-   **Performance**: List components receiving high-frequency updates (like file progress) **must** use `React.memo` to prevent rendering bottlenecks.
+-   **Styling**:
+    -   **DropZone**: Centered, `p-10`, flex-col, dashed borders.
+    -   **File List**: Filename (primary/bold), Path (secondary/small).
+    -   **Buttons**: Interactive buttons (Copy) should use local state for visual feedback (2s delay).
 
-3.  **Command Line Logic**:
-    -   The original `cmd/` package (Cobra) is preserved for `install`/`uninstall` logic.
-    -   This logic is invoked before Wails starts if arguments are present.
+### 3. Backend Logic
+-   **Configuration**:
+    -   Use `viper` for config.
+    -   **Saving**: Use `viper.WriteConfigAs` with an explicit path to ensure creation if missing.
+    -   **Defaults**: Use `viper.SetDefault` for critical keys (binary paths). Use `os.UserHomeDir()` for paths.
+-   **File Processing**:
+    -   **Validation**: Always check `!info.IsDir()` and ensure the file is not the running executable itself.
+    -   **Regex**: When parsing FFmpeg output, use `\d+` for the hour component to support >99 hours.
+    -   **Concurrency**: Use `sync.WaitGroup` when parsing `stderr` in goroutines.
+-   **Video Encoding**:
+    -   Supports 'High' (5Mbps), 'Medium' (2.5Mbps), 'Low' (1Mbps) presets.
+    -   Flags adapt to hardware (AMD: `quality`/`balanced`/`speed`, NVIDIA: `slow`/`medium`/`fast`).
 
-## Development Tasks & Status
-
--   **Status**: Wails migration is complete. Frontend and Backend are integrated.
--   **Frontend**: Located in `frontend/`. Uses `npm`.
--   **Bindings**: Generated in `frontend/wailsjs/`. Run `wails generate module` to update if `App` struct changes.
+### 4. Windows Specifics
+-   **Context Menu**: Uses `SystemFileAssociations` (Classic) and `OpenWithProgids` (Win11).
+-   **Clipboard**: `CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`.
+    -   **Escaping**: Sanitize paths in PowerShell commands by replacing `'` with `''`.
 
 ## Instructions for Agents
 
-1.  **Always Verify**: After editing code, run `go mod tidy` or a build check to ensure no syntax errors.
-2.  **Wails Bindings**: If you modify `App` struct methods, you MUST run `wails generate module` to update frontend bindings.
+1.  **Always Verify**: After editing code, run `go mod tidy` or a build check.
+2.  **Verify Frontend**: If touching UI, consider how to verify it (mocking Wails if using standard browser tools).
 3.  **Cross-Platform Awareness**: Ensure `GOOS=windows` checks or build tags are respected.
-4.  **Dependency Management**: Use `npm` for all frontend dependency tasks.
-5.  **UI/UX**: The frontend listens to `conversion-progress` events. Ensure any new long-running tasks emit appropriate events.
-6.  **Config**: Configuration is handled by `viper`. `App` struct exposes settings to frontend.
-7.  **Cleanup**: Binary artifacts (e.g., `.exe` files, `dist/` folders) MUST be removed before committing.
-8.  **Code Comments**: Avoid verbose comments that are unnecessary because the actual code is sufficiently self-explanatory. Code should be self-documenting where possible.
+4.  **Dependencies**: Use `npm`. Do not use `pnpm` or `yarn`.
+5.  **Code Style**: Avoid verbose comments. Code should be self-documenting.
+6.  **Git**: `frontend/dist` is embedded. `go build` requires it to exist.
 
 ## Common Issues / Solutions
 
 -   **Wails Generate Error**: Often due to build tags. Ensure `cmd/` files have appropriate `!windows` fallbacks if they import windows-specific packages.
--   **Vite Build**: Ensure `npm install` is run in `frontend/` before building.
--   **Viper Configuration**: Ensure `viper.SetDefault` is used for all critical configuration keys (especially binary paths) to prevent runtime errors when `config.yaml` is missing. Use `os.UserHomeDir()` for default paths.
+-   **Viper Configuration**: `viper.WriteConfig` fails if no config file exists; use `WriteConfigAs`.
+-   **Path Separators**: Use Unix-style forward slashes (`/`) when mocking paths in frontend tests to avoid escaping issues.
