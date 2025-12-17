@@ -228,6 +228,36 @@ func (a *App) SaveSettings(s Settings) error {
 	return err
 }
 
+func (a *App) InstallTool(toolName string) error {
+	var packageID string
+	switch toolName {
+	case "ffmpeg":
+		packageID = "Gyan.FFmpeg"
+	case "magick":
+		packageID = "ImageMagick.ImageMagick"
+	default:
+		return fmt.Errorf("unknown tool: %s", toolName)
+	}
+
+	if err := windows.InstallWingetPackage(packageID); err != nil {
+		return err
+	}
+
+	// Re-detect
+	detected := a.DetectBinaries()
+	if path, ok := detected[toolName]; ok {
+		if toolName == "ffmpeg" {
+			viper.Set("ffmpegBinary", path)
+		} else if toolName == "magick" {
+			viper.Set("magickBinary", path)
+		}
+		// Force save to persist
+		return a.SaveSettings(a.GetSettings())
+	} else {
+		return fmt.Errorf("installation completed but binary not found. You may need to restart the application")
+	}
+}
+
 func (a *App) SelectBinaryDialog() string {
 	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select Binary",
