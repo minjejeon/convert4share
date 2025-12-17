@@ -153,6 +153,9 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 
 	cmd := prepareCommandContext(ctx, c.FfmpegBinary, args...)
 
+	// Ensure standard input is closed to prevent ffmpeg from waiting for input
+	cmd.Stdin = nil
+
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return fmt.Errorf("could not get stderr pipe: %w", err)
@@ -184,6 +187,11 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 				stderrLog = stderrLog[1:]
 			}
 			stderrMu.Unlock()
+
+			// Debug logging for ffmpeg output to diagnose hangs/errors
+			// Only log lines that don't look like standard progress to avoid flooding logs too much,
+			// unless we are in deep debug mode. For now, log everything as the user is experiencing a hang.
+			log.Printf("ffmpeg: %s", line)
 
 			if duration == 0 {
 				matches := durationRegex.FindStringSubmatch(line)
