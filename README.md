@@ -1,3 +1,5 @@
+![Convert4Share Logo](logo.png)
+
 # Convert4Share
 
 `Convert4Share` is a Windows desktop application designed to convert `.mov` and `.heic` files into the more widely compatible `.mp4` and `.jpg` formats.
