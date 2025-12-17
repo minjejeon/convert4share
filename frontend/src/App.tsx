@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { EventsOn } from './wailsjs/runtime/runtime';
-import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard, GetThumbnail } from './wailsjs/go/main/App';
+import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard, GetThumbnail, CancelJob, PauseQueue, ResumeQueue } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList, FileItem } from './components/FileList';
@@ -21,6 +21,7 @@ function App() {
     const [files, setFiles] = useState<FileItem[]>([]);
     const [isInstalled, setIsInstalled] = useState<boolean>(true);
     const [isInstalling, setIsInstalling] = useState<boolean>(false);
+    const [isPaused, setIsPaused] = useState<boolean>(false);
     const { theme, setTheme } = useTheme();
 
     const addFile = (path: string) => {
@@ -38,6 +39,7 @@ function App() {
     };
 
     const handleRemove = (id: string) => {
+        CancelJob(id);
         setFiles(prev => prev.filter(f => f.id !== id));
     };
 
@@ -77,10 +79,15 @@ function App() {
             }));
         });
 
+        const cleanupPaused = EventsOn("queue-paused", () => setIsPaused(true));
+        const cleanupResumed = EventsOn("queue-resumed", () => setIsPaused(false));
+
         return () => {
             cleanupFileAdded();
             cleanupFilesReceived();
             cleanupProgress();
+            cleanupPaused();
+            cleanupResumed();
         };
     }, []);
 
@@ -126,9 +133,9 @@ function App() {
     return (
         <Layout currentView={view} onNavigate={setView}>
             {view === 'home' && (
-                <div className="max-w-3xl mx-auto pb-12 flex flex-col gap-8">
+                <div className="max-w-3xl mx-auto h-full flex flex-col gap-6 p-6">
                      {!isInstalled && (
-                        <div className="rounded-xl bg-white dark:bg-slate-800/60 p-4 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between shadow-sm backdrop-blur-sm">
+                        <div className="rounded-xl bg-white dark:bg-slate-800/60 p-4 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between shadow-sm backdrop-blur-sm shrink-0">
                             <div className="flex items-center gap-4">
                                 <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg shrink-0">
                                     <AlertCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -152,11 +159,23 @@ function App() {
                             </button>
                         </div>
                     )}
-                    <DropZone />
-                    <FileList files={files} onRemove={handleRemove} onCopy={handleCopy} onClearCompleted={handleClearCompleted} />
+                    <div className="shrink-0">
+                        <DropZone />
+                    </div>
+                    <div className="flex-1 min-h-0">
+                        <FileList
+                            files={files}
+                            onRemove={handleRemove}
+                            onCopy={handleCopy}
+                            onClearCompleted={handleClearCompleted}
+                            isPaused={isPaused}
+                            onPause={PauseQueue}
+                            onResume={ResumeQueue}
+                        />
+                    </div>
                 </div>
             )}
-            {view === 'settings' && <SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} theme={theme} onThemeChange={setTheme} />}
+            {view === 'settings' && <div className="h-full overflow-y-auto px-6"><SettingsView isInstalled={isInstalled} onStatusChange={setIsInstalled} theme={theme} onThemeChange={setTheme} /></div>}
         </Layout>
     );
 }

@@ -25,6 +25,9 @@ type App struct {
 	mu           sync.Mutex
 	isReady      bool
 	processTimer *time.Timer
+	jobCancels   map[string]context.CancelFunc
+	isPaused     bool
+	pauseCond    *sync.Cond
 }
 
 type Settings struct {
@@ -49,7 +52,11 @@ type JobStatus struct {
 }
 
 func NewApp() *App {
-	return &App{}
+	app := &App{
+		jobCancels: make(map[string]context.CancelFunc),
+	}
+	app.pauseCond = sync.NewCond(&app.mu)
+	return app
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -176,6 +183,30 @@ func (a *App) SelectBinaryDialog() string {
 	return selection
 }
 
+func (a *App) CancelJob(id string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if cancel, ok := a.jobCancels[id]; ok {
+		cancel()
+		delete(a.jobCancels, id)
+	}
+}
+
+func (a *App) PauseQueue() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.isPaused = true
+	runtime.EventsEmit(a.ctx, "queue-paused", true)
+}
+
+func (a *App) ResumeQueue() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.isPaused = false
+	a.pauseCond.Broadcast()
+	runtime.EventsEmit(a.ctx, "queue-resumed", true)
+}
+
 func (a *App) DetectBinaries() map[string]string {
 	results := make(map[string]string)
 
@@ -294,8 +325,8 @@ func (a *App) ConvertFiles(files []string) {
 		for _, f := range files {
 			fpath := f
 
-			if info, err := os.Stat(fpath); err != nil || info.IsDir() {
-				reporter(fpath, "", 0, "error", "File not found or invalid")
+			if info, err := os.Stat(fpath); err != nil || info.IsDir() || info.Size() == 0 {
+				reporter(fpath, "", 0, "error", "File is empty or invalid")
 				continue
 			}
 
@@ -319,27 +350,60 @@ func (a *App) ConvertFiles(files []string) {
 			go func(src string, extension string) {
 				defer wg.Done()
 
+				a.mu.Lock()
+				for a.isPaused {
+					a.pauseCond.Wait()
+				}
+				jobCtx, cancel := context.WithCancel(a.ctx)
+				a.jobCancels[src] = cancel
+				a.mu.Unlock()
+
+				defer func() {
+					cancel()
+					a.mu.Lock()
+					delete(a.jobCancels, src)
+					a.mu.Unlock()
+				}()
+
 				var err error
 				var dest string
 
+				getUniqueDest := func(dir, name, ext string) string {
+					d := filepath.Join(dir, name+ext)
+					for i := 1; ; i++ {
+						if _, e := os.Stat(d); os.IsNotExist(e) {
+							return d
+						}
+						d = filepath.Join(dir, fmt.Sprintf("%s (%d)%s", name, i, ext))
+					}
+				}
+
 				if extension == ".mov" {
-					dest = filepath.Join(destDir, stem+".mp4")
+					dest = getUniqueDest(destDir, stem, ".mp4")
 					reporter(src, dest, 0, "processing", "")
 
-					ffmpegSem <- struct{}{}
+					select {
+					case ffmpegSem <- struct{}{}:
+					case <-jobCtx.Done():
+						return
+					}
 					defer func() { <-ffmpegSem }()
 
-					err = convConfig.Ffmpeg(src, dest, func(progress int) {
+					err = convConfig.Ffmpeg(jobCtx, src, dest, func(progress int) {
 						reporter(src, dest, progress, "processing", "")
 					})
 				} else if extension == ".heic" {
-					dest = filepath.Join(destDir, stem+".jpg")
+					dest = getUniqueDest(destDir, stem, ".jpg")
 					reporter(src, dest, 0, "processing", "")
 
-					magickSem <- struct{}{}
+					select {
+					case magickSem <- struct{}{}:
+					case <-jobCtx.Done():
+						return
+					}
 					defer func() { <-magickSem }()
 
-					err = convConfig.Magick(src, dest)
+					err = convConfig.Magick(jobCtx, src, dest)
 				} else {
 					reporter(src, "", 0, "error", "Unsupported format")
 					return
@@ -360,7 +424,7 @@ func (a *App) ConvertFiles(files []string) {
 
 func (a *App) AddFiles(files []string) {
 	for _, f := range files {
-		if info, err := os.Stat(f); err == nil && !info.IsDir() {
+		if info, err := os.Stat(f); err == nil && !info.IsDir() && info.Size() > 0 {
 			runtime.EventsEmit(a.ctx, "file-added", f)
 		}
 	}
@@ -420,7 +484,7 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 				}
 			}
 
-			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
+			if info, err := os.Stat(arg); err == nil && !info.IsDir() && info.Size() > 0 {
 				actualFiles = append(actualFiles, arg)
 			}
 		}

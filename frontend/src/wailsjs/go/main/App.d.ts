@@ -25,3 +25,9 @@ export function SelectBinaryDialog():Promise<string>;
 export function DetectBinaries():Promise<{[key: string]: string}>;
 
 export function GetThumbnail(arg1:string):Promise<string>;
+
+export function CancelJob(arg1:string):Promise<void>;
+
+export function PauseQueue():Promise<void>;
+
+export function ResumeQueue():Promise<void>;

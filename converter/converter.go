@@ -3,6 +3,7 @@ package converter
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -33,15 +34,15 @@ var (
 	timeRegex     = regexp.MustCompile(`time=(\d+):(\d{2}):(\d{2})\.(\d{2})`)
 )
 
-func (c *Config) Magick(orig, dest string) error {
-	cmd := prepareCommand(c.MagickBinary, orig, dest)
+func (c *Config) Magick(ctx context.Context, orig, dest string) error {
+	cmd := prepareCommandContext(ctx, c.MagickBinary, orig, dest)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	log.Printf("Running magick command: %s", cmd.String())
 	return cmd.Run()
 }
 
-func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
+func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress ProgressCallback) error {
 	args := []string{
 		"-hide_banner",
 		"-loglevel", "info",
@@ -150,7 +151,7 @@ func (c *Config) Ffmpeg(orig, dest string, onProgress ProgressCallback) error {
 		dest,
 	)
 
-	cmd := prepareCommand(c.FfmpegBinary, args...)
+	cmd := prepareCommandContext(ctx, c.FfmpegBinary, args...)
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {

@@ -45,3 +45,15 @@ export function DetectBinaries() {
 export function GetThumbnail(arg1) {
     return window['go']['main']['App']['GetThumbnail'](arg1);
 }
+
+export function CancelJob(arg1) {
+    return window['go']['main']['App']['CancelJob'](arg1);
+}
+
+export function PauseQueue() {
+    return window['go']['main']['App']['PauseQueue']();
+}
+
+export function ResumeQueue() {
+    return window['go']['main']['App']['ResumeQueue']();
+}
