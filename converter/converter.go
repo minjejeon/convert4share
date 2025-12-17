@@ -42,7 +42,7 @@ func (c *Config) Magick(ctx context.Context, orig, dest string) error {
 	return cmd.Run()
 }
 
-func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress ProgressCallback) error {
+func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 	args := []string{
 		"-hide_banner",
 		"-loglevel", "info",
@@ -104,10 +104,6 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 				"-vbaq", "true",
 				"-preencode", "true",
 				"-high_motion_quality_boost_enable", "true",
-				"-preanalysis", "true",
-				"-pa_adaptive_mini_gop", "true",
-				"-pa_lookahead_buffer_depth", "40",
-				"-pa_taq_mode", "2",
 				"-bf", "3",
 			)
 		case "balanced": // Medium
@@ -151,6 +147,11 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 		dest,
 	)
 
+	return args
+}
+
+func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress ProgressCallback) error {
+	args := c.BuildFfmpegArgs(orig, dest)
 	cmd := prepareCommandContext(ctx, c.FfmpegBinary, args...)
 
 	// Ensure standard input is closed to prevent ffmpeg from waiting for input
