@@ -96,6 +96,24 @@ func (a *App) initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		logger.Info("Config file not found, using defaults", "error", err)
 	}
+
+	// Auto-detect binaries if they are set to defaults or look invalid,
+	// and update the in-memory configuration.
+	detected := a.DetectBinaries()
+
+	if val := viper.GetString("ffmpegBinary"); val == "ffmpeg" {
+		if path, ok := detected["ffmpeg"]; ok {
+			logger.Info("Auto-detected ffmpeg binary", "path", path)
+			viper.Set("ffmpegBinary", path)
+		}
+	}
+
+	if val := viper.GetString("magickBinary"); val == "magick" {
+		if path, ok := detected["magick"]; ok {
+			logger.Info("Auto-detected magick binary", "path", path)
+			viper.Set("magickBinary", path)
+		}
+	}
 }
 
 func (a *App) processPendingFiles() {
@@ -454,7 +472,11 @@ func resolveDestination(dir, name, ext, collisionOption string) (string, error) 
 func (a *App) AddFiles(files []string) {
 	for _, f := range files {
 		if info, err := os.Stat(f); err == nil && !info.IsDir() && info.Size() > 0 {
-			runtime.EventsEmit(a.ctx, "file-added", f)
+			if absArg, err := filepath.Abs(f); err == nil {
+				runtime.EventsEmit(a.ctx, "file-added", absArg)
+			} else {
+				runtime.EventsEmit(a.ctx, "file-added", f)
+			}
 		}
 	}
 }
@@ -514,7 +536,11 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 			}
 
 			if info, err := os.Stat(arg); err == nil && !info.IsDir() && info.Size() > 0 {
-				actualFiles = append(actualFiles, arg)
+				if absArg, err := filepath.Abs(arg); err == nil {
+					actualFiles = append(actualFiles, absArg)
+				} else {
+					actualFiles = append(actualFiles, arg)
+				}
 			}
 		}
 		if len(actualFiles) > 0 {
