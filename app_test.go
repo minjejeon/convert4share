@@ -81,4 +81,16 @@ func TestResolveDestination(t *testing.T) {
     if dest != expected {
         t.Errorf("Expected %s, got %s", expected, dest)
     }
+
+	// Case 6: File exists but is 0 bytes (should overwrite even if rename)
+	if err := os.WriteFile(expected, []byte(""), 0644); err != nil {
+		t.Fatalf("Failed to create 0-byte file: %v", err)
+	}
+	dest, err = resolveDestination(tempDir, name, ext, "rename")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if dest != expected {
+		t.Errorf("Expected %s (overwrite 0-byte), got %s", expected, dest)
+	}
 }

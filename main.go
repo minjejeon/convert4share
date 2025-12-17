@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -44,6 +45,7 @@ func initLogger() {
 		Level: slog.LevelDebug,
 	})
 	logger = slog.New(handler)
+	log.SetOutput(logFile)
 }
 
 func init() {
@@ -69,7 +71,11 @@ func main() {
 	if len(os.Args) > 1 {
 		for _, arg := range os.Args[1:] {
 			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
-				app.pendingFiles = append(app.pendingFiles, arg)
+				if absArg, err := filepath.Abs(arg); err == nil {
+					app.pendingFiles = append(app.pendingFiles, absArg)
+				} else {
+					app.pendingFiles = append(app.pendingFiles, arg)
+				}
 			}
 		}
 	}

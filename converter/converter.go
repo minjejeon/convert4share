@@ -165,6 +165,9 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+	var stderrLog []string
+	var stderrMu sync.Mutex
+
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
@@ -174,6 +177,13 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 
 		for scanner.Scan() {
 			line := scanner.Text()
+
+			stderrMu.Lock()
+			stderrLog = append(stderrLog, line)
+			if len(stderrLog) > 20 {
+				stderrLog = stderrLog[1:]
+			}
+			stderrMu.Unlock()
 
 			if duration == 0 {
 				matches := durationRegex.FindStringSubmatch(line)
@@ -211,7 +221,10 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 	err = cmd.Wait()
 	wg.Wait()
 	if err != nil {
-		return fmt.Errorf("ffmpeg finished with error: %w", err)
+		stderrMu.Lock()
+		logs := strings.Join(stderrLog, "\n")
+		stderrMu.Unlock()
+		return fmt.Errorf("ffmpeg finished with error: %w. Log: %s", err, logs)
 	}
 	return nil
 }
