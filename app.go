@@ -101,14 +101,26 @@ func (a *App) initConfig() {
 	// and update the in-memory configuration.
 	detected := a.DetectBinaries()
 
-	if val := viper.GetString("ffmpegBinary"); val == "ffmpeg" {
+	checkBinary := func(key string) bool {
+		val := viper.GetString(key)
+		if val == "" {
+			return false
+		}
+		if _, err := exec.LookPath(val); err != nil {
+			logger.Info("Binary path invalid or not found", "key", key, "path", val, "error", err)
+			return false
+		}
+		return true
+	}
+
+	if !checkBinary("ffmpegBinary") {
 		if path, ok := detected["ffmpeg"]; ok {
 			logger.Info("Auto-detected ffmpeg binary", "path", path)
 			viper.Set("ffmpegBinary", path)
 		}
 	}
 
-	if val := viper.GetString("magickBinary"); val == "magick" {
+	if !checkBinary("magickBinary") {
 		if path, ok := detected["magick"]; ok {
 			logger.Info("Auto-detected magick binary", "path", path)
 			viper.Set("magickBinary", path)
@@ -489,7 +501,7 @@ func (a *App) GetThumbnail(path string) (string, error) {
 
 	data, err := convConfig.GenerateThumbnail(path)
 	if err != nil {
-		logger.Error("Failed to generate thumbnail", "path", path, "error", err)
+		logger.Error("Failed to generate thumbnail", "path", path, "ffmpeg", convConfig.FfmpegBinary, "magick", convConfig.MagickBinary, "error", err)
 		return "", fmt.Errorf("failed to generate thumbnail: %w", err)
 	}
 
