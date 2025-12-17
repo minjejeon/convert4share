@@ -464,7 +464,13 @@ func resolveDestination(dir, name, ext, collisionOption string) (string, error) 
 		return dest, nil
 	}
 
-	if _, err := os.Stat(dest); os.IsNotExist(err) {
+	info, err := os.Stat(dest)
+	if os.IsNotExist(err) {
+		return dest, nil
+	}
+
+	// If file exists and is 0 bytes, overwrite it
+	if err == nil && info.Size() == 0 {
 		return dest, nil
 	}
 
@@ -482,6 +488,7 @@ func resolveDestination(dir, name, ext, collisionOption string) (string, error) 
 }
 
 func (a *App) AddFiles(files []string) {
+	logger.Info("AddFiles called", "files", files)
 	for _, f := range files {
 		if info, err := os.Stat(f); err == nil && !info.IsDir() && info.Size() > 0 {
 			if absArg, err := filepath.Abs(f); err == nil {
@@ -515,7 +522,11 @@ func (a *App) domReady(ctx context.Context) {
 	a.mu.Unlock()
 
 	logger.Info("DOM is ready.")
-	a.processPendingFiles()
+	// Small delay to allow frontend to attach listeners
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		a.processPendingFiles()
+	}()
 }
 
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
@@ -543,6 +554,7 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 			// Skip the argument if it matches the executable path (self-reference)
 			if exePath != "" {
 				if absArg, err := filepath.Abs(arg); err == nil && strings.EqualFold(absArg, exePath) {
+					logger.Info("Skipping executable path in args", "arg", arg)
 					continue
 				}
 			}
@@ -553,6 +565,8 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 				} else {
 					actualFiles = append(actualFiles, arg)
 				}
+			} else {
+				logger.Info("Skipping invalid file in second instance args", "arg", arg, "err", err)
 			}
 		}
 		if len(actualFiles) > 0 {
