@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { EventsOn } from './wailsjs/runtime/runtime';
 import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard, GetThumbnail, CancelJob, PauseQueue, ResumeQueue } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
@@ -39,18 +39,18 @@ function App() {
         });
     };
 
-    const handleRemove = (id: string) => {
+    const handleRemove = useCallback((id: string) => {
         CancelJob(id);
         setFiles(prev => prev.filter(f => f.id !== id));
-    };
+    }, []);
 
-    const handleClearCompleted = () => {
+    const handleClearCompleted = useCallback(() => {
         setFiles(prev => prev.filter(f => f.status !== 'done'));
-    };
+    }, []);
 
-    const handleCopy = (path: string) => {
+    const handleCopy = useCallback((path: string) => {
         CopyFileToClipboard(path).catch(console.error);
-    };
+    }, []);
 
     useEffect(() => {
         GetContextMenuStatus().then(setIsInstalled);
