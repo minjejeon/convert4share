@@ -72,7 +72,7 @@ func registerProgID(exePath string) error {
 	}
 	defer cmdKey.Close()
 
-	command := fmt.Sprintf(`"%s" "%%*"`, exePath)
+	command := fmt.Sprintf(`"%s" "%%1"`, exePath)
 	if err := cmdKey.SetStringValue("", command); err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func registerGenericShellExtension(exePath string) error {
 	}
 	defer cmdKey.Close()
 
-	command := fmt.Sprintf(`"%s" "%%*"`, exePath)
+	command := fmt.Sprintf(`"%s" "%%1"`, exePath)
 	if err := cmdKey.SetStringValue("", command); err != nil {
 		return err
 	}
