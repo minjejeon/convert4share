@@ -48,6 +48,19 @@
             <uap:DataFormat>StorageItems</uap:DataFormat>
           </uap:ShareTarget>
         </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="convert4sharefiles">
+            <uap:DisplayName>Convert4Share Media</uap:DisplayName>
+            <uap:Logo>Assets\StoreLogo.png</uap:Logo>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.mov</uap:FileType>
+              <uap:FileType>.heic</uap:FileType>
+            </uap:SupportedFileTypes>
+            <uap:SupportedVerbs>
+              <uap:Verb Id="open" Parameters="&quot;%1&quot;">open</uap:Verb>
+            </uap:SupportedVerbs>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
       </Extensions>
     </Application>
   </Applications>
