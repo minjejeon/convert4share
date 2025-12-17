@@ -2,7 +2,7 @@ import React, { memo, useState, useMemo } from 'react';
 import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check, Pause, Play } from 'lucide-react';
 import { cn } from '../lib/utils';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { VariableSizeList as List } from 'react-window';
+import { List } from 'react-window';
 
 export interface FileItem {
     id: string; // usually path
@@ -222,16 +222,14 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, 
         <div className="h-full w-full">
             <AutoSizer>
                 {({ height, width }: { height: number; width: number }) => (
-                    // @ts-ignore
                     <List
-                        height={height}
-                        width={width}
-                        itemCount={itemData.length}
-                        itemSize={getItemSize}
+                        style={{ height, width }}
+                        rowCount={itemData.length}
+                        rowHeight={getItemSize}
                         overscanCount={5}
-                    >
-                        {Row}
-                    </List>
+                        rowComponent={Row}
+                        rowProps={{}}
+                    />
                 )}
             </AutoSizer>
         </div>
