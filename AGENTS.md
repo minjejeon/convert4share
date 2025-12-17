@@ -61,6 +61,28 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 6.  **Git**: `frontend/dist` is embedded. `go build` requires it to exist.
 7.  **Dependency Lock**: Do not change `src/wailsjs/runtime` in `@frontend/package-lock.json`.
 
+### Tag Message Guidelines
+When creating a tag message, adhere to the following format:
+
+**Major Changes Summary:** Group major changes by category (e.g., Performance, Feature, Fix). Summarize the change and include the commit hash.
+**Detailed Commit List:** List all commits (including those not in the summary) with their commit message and hash.
+**Hyperlinks:** Ensure every commit hash is a hyperlink.
+
+**Example:**
+
+```
+### Features
+* Added async support ([1a2b3c](http://url...))
+
+### Performance
+* Optimized IPC ([4d5e6f](http://url...))
+
+### All Commits
+* [1a2b3c](http://url...) Added async support
+* [4d5e6f](http://url...) Optimized IPC
+* [7g8h9i](http://url...) Fixed typo in README
+```
+
 ## Common Issues / Solutions
 
 -   **Wails Generate Error**: Often due to build tags. Ensure `cmd/` files have appropriate `!windows` fallbacks if they import windows-specific packages.
