@@ -59,6 +59,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 4.  **Dependencies**: Use `npm`. Do not use `pnpm` or `yarn`.
 5.  **Code Style**: Avoid verbose comments. Code should be self-documenting.
 6.  **Git**: `frontend/dist` is embedded. `go build` requires it to exist.
+7.  **Dependency Lock**: Do not change `src/wailsjs/runtime` in `@frontend/package-lock.json`.
 
 ## Common Issues / Solutions
 
