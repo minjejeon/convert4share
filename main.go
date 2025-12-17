@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"fmt"
+	"io"
 	"log"
 	"log/slog"
 	"os"
@@ -26,6 +27,12 @@ var configTemplate []byte
 var logger *slog.Logger
 
 func initLogger() {
+	if !isDev() {
+		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+		log.SetOutput(io.Discard)
+		return
+	}
+
 	exePath, err := os.Executable()
 	if err != nil {
 		// Can't get executable path, log to stderr
