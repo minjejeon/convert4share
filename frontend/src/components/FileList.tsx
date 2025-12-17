@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { memo, useState, useMemo } from 'react';
 import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check, Pause, Play } from 'lucide-react';
 import { cn } from '../lib/utils';

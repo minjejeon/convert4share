@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { GetSettings, SaveSettings, InstallContextMenu, UninstallContextMenu, GetContextMenuStatus, SelectBinaryDialog, DetectBinaries } from '../wailsjs/go/main/App';
 import { main } from '../wailsjs/go/models';
-import { Loader2, Save, Monitor, Check, FolderOpen, Search, Sliders, Cpu, Film, Layers, Moon, Sun, Laptop } from 'lucide-react';
+import { Loader2, Save, Monitor, Check, FolderOpen, Search, Sliders, Cpu, Film, Layers, Moon, Sun, Laptop, FileText, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { LicenseViewer } from './LicenseViewer';
 
 interface SettingsViewProps {
     isInstalled: boolean;
@@ -17,6 +18,7 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
     const [togglingMenu, setTogglingMenu] = useState(false);
+    const [showLicenses, setShowLicenses] = useState(false);
 
     useEffect(() => {
         GetSettings().then((s) => {
@@ -356,6 +358,26 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
                      </div>
                 </div>
 
+                {/* About & Licenses */}
+                <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors shadow-sm dark:shadow-none flex items-center justify-between">
+                     <div>
+                        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <Info className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                            About & Legal
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            View third-party software licenses and legal notices.
+                        </p>
+                     </div>
+                     <button
+                        onClick={() => setShowLicenses(true)}
+                        className="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 transition-colors flex items-center gap-2 shadow-sm"
+                     >
+                        <FileText className="w-4 h-4" />
+                        View Licenses
+                     </button>
+                </div>
+
                 <div className="flex justify-end pt-4 sticky bottom-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-sm p-4 -mx-4 -mb-4 border-t border-slate-200 dark:border-white/5">
                     <button
                         onClick={handleSave}
@@ -377,6 +399,7 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
                     </button>
                 </div>
             </div>
+            {showLicenses && <LicenseViewer onClose={() => setShowLicenses(false)} />}
         </div>
     );
 }
