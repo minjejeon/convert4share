@@ -13,6 +13,7 @@ interface ProgressData {
     destFile?: string;
     status: 'queued' | 'processing' | 'done' | 'error';
     progress: number;
+    speed?: string;
     error?: string;
 }
 
@@ -73,6 +74,7 @@ function App() {
                         ...f,
                         status: data.status,
                         progress: data.progress,
+                        speed: data.speed,
                         error: data.error,
                         destFile: data.destFile,
                         completedAt: isDone && !f.completedAt ? now : f.completedAt

@@ -26,11 +26,12 @@ type Config struct {
 	VideoQuality        string // "high", "medium", "low"
 }
 
-type ProgressCallback func(progress int)
+type ProgressCallback func(progress int, speed string)
 
 var (
 	durationRegex = regexp.MustCompile(`Duration: (\d+):(\d{2}):(\d{2})\.(\d+)`)
 	timeRegex     = regexp.MustCompile(`time=(\d+):(\d{2}):(\d{2})\.(\d+)`)
+	speedRegex    = regexp.MustCompile(`speed=\s*([\d\.]+)x`)
 )
 
 func (c *Config) Magick(ctx context.Context, orig, dest string) error {
@@ -240,8 +241,15 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 					if progress > 100 {
 						progress = 100
 					}
+
+					var speed string
+					speedMatch := speedRegex.FindStringSubmatch(line)
+					if len(speedMatch) > 1 {
+						speed = speedMatch[1] + "x"
+					}
+
 					if onProgress != nil {
-						onProgress(progress)
+						onProgress(progress, speed)
 					}
 				}
 			}
