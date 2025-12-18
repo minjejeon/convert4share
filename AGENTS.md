@@ -60,6 +60,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 5.  **Code Style**: Avoid verbose comments. Code should be self-documenting.
 6.  **Git**: `frontend/dist` is embedded. `go build` requires it to exist.
 7.  **Dependency Lock**: Do not change `src/wailsjs/runtime` in `@frontend/package-lock.json`.
+8.  **Artifact Cleanup**: Always remove binary artifacts (e.g., compiled executables like `convert4share`, `main`) before submitting changes.
 
 ### Tag Message Guidelines
 When creating a tag message, adhere to the following format:
