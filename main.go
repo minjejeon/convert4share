@@ -35,17 +35,14 @@ func initLogger() {
 
 	exePath, err := os.Executable()
 	if err != nil {
-		// Can't get executable path, log to stderr
 		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
 		logger.Error("Could not get executable path", "error", err)
 		return
 	}
 
-	// Use PID in log filename to prevent file locking issues when multiple instances start simultaneously
 	logPath := filepath.Join(filepath.Dir(exePath), fmt.Sprintf("convert4share-debug-%d.log", os.Getpid()))
 	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		// Can't open log file, log to stderr
 		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
 		logger.Error("Could not open log file", "path", logPath, "error", err)
 		return

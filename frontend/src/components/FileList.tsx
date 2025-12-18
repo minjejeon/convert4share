@@ -42,7 +42,6 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
             <div
                 className="group flex items-center gap-4 bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-all duration-200 h-full shadow-sm dark:shadow-none"
             >
-                {/* Thumbnail / Icon */}
                 <div className="shrink-0 relative overflow-hidden w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-900/50 ring-1 ring-slate-900/5 dark:ring-white/5 flex items-center justify-center">
                     {file.thumbnail ? (
                         <img src={file.thumbnail} alt={fileName} className="w-full h-full object-cover" />
@@ -55,7 +54,6 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                     )}
                 </div>
 
-                {/* Info & Progress */}
                 <div className="min-w-0 flex-1 flex flex-col justify-center gap-2">
                     <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
@@ -110,7 +108,6 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                     </div>
                 </div>
 
-                {/* Actions */}
                 <div className="shrink-0 flex items-center gap-1 pl-2 border-l border-slate-200 dark:border-white/5">
                     {file.status === 'done' && file.destFile ? (
                         <button

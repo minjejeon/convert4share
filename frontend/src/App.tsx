@@ -31,7 +31,6 @@ function App() {
             return [...prev, { id: path, path, status: 'queued', progress: 0, addedAt: Date.now() }];
         });
 
-        // Fetch thumbnail
         GetThumbnail(path).then(thumb => {
             setFiles(prev => prev.map(f => f.path === path ? { ...f, thumbnail: thumb } : f));
         }).catch(err => {

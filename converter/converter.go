@@ -55,7 +55,6 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 
 	scaleArg := fmt.Sprintf("scale='w=%d:h=%d:force_original_aspect_ratio=decrease'", c.MaxSize, c.MaxSize)
 
-	// Determine bitrate and preset based on VideoQuality
 	var bitrate string
 	var maxBitrate string
 	var bufSize string
@@ -120,7 +119,6 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 				"-bf", "3",
 			)
 		case "speed": // Low
-			// Keep it simple for speed
 		}
 	case "nvidia":
 		log.Println("Using 'nvidia' hardware accelerator (h264_nvenc) from config.")
@@ -269,8 +267,6 @@ func (c *Config) GenerateThumbnail(inputFile string) ([]byte, error) {
 	// Preview size: 200px width, aspect ratio preserved
 
 	if ext == ".mov" || ext == ".mp4" || ext == ".mkv" || ext == ".avi" {
-		// FFMPEG
-		// -ss 00:00:00 -i input -vframes 1 -vf scale=200:-1 -f image2 -c:v mjpeg pipe:1
 		args := []string{
 			"-hide_banner",
 			"-loglevel", "error",
@@ -284,8 +280,6 @@ func (c *Config) GenerateThumbnail(inputFile string) ([]byte, error) {
 		}
 		cmd = prepareCommand(c.FfmpegBinary, args...)
 	} else {
-		// Magick
-		// input[0] -resize 200x200 jpeg:-
 		// Note: For HEIC, magick handles it if delegates are present.
 		// We use input[0] to get the first frame/page.
 		args := []string{
