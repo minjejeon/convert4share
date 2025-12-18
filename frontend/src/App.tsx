@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { EventsOn } from './wailsjs/runtime/runtime';
+import { EventsOn, EventsEmit } from './wailsjs/runtime/runtime';
 import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard, GetThumbnail, CancelJob, PauseQueue, ResumeQueue } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
@@ -92,6 +92,8 @@ function App() {
         window.addEventListener('dragenter', handleWindowDragEnter);
         const cleanupPaused = EventsOn("queue-paused", () => setIsPaused(true));
         const cleanupResumed = EventsOn("queue-resumed", () => setIsPaused(false));
+
+        EventsEmit("frontend-ready");
 
         return () => {
             cleanupFileAdded();

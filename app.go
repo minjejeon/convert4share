@@ -66,6 +66,10 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.initConfig()
+	runtime.EventsOn(ctx, "frontend-ready", func(optionalData ...interface{}) {
+		logger.Info("Frontend reported ready")
+		a.processPendingFiles()
+	})
 }
 
 func (a *App) initConfig() {
@@ -610,11 +614,6 @@ func (a *App) domReady(ctx context.Context) {
 	a.mu.Unlock()
 
 	logger.Info("DOM is ready.")
-	// Small delay to allow frontend to attach listeners
-	go func() {
-		time.Sleep(500 * time.Millisecond)
-		a.processPendingFiles()
-	}()
 }
 
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {

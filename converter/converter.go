@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -36,10 +35,14 @@ var (
 
 func (c *Config) Magick(ctx context.Context, orig, dest string) error {
 	cmd := prepareCommandContext(ctx, c.MagickBinary, orig, dest)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	log.Printf("Running magick command: %s", cmd.String())
-	return cmd.Run()
+
+	// Use CombinedOutput to avoid hanging on Windows GUI if stdout/stderr are not consumed.
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("magick failed: %w. Output: %s", err, string(output))
+	}
+	return nil
 }
 
 func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
@@ -190,9 +193,11 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 			stderrMu.Unlock()
 
 			// Debug logging for ffmpeg output to diagnose hangs/errors
-			// Only log lines that don't look like standard progress to avoid flooding logs too much,
-			// unless we are in deep debug mode. For now, log everything as the user is experiencing a hang.
-			log.Printf("ffmpeg: %s", line)
+			// Only log lines that don't look like standard progress to avoid flooding logs too much.
+			isProgress := timeRegex.MatchString(line)
+			if !isProgress {
+				log.Printf("ffmpeg: %s", line)
+			}
 
 			if duration == 0 {
 				matches := durationRegex.FindStringSubmatch(line)
