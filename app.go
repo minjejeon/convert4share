@@ -104,8 +104,6 @@ func (a *App) initConfig() {
 		logger.Info("Config file not found, using defaults", "error", err)
 	}
 
-	// Auto-detect binaries if they are set to defaults or look invalid,
-	// and update the in-memory configuration.
 	detected := a.DetectBinaries()
 
 	checkBinary := func(key string) bool {
@@ -318,7 +316,6 @@ func (a *App) DetectBinaries() map[string]string {
 		results["magick"] = path
 	}
 
-	// Helper to check if file exists
 	exists := func(p string) bool {
 		info, err := os.Stat(p)
 		return err == nil && !info.IsDir()
@@ -353,7 +350,6 @@ func (a *App) DetectBinaries() map[string]string {
 				}
 				lowerName := strings.ToLower(entry.Name())
 
-				// Helper to search recursively in a package dir
 				findInDir := func(dir, binName string) string {
 					var found string
 					filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
@@ -538,7 +534,6 @@ func (a *App) resolveDestination(dir, name, ext, collisionOption string) (string
 
 	dest := filepath.Join(dir, name+ext)
 
-	// Helper to create empty file atomically
 	createPlaceholder := func(path string) bool {
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL, 0666)
 		if err == nil {
@@ -570,7 +565,6 @@ func (a *App) resolveDestination(dir, name, ext, collisionOption string) (string
 		return "", fmt.Errorf("file already exists: %s", dest)
 	}
 
-	// Default to "rename"
 	for i := 1; ; i++ {
 		d := filepath.Join(dir, fmt.Sprintf("%s (%d)%s", name, i, ext))
 		if createPlaceholder(d) {
@@ -640,7 +634,6 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 		files := secondInstanceData.Args
 		var actualFiles []string
 		for _, arg := range files {
-			// Skip the argument if it matches the executable path (self-reference)
 			if exePath != "" {
 				if absArg, err := filepath.Abs(arg); err == nil && strings.EqualFold(absArg, exePath) {
 					logger.Info("Skipping executable path in args", "arg", arg)
