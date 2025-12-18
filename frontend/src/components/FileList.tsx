@@ -9,6 +9,7 @@ export interface FileItem {
     destFile?: string;
     status: 'queued' | 'processing' | 'done' | 'error';
     progress: number;
+    speed?: string;
     error?: string;
     thumbnail?: string;
     addedAt?: number;
@@ -77,6 +78,7 @@ const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove
                             file.status === 'queued' && "text-slate-500 bg-slate-100 dark:bg-slate-700/50",
                         )}>
                             {file.status === 'queued' ? 'Waiting' : file.status}
+                            {file.status === 'processing' && file.speed && <span className="normal-case ml-1 opacity-75">({file.speed})</span>}
                         </span>
                     </div>
 

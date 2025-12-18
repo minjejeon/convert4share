@@ -52,6 +52,7 @@ type JobStatus struct {
 	DestFile string `json:"destFile,omitempty"`
 	Status   string `json:"status"` // "queued", "processing", "done", "error"
 	Progress int    `json:"progress"`
+	Speed    string `json:"speed,omitempty"`
 	Error    string `json:"error,omitempty"`
 }
 
@@ -396,7 +397,7 @@ func (a *App) ConvertFiles(files []string) {
 		}
 		collisionOption := viper.GetString("collisionOption")
 
-		reporter := func(file string, destFile string, percent int, status string, errMsg string) {
+		reporter := func(file string, destFile string, percent int, status string, errMsg string, speed string) {
 			runtime.EventsEmit(a.ctx, "conversion-progress", JobStatus{
 				ID:       file,
 				File:     file,
@@ -404,6 +405,7 @@ func (a *App) ConvertFiles(files []string) {
 				Status:   status,
 				Progress: percent,
 				Error:    errMsg,
+				Speed:    speed,
 			})
 		}
 
@@ -416,7 +418,7 @@ func (a *App) ConvertFiles(files []string) {
 			fpath := f
 
 			if info, err := os.Stat(fpath); err != nil || info.IsDir() || info.Size() == 0 {
-				reporter(fpath, "", 0, "error", "File is empty or invalid")
+				reporter(fpath, "", 0, "error", "File is empty or invalid", "")
 				continue
 			}
 
@@ -474,11 +476,11 @@ func (a *App) ConvertFiles(files []string) {
 				if extension == ".mov" {
 					dest, err = a.resolveDestination(destDir, stem, ".mp4", collisionOption)
 					if err != nil {
-						reporter(src, "", 100, "error", err.Error())
+						reporter(src, "", 100, "error", err.Error(), "")
 						return
 					}
 
-					reporter(src, dest, 0, "processing", "")
+					reporter(src, dest, 0, "processing", "", "")
 
 					select {
 					case ffmpegSem <- struct{}{}:
@@ -487,17 +489,17 @@ func (a *App) ConvertFiles(files []string) {
 					}
 					defer func() { <-ffmpegSem }()
 
-					err = convConfig.Ffmpeg(jobCtx, src, dest, func(progress int) {
-						reporter(src, dest, progress, "processing", "")
+					err = convConfig.Ffmpeg(jobCtx, src, dest, func(progress int, speed string) {
+						reporter(src, dest, progress, "processing", "", speed)
 					})
 				} else if extension == ".heic" {
 					dest, err = a.resolveDestination(destDir, stem, ".jpg", collisionOption)
 					if err != nil {
-						reporter(src, "", 100, "error", err.Error())
+						reporter(src, "", 100, "error", err.Error(), "")
 						return
 					}
 
-					reporter(src, dest, 0, "processing", "")
+					reporter(src, dest, 0, "processing", "", "")
 
 					select {
 					case magickSem <- struct{}{}:
@@ -508,7 +510,7 @@ func (a *App) ConvertFiles(files []string) {
 
 					err = convConfig.Magick(jobCtx, src, dest)
 				} else {
-					reporter(src, "", 0, "error", "Unsupported format")
+					reporter(src, "", 0, "error", "Unsupported format", "")
 					return
 				}
 
@@ -516,9 +518,9 @@ func (a *App) ConvertFiles(files []string) {
 					if dest != "" {
 						os.Remove(dest)
 					}
-					reporter(src, dest, 100, "error", err.Error())
+					reporter(src, dest, 100, "error", err.Error(), "")
 				} else {
-					reporter(src, dest, 100, "done", "")
+					reporter(src, dest, 100, "done", "", "")
 				}
 			}(fpath, ext)
 		}
