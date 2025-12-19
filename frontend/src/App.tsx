@@ -150,7 +150,10 @@ function App() {
         e.stopPropagation();
         setIsDraggingGlobal(false);
         if (e.dataTransfer.files.length > 0) {
-            const paths = Array.from(e.dataTransfer.files).map((f: any) => f.path || f.name);
+            const paths = Array.from(e.dataTransfer.files).map((f) => {
+                const file = f as File & { path?: string };
+                return file.path || file.name;
+            });
             paths.filter(p => p).forEach(addFile);
         }
     };
