@@ -106,6 +106,7 @@ function App() {
         };
     }, []);
 
+    const queuedCount = files.filter(f => f.status === 'queued').length;
     useEffect(() => {
         const queued = files.filter(f => f.status === 'queued');
         if (queued.length > 0) {
@@ -117,7 +118,8 @@ function App() {
             }, 100);
             return () => clearTimeout(timeout);
         }
-    }, [files]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [queuedCount]);
 
     const handleInstall = async () => {
         setIsInstalling(true);
