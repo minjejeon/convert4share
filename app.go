@@ -2,17 +2,14 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/minjejeon/convert4share/converter"
-	"github.com/minjejeon/convert4share/windows"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -31,19 +28,6 @@ type App struct {
 	pauseCond    *sync.Cond
 	ffmpegSem    chan struct{}
 	magickSem    chan struct{}
-}
-
-type Settings struct {
-	MagickBinary        string   `json:"magickBinary"`
-	FfmpegBinary        string   `json:"ffmpegBinary"`
-	MaxSize             int      `json:"maxSize"`
-	HardwareAccelerator string   `json:"hardwareAccelerator"`
-	FfmpegCustomArgs    string   `json:"ffmpegCustomArgs"`
-	DefaultDestDir      string   `json:"defaultDestDir"`
-	ExcludePatterns     []string `json:"excludePatterns"`
-	VideoQuality        string   `json:"videoQuality"`
-	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
-	CollisionOption     string   `json:"collisionOption"`
 }
 
 type JobStatus struct {
@@ -73,91 +57,6 @@ func (a *App) startup(ctx context.Context) {
 	})
 }
 
-func (a *App) initConfig() {
-	exePath, err := os.Executable()
-	if err != nil {
-		logger.Error("Error getting executable path", "error", err)
-		return
-	}
-	exeDir := filepath.Dir(exePath)
-
-	viper.AddConfigPath(exeDir)
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AutomaticEnv()
-
-	viper.SetDefault("magickBinary", "magick")
-	viper.SetDefault("ffmpegBinary", "ffmpeg")
-	viper.SetDefault("maxSize", 1920)
-	viper.SetDefault("maxMagickWorkers", 5)
-	viper.SetDefault("maxFfmpegWorkers", 1)
-	viper.SetDefault("hardwareAccelerator", "none")
-	viper.SetDefault("videoQuality", "high")
-	viper.SetDefault("collisionOption", "rename")
-
-	defaultDest := "$HOMEDRIVE/$HOMEPATH/Pictures"
-	if home, err := os.UserHomeDir(); err == nil {
-		defaultDest = filepath.Join(home, "Pictures")
-	}
-	viper.SetDefault("defaultDestDir", defaultDest)
-
-	if err := viper.ReadInConfig(); err != nil {
-		logger.Info("Config file not found, using defaults", "error", err)
-	}
-
-	detected := a.DetectBinaries()
-
-	checkBinary := func(key string) bool {
-		val := viper.GetString(key)
-		if val == "" {
-			return false
-		}
-		if _, err := exec.LookPath(val); err != nil {
-			logger.Info("Binary path invalid or not found", "key", key, "path", val, "error", err)
-			return false
-		}
-		return true
-	}
-
-	if !checkBinary("ffmpegBinary") {
-		if path, ok := detected["ffmpeg"]; ok {
-			logger.Info("Auto-detected ffmpeg binary", "path", path)
-			viper.Set("ffmpegBinary", path)
-		}
-	}
-
-	if !checkBinary("magickBinary") {
-		if path, ok := detected["magick"]; ok {
-			logger.Info("Auto-detected magick binary", "path", path)
-			viper.Set("magickBinary", path)
-		}
-	}
-
-	a.updateSemaphores()
-}
-
-func (a *App) updateSemaphores() {
-	maxFfmpeg := viper.GetInt("maxFfmpegWorkers")
-	if maxFfmpeg < 1 {
-		maxFfmpeg = 1
-	}
-
-	maxMagick := viper.GetInt("maxMagickWorkers")
-	if maxMagick < 1 {
-		maxMagick = 1
-	}
-
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	if a.ffmpegSem == nil || cap(a.ffmpegSem) != maxFfmpeg {
-		a.ffmpegSem = make(chan struct{}, maxFfmpeg)
-	}
-	if a.magickSem == nil || cap(a.magickSem) != maxMagick {
-		a.magickSem = make(chan struct{}, maxMagick)
-	}
-}
-
 func (a *App) processPendingFiles() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -172,113 +71,6 @@ func (a *App) processPendingFiles() {
 		runtime.EventsEmit(a.ctx, "files-received", a.pendingFiles)
 		a.pendingFiles = nil
 	}
-}
-
-func (a *App) GetSettings() Settings {
-	return Settings{
-		MagickBinary:        viper.GetString("magickBinary"),
-		FfmpegBinary:        viper.GetString("ffmpegBinary"),
-		MaxSize:             viper.GetInt("maxSize"),
-		HardwareAccelerator: viper.GetString("hardwareAccelerator"),
-		FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
-		DefaultDestDir:      viper.GetString("defaultDestDir"),
-		ExcludePatterns:     viper.GetStringSlice("excludeStringPatterns"),
-		VideoQuality:        viper.GetString("videoQuality"),
-		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
-		CollisionOption:     viper.GetString("collisionOption"),
-	}
-}
-
-func (a *App) GetContextMenuStatus() bool {
-	return windows.IsContextMenuInstalled()
-}
-
-func (a *App) InstallContextMenu() error {
-	return windows.RunCommandAsAdmin("install")
-}
-
-func (a *App) UninstallContextMenu() error {
-	return windows.RunCommandAsAdmin("uninstall")
-}
-
-func (a *App) CopyFileToClipboard(path string) error {
-	return windows.CopyFileToClipboard(path)
-}
-
-func (a *App) SaveSettings(s Settings) error {
-	viper.Set("magickBinary", s.MagickBinary)
-	viper.Set("ffmpegBinary", s.FfmpegBinary)
-	viper.Set("maxSize", s.MaxSize)
-	viper.Set("hardwareAccelerator", s.HardwareAccelerator)
-	viper.Set("ffmpegCustomArgs", s.FfmpegCustomArgs)
-	viper.Set("defaultDestDir", s.DefaultDestDir)
-	viper.Set("excludeStringPatterns", s.ExcludePatterns)
-	viper.Set("videoQuality", s.VideoQuality)
-	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
-	viper.Set("collisionOption", s.CollisionOption)
-
-	exePath, err := os.Executable()
-	if err != nil {
-		return err
-	}
-	exeDir := filepath.Dir(exePath)
-	configPath := filepath.Join(exeDir, "config.yaml")
-
-	err = viper.WriteConfigAs(configPath)
-	if err == nil {
-		a.updateSemaphores()
-	}
-	return err
-}
-
-func (a *App) InstallTool(toolName string) error {
-	var packageID string
-	switch toolName {
-	case "ffmpeg":
-		packageID = "Gyan.FFmpeg"
-	case "magick":
-		packageID = "ImageMagick.ImageMagick"
-	default:
-		return fmt.Errorf("unknown tool: %s", toolName)
-	}
-
-	if err := windows.InstallWingetPackage(packageID); err != nil {
-		return err
-	}
-
-	// Re-detect
-	detected := a.DetectBinaries()
-	if path, ok := detected[toolName]; ok {
-		if toolName == "ffmpeg" {
-			viper.Set("ffmpegBinary", path)
-		} else if toolName == "magick" {
-			viper.Set("magickBinary", path)
-		}
-		// Force save to persist
-		return a.SaveSettings(a.GetSettings())
-	} else {
-		return fmt.Errorf("installation completed but binary not found. You may need to restart the application")
-	}
-}
-
-func (a *App) SelectBinaryDialog() string {
-	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Select Binary",
-		Filters: []runtime.FileFilter{
-			{
-				DisplayName: "Executables",
-				Pattern:     "*.exe;*.bat;*.cmd",
-			},
-			{
-				DisplayName: "All Files",
-				Pattern:     "*",
-			},
-		},
-	})
-	if err != nil {
-		return ""
-	}
-	return selection
 }
 
 func (a *App) CancelJob(id string) {
@@ -304,84 +96,6 @@ func (a *App) ResumeQueue() {
 	a.isPaused = false
 	a.pauseCond.Broadcast()
 	runtime.EventsEmit(a.ctx, "queue-resumed", true)
-}
-
-func (a *App) DetectBinaries() map[string]string {
-	results := make(map[string]string)
-
-	if path, err := exec.LookPath("ffmpeg"); err == nil {
-		results["ffmpeg"] = path
-	}
-
-	if path, err := exec.LookPath("magick"); err == nil {
-		results["magick"] = path
-	}
-
-	exists := func(p string) bool {
-		info, err := os.Stat(p)
-		return err == nil && !info.IsDir()
-	}
-
-	// Check WinGet locations if not found
-	home, err := os.UserHomeDir()
-	if err == nil {
-		localAppData := filepath.Join(home, "AppData", "Local")
-		wingetBase := filepath.Join(localAppData, "Microsoft", "WinGet")
-
-		// 1. Check Links (Symlinks)
-		linksDir := filepath.Join(wingetBase, "Links")
-		if _, ok := results["ffmpeg"]; !ok {
-			if p := filepath.Join(linksDir, "ffmpeg.exe"); exists(p) {
-				results["ffmpeg"] = p
-			}
-		}
-		if _, ok := results["magick"]; !ok {
-			if p := filepath.Join(linksDir, "magick.exe"); exists(p) {
-				results["magick"] = p
-			}
-		}
-
-		// 2. Check Packages (Actual installation dirs)
-		packagesDir := filepath.Join(wingetBase, "Packages")
-		entries, err := os.ReadDir(packagesDir)
-		if err == nil {
-			for _, entry := range entries {
-				if !entry.IsDir() {
-					continue
-				}
-				lowerName := strings.ToLower(entry.Name())
-
-				findInDir := func(dir, binName string) string {
-					var found string
-					filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-						if err != nil {
-							return nil
-						}
-						if !d.IsDir() && strings.EqualFold(d.Name(), binName) {
-							found = path
-							return filepath.SkipAll
-						}
-						return nil
-					})
-					return found
-				}
-
-				if _, ok := results["ffmpeg"]; !ok && strings.Contains(lowerName, "ffmpeg") {
-					if p := findInDir(filepath.Join(packagesDir, entry.Name()), "ffmpeg.exe"); p != "" {
-						results["ffmpeg"] = p
-					}
-				}
-
-				if _, ok := results["magick"]; !ok && (strings.Contains(lowerName, "imagemagick") || strings.Contains(lowerName, "magick")) {
-					if p := findInDir(filepath.Join(packagesDir, entry.Name()), "magick.exe"); p != "" {
-						results["magick"] = p
-					}
-				}
-			}
-		}
-	}
-
-	return results
 }
 
 func (a *App) ConvertFiles(files []string) {
@@ -586,22 +300,6 @@ func (a *App) AddFiles(files []string) {
 			}
 		}
 	}
-}
-
-func (a *App) GetThumbnail(path string) (string, error) {
-	convConfig := &converter.Config{
-		MagickBinary: viper.GetString("magickBinary"),
-		FfmpegBinary: viper.GetString("ffmpegBinary"),
-	}
-
-	data, err := convConfig.GenerateThumbnail(path)
-	if err != nil {
-		logger.Error("Failed to generate thumbnail", "path", path, "ffmpeg", convConfig.FfmpegBinary, "magick", convConfig.MagickBinary, "error", err)
-		return "", fmt.Errorf("failed to generate thumbnail: %w", err)
-	}
-
-	base64Str := base64.StdEncoding.EncodeToString(data)
-	return "data:image/jpeg;base64," + base64Str, nil
 }
 
 func (a *App) domReady(ctx context.Context) {
