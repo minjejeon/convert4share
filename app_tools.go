@@ -164,7 +164,7 @@ func (a *App) GetThumbnail(path string) (string, error) {
 		FfmpegBinary: viper.GetString("ffmpegBinary"),
 	}
 
-	data, err := convConfig.GenerateThumbnail(path)
+	data, err := convConfig.GenerateThumbnail(a.ctx, path)
 	if err != nil {
 		logger.Error("Failed to generate thumbnail", "path", path, "ffmpeg", convConfig.FfmpegBinary, "magick", convConfig.MagickBinary, "error", err)
 		return "", fmt.Errorf("failed to generate thumbnail: %w", err)

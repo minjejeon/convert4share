@@ -36,6 +36,8 @@ var (
 
 func (c *Config) Magick(ctx context.Context, orig, dest string) error {
 	cmd := prepareCommandContext(ctx, c.MagickBinary, orig, dest)
+	// Ensure standard input is closed to prevent magick from waiting for input
+	cmd.Stdin = nil
 	log.Printf("Running magick command: %s", cmd.String())
 
 	// Use CombinedOutput to avoid hanging on Windows GUI if stdout/stderr are not consumed.
@@ -267,7 +269,7 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 	return nil
 }
 
-func (c *Config) GenerateThumbnail(inputFile string) ([]byte, error) {
+func (c *Config) GenerateThumbnail(ctx context.Context, inputFile string) ([]byte, error) {
 	ext := strings.ToLower(filepath.Ext(inputFile))
 	var cmd *exec.Cmd
 	var stdout bytes.Buffer
@@ -286,7 +288,7 @@ func (c *Config) GenerateThumbnail(inputFile string) ([]byte, error) {
 			"-c:v", "mjpeg",
 			"pipe:1",
 		}
-		cmd = prepareCommand(c.FfmpegBinary, args...)
+		cmd = prepareCommandContext(ctx, c.FfmpegBinary, args...)
 	} else {
 		// Note: For HEIC, magick handles it if delegates are present.
 		// We use input[0] to get the first frame/page.
@@ -296,9 +298,11 @@ func (c *Config) GenerateThumbnail(inputFile string) ([]byte, error) {
 			"-quality", "80",
 			"jpeg:-",
 		}
-		cmd = prepareCommand(c.MagickBinary, args...)
+		cmd = prepareCommandContext(ctx, c.MagickBinary, args...)
 	}
 
+	// Ensure standard input is closed
+	cmd.Stdin = nil
 	cmd.Stdout = &stdout
 	// We can ignore stderr or capture it for debug
 	// cmd.Stderr = os.Stderr

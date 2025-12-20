@@ -198,10 +198,10 @@ func (a *App) ConvertFiles(files []string) {
 
 					select {
 					case ffmpegSem <- struct{}{}:
+						defer func() { <-ffmpegSem }()
 					case <-jobCtx.Done():
 						return
 					}
-					defer func() { <-ffmpegSem }()
 
 					err = convConfig.Ffmpeg(jobCtx, src, dest, func(progress int, speed string) {
 						reporter(src, dest, progress, "processing", "", speed)
@@ -217,10 +217,10 @@ func (a *App) ConvertFiles(files []string) {
 
 					select {
 					case magickSem <- struct{}{}:
+						defer func() { <-magickSem }()
 					case <-jobCtx.Done():
 						return
 					}
-					defer func() { <-magickSem }()
 
 					err = convConfig.Magick(jobCtx, src, dest)
 				} else {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { EventsOn, EventsEmit } from './wailsjs/runtime/runtime';
 import { ConvertFiles, GetContextMenuStatus, InstallContextMenu, CopyFileToClipboard, GetThumbnail, CancelJob, PauseQueue, ResumeQueue } from './wailsjs/go/main/App';
 import { Layout } from './components/Layout';
@@ -25,8 +25,15 @@ function App() {
     const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
     const { theme, setTheme } = useTheme();
+    const filesRef = useRef(files);
+    filesRef.current = files;
+    const installIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const installTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const addFile = (path: string) => {
+        // Prevent redundant thumbnail requests by checking against the current files ref
+        if (filesRef.current.some(f => f.path === path)) return;
+
         setFiles(prev => {
             if (prev.some(f => f.path === path)) return prev;
             return [...prev, { id: path, path, status: 'queued', progress: 0, addedAt: Date.now() }];
@@ -134,18 +141,27 @@ function App() {
                     }
                 });
             }, 1000);
-            setTimeout(() => {
+            installIntervalRef.current = interval;
+            const timeout = setTimeout(() => {
                 clearInterval(interval);
                 GetContextMenuStatus().then(status => {
                     if (status) setIsInstalled(true);
                     setIsInstalling(false);
                 });
             }, 10000);
+            installTimeoutRef.current = timeout;
         } catch (e) {
             console.error(e);
             setIsInstalling(false);
         }
     };
+
+    useEffect(() => {
+        return () => {
+            if (installIntervalRef.current) clearInterval(installIntervalRef.current);
+            if (installTimeoutRef.current) clearTimeout(installTimeoutRef.current);
+        };
+    }, []);
 
     const handleGlobalDrop = (e: React.DragEvent) => {
         e.preventDefault();
