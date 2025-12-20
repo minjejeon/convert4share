@@ -17,10 +17,11 @@ export function SettingsVideo({ settings, onChange }: SettingsVideoProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <label htmlFor="video-hw-accel" className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <Cpu className="w-3 h-3" /> Hardware Accelerator
                     </label>
                     <select
+                        id="video-hw-accel"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                         value={settings.hardwareAccelerator}
                         onChange={(e) => onChange({ ...settings, hardwareAccelerator: e.target.value })}
@@ -32,10 +33,11 @@ export function SettingsVideo({ settings, onChange }: SettingsVideoProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <label htmlFor="video-quality" className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <Layers className="w-3 h-3" /> Quality Preset
                     </label>
                     <select
+                        id="video-quality"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                         value={settings.videoQuality || "high"}
                         onChange={(e) => onChange({ ...settings, videoQuality: e.target.value })}
@@ -47,8 +49,9 @@ export function SettingsVideo({ settings, onChange }: SettingsVideoProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Concurrent Jobs</label>
+                    <label htmlFor="video-workers" className="text-xs font-medium text-slate-500 dark:text-slate-400">Concurrent Jobs</label>
                     <input
+                        id="video-workers"
                         type="number"
                         min="1"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
@@ -58,8 +61,9 @@ export function SettingsVideo({ settings, onChange }: SettingsVideoProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Max Resolution (Size)</label>
+                    <label htmlFor="video-max-size" className="text-xs font-medium text-slate-500 dark:text-slate-400">Max Resolution (Size)</label>
                      <input
+                        id="video-max-size"
                         type="number"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                         value={settings.maxSize}
@@ -70,8 +74,9 @@ export function SettingsVideo({ settings, onChange }: SettingsVideoProps) {
             </div>
 
             <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700/50">
-                <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Custom FFmpeg Arguments</label>
+                <label htmlFor="video-custom-args" className="text-xs font-medium text-slate-500 dark:text-slate-400">Custom FFmpeg Arguments</label>
                  <input
+                    id="video-custom-args"
                     type="text"
                     className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 font-mono text-xs transition-shadow"
                     value={settings.ffmpegCustomArgs}
