@@ -16,8 +16,9 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
              </h3>
              <div className="space-y-5">
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Default Destination Directory</label>
+                    <label htmlFor="paths-dest-dir" className="text-xs font-medium text-slate-500 dark:text-slate-400">Default Destination Directory</label>
                     <input
+                        id="paths-dest-dir"
                         type="text"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono transition-shadow"
                         value={settings.defaultDestDir}
@@ -25,8 +26,9 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
                     />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">File Collision Behavior</label>
+                    <label htmlFor="paths-collision" className="text-xs font-medium text-slate-500 dark:text-slate-400">File Collision Behavior</label>
                     <select
+                        id="paths-collision"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                         value={settings.collisionOption || "rename"}
                         onChange={(e) => onChange({ ...settings, collisionOption: e.target.value })}
@@ -37,8 +39,9 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
                     </select>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Exclude Patterns (comma separated)</label>
+                    <label htmlFor="paths-exclude" className="text-xs font-medium text-slate-500 dark:text-slate-400">Exclude Patterns (comma separated)</label>
                      <input
+                        id="paths-exclude"
                         type="text"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                         value={settings.excludePatterns?.join(', ')}

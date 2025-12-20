@@ -80,9 +80,10 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
             </div>
             <div className="space-y-5">
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">FFmpeg Binary Path</label>
+                    <label htmlFor="tools-ffmpeg-path" className="text-xs font-medium text-slate-500 dark:text-slate-400">FFmpeg Binary Path</label>
                     <div className="flex gap-2">
                         <input
+                            id="tools-ffmpeg-path"
                             type="text"
                             className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
                             value={settings.ffmpegBinary}
@@ -106,9 +107,10 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Magick Binary Path</label>
+                    <label htmlFor="tools-magick-path" className="text-xs font-medium text-slate-500 dark:text-slate-400">Magick Binary Path</label>
                     <div className="flex gap-2">
                         <input
+                            id="tools-magick-path"
                             type="text"
                             className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
                             value={settings.magickBinary}
