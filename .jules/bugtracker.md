@@ -8,3 +8,6 @@
 | BUG-004 | **Minor** | **Interval Leak in `handleInstall`**: Cleanup missing. | **Resolved** | Approved | Fixed in `frontend/src/App.tsx`. |
 | BUG-005 | **Minor** | **Magick Stdin Safety**: `Magick` command missing `Stdin = nil`. | **Resolved** | Approved | Fixed in `converter/converter.go`. |
 | BUG-006 | **Info** | **Frontend Memory Accumulation (Base64)**: Storing thumbnails as Base64 strings. | Deferred | **Deferred** | User explicitly instructed to defer this. |
+| BUG-007 | **Major** | **Job Map Corruption in `ConvertFiles`**: Duplicate file submissions overwrite `jobCancels` entry, leading to broken cancellation and state inconsistencies. | **Resolved** | Approved | Fixed in `app.go`. |
+| BUG-008 | **Minor** | **Context Race in `handleSecondInstance`**: Accesses `a.ctx` without lock, potential race with `startup`. | **Resolved** | Approved | Fixed in `app.go`. |
+| BUG-009 | **Info** | **Architecture Mismatch**: Memory mentions `useFileQueue.ts`, but logic is in `App.tsx`. | **Pending** | | Update memory or refactor code. |

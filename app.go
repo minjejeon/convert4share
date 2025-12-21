@@ -157,6 +157,12 @@ func (a *App) ConvertFiles(files []string) {
 				defer wg.Done()
 
 				a.mu.Lock()
+				// Check if job is already running to prevent map corruption (BUG-007)
+				if _, exists := a.jobCancels[src]; exists {
+					a.mu.Unlock()
+					return
+				}
+
 				jobCtx, cancel := context.WithCancel(a.ctx)
 				a.jobCancels[src] = cancel
 
@@ -371,13 +377,17 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 }
 
 func (a *App) handleSecondInstance() {
+	a.mu.Lock()
+	ctx := a.ctx
+	a.mu.Unlock()
+
 	// If the app is still starting up (ctx is nil), the window will appear naturally.
 	// We only need to force focus if the app is already running.
-	if a.ctx != nil {
-		runtime.WindowUnminimise(a.ctx)
-		runtime.WindowShow(a.ctx)
-		runtime.WindowSetAlwaysOnTop(a.ctx, true)
-		runtime.WindowSetAlwaysOnTop(a.ctx, false)
+	if ctx != nil {
+		runtime.WindowUnminimise(ctx)
+		runtime.WindowShow(ctx)
+		runtime.WindowSetAlwaysOnTop(ctx, true)
+		runtime.WindowSetAlwaysOnTop(ctx, false)
 	}
 
 	a.processPendingFiles()
