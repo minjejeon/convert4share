@@ -102,6 +102,14 @@ func (a *App) ConvertFiles(files []string) {
 				continue
 			}
 
+			a.mu.Lock()
+			if _, ok := a.jobCancels[fpath]; ok {
+				a.mu.Unlock()
+				logger.Warn("Skipping file as it is already being processed", "file", fpath)
+				continue
+			}
+			a.mu.Unlock()
+
 			ext := strings.ToLower(filepath.Ext(fpath))
 
 			fname := filepath.Base(fpath)
