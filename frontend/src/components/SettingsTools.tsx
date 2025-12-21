@@ -93,6 +93,7 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
                             onClick={() => handleBrowse('ffmpegBinary')}
                             className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
                             title="Browse..."
+                            aria-label="Browse for FFmpeg binary"
                         >
                             <FolderOpen className="w-4 h-4" />
                         </button>
@@ -101,6 +102,7 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
                             disabled={!!installing}
                             className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
                             title="Install via WinGet"
+                            aria-label="Install FFmpeg via WinGet"
                         >
                             {installing === 'ffmpeg' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                         </button>
@@ -120,6 +122,7 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
                             onClick={() => handleBrowse('magickBinary')}
                             className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
                             title="Browse..."
+                            aria-label="Browse for ImageMagick binary"
                         >
                             <FolderOpen className="w-4 h-4" />
                         </button>
@@ -128,6 +131,7 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
                             disabled={!!installing}
                             className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
                             title="Install via WinGet"
+                            aria-label="Install ImageMagick via WinGet"
                         >
                             {installing === 'magick' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                         </button>

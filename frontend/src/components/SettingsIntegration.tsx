@@ -87,7 +87,9 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
                             "p-1.5 rounded-md transition-all",
                             theme === 'light' ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                         )}
-                        title="Light"
+                        title="Light Theme"
+                        aria-label="Switch to light theme"
+                        aria-pressed={theme === 'light'}
                     >
                         <Sun className="w-4 h-4" />
                     </button>
@@ -97,7 +99,9 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
                             "p-1.5 rounded-md transition-all",
                             theme === 'dark' ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                         )}
-                        title="Dark"
+                        title="Dark Theme"
+                        aria-label="Switch to dark theme"
+                        aria-pressed={theme === 'dark'}
                     >
                         <Moon className="w-4 h-4" />
                     </button>
@@ -107,7 +111,9 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
                             "p-1.5 rounded-md transition-all",
                             theme === 'system' ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                         )}
-                        title="System"
+                        title="System Theme"
+                        aria-label="Switch to system theme"
+                        aria-pressed={theme === 'system'}
                     >
                         <Laptop className="w-4 h-4" />
                     </button>
