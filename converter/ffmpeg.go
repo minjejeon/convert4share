@@ -88,13 +88,14 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 		}
 	case "nvidia":
 		log.Println("Using 'nvidia' hardware accelerator (h264_nvenc) from config.")
+		// User reported success with software scale + format=yuv420p
 		args = append(args,
 			"-hwaccel", "cuda",
 			"-i", orig,
 			"-c:v", "h264_nvenc",
 			"-preset", nvidiaPreset,
 			"-b:v", bitrate,
-			"-vf", scaleArg,
+			"-vf", scaleArg+",format=yuv420p",
 		)
 	case "none", "":
 		log.Println("Using software encoder (libx264).")

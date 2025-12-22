@@ -17,6 +17,7 @@ export interface FileItem {
 
 export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove: (id: string) => void; onCopy: (path: string) => void }) => {
     const [isCopied, setIsCopied] = useState(false);
+    const [isErrorCopied, setIsErrorCopied] = useState(false);
     const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
     const fileName = lastSeparatorIndex >= 0 ? file.path.substring(lastSeparatorIndex + 1) : file.path;
     const dirName = lastSeparatorIndex >= 0 ? file.path.substring(0, lastSeparatorIndex) : '';
@@ -25,6 +26,13 @@ export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; o
         onCopy(file.destFile!);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
+    };
+
+    const handleCopyError = (errorText: string) => {
+        navigator.clipboard.writeText(errorText).then(() => {
+            setIsErrorCopied(true);
+            setTimeout(() => setIsErrorCopied(false), 2000);
+        }).catch(console.error);
     };
 
     return (
@@ -90,11 +98,19 @@ export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; o
                             />
                         </div>
                         {file.error && (
-                            <div className="mt-2 w-full text-xs text-red-500 dark:text-red-400 flex items-start gap-1.5 animate-in fade-in" title={file.error}>
+                            <div className="mt-2 w-full text-xs text-red-500 dark:text-red-400 flex items-start gap-1.5 animate-in fade-in">
                                 <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
-                                <span className="break-all line-clamp-3">
+                                <span className="break-all line-clamp-3 flex-1" title={file.error}>
                                     {file.error}
                                 </span>
+                                <button
+                                    onClick={() => handleCopyError(file.error!)}
+                                    className="shrink-0 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
+                                    title="Copy Error Log"
+                                    aria-label="Copy error log"
+                                >
+                                    {isErrorCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                </button>
                             </div>
                         )}
                     </div>

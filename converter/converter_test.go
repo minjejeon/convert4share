@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -55,5 +56,45 @@ func TestBuildFfmpegArgs(t *testing.T) {
 	}
 	if !foundMaxRate {
 		t.Error("Expected -maxrate 10M for AMD High quality")
+	}
+}
+
+func TestBuildFfmpegArgs_Nvidia(t *testing.T) {
+	c := Config{
+		MagickBinary:        "magick",
+		FfmpegBinary:        "ffmpeg",
+		MaxSize:             1920,
+		HardwareAccelerator: "nvidia",
+		VideoQuality:        "high",
+	}
+
+	args := c.BuildFfmpegArgs("input.mov", "output.mp4")
+
+	// Helper to check if arg exists
+	hasArg := func(arg string) bool {
+		for _, a := range args {
+			if a == arg {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !hasArg("-hwaccel") {
+		t.Error("Expected -hwaccel for NVIDIA")
+	}
+
+	foundCorrectFilter := false
+	for i, a := range args {
+		if a == "-vf" && i+1 < len(args) {
+			val := args[i+1]
+			if strings.Contains(val, "scale=") && strings.Contains(val, "format=yuv420p") {
+				foundCorrectFilter = true
+			}
+			break
+		}
+	}
+	if !foundCorrectFilter {
+		t.Error("Expected scale filter with format=yuv420p for NVIDIA")
 	}
 }
