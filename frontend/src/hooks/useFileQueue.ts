@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { EventsOn, EventsEmit } from '../wailsjs/runtime/runtime';
 import { ConvertFiles, GetThumbnail, CancelJob, PauseQueue, ResumeQueue, CopyFileToClipboard } from '../wailsjs/go/main/App';
-import { FileItem } from '../components/FileList';
+import { FileItem } from '../components/FileItemRow';
 
 interface ProgressData {
     file: string;

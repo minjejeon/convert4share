@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  build:
+    desc: "Build the application for production"
+    cmds:
+      - wails build -ldflags="-s -w"
+  dev:
+    desc: "Run the application in development mode"
+    cmds:
+      - wails dev
