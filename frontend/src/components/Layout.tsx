@@ -12,12 +12,16 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
     return (
         <div className="h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 overflow-hidden">
             <header className="h-14 border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md sticky top-0 z-50 select-none drag-region shrink-0">
-                <div className="flex items-center gap-2.5">
+                <button
+                    onClick={() => onNavigate('home')}
+                    className="flex items-center gap-2.5 no-drag-region cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
+                    aria-label="Go to Home"
+                >
                     <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
                         <img src={logo} alt="Convert4Share Logo" className="w-full h-full object-cover" />
                     </div>
                     <h1 className="text-sm font-bold tracking-wide text-slate-900 dark:text-slate-200">Convert4Share</h1>
-                </div>
+                </button>
                 <nav className="flex gap-1 no-drag-region bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg border border-slate-200 dark:border-white/5">
                     <button
                         onClick={() => onNavigate('home')}
