@@ -171,15 +171,7 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 					m, _ := strconv.Atoi(matches[2])
 					s, _ := strconv.Atoi(matches[3])
 
-					fractionStr := matches[4]
-					if len(fractionStr) > 9 {
-						fractionStr = fractionStr[:9]
-					}
-					for len(fractionStr) < 9 {
-						fractionStr += "0"
-					}
-					nanos, _ := strconv.Atoi(fractionStr)
-
+					nanos := parseFractionToNanos(matches[4])
 					duration = time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(nanos)*time.Nanosecond
 					log.Printf("Detected video duration: %s", duration)
 				}
@@ -192,15 +184,7 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 					m, _ := strconv.Atoi(matches[2])
 					s, _ := strconv.Atoi(matches[3])
 
-					fractionStr := matches[4]
-					if len(fractionStr) > 9 {
-						fractionStr = fractionStr[:9]
-					}
-					for len(fractionStr) < 9 {
-						fractionStr += "0"
-					}
-					nanos, _ := strconv.Atoi(fractionStr)
-
+					nanos := parseFractionToNanos(matches[4])
 					currentTime := time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(nanos)*time.Nanosecond
 
 					progress := int((float64(currentTime) / float64(duration)) * 100)
@@ -231,4 +215,17 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 		return fmt.Errorf("ffmpeg finished with error: %w. Log: %s", err, logs)
 	}
 	return nil
+}
+
+// parseFractionToNanos converts a fractional second string (e.g. "50") to nanoseconds.
+// It pads or truncates the string to 9 digits to represent nanoseconds.
+// For example: "5" -> 500000000 (500ms), "123" -> 123000000 (123ms).
+func parseFractionToNanos(s string) int {
+	if len(s) > 9 {
+		s = s[:9]
+	} else if len(s) < 9 {
+		s = s + strings.Repeat("0", 9-len(s))
+	}
+	nanos, _ := strconv.Atoi(s)
+	return nanos
 }
