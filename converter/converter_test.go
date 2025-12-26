@@ -98,3 +98,26 @@ func TestBuildFfmpegArgs_Nvidia(t *testing.T) {
 		t.Error("Expected scale filter with format=yuv420p for NVIDIA")
 	}
 }
+
+func TestParseFractionToNanos(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int
+	}{
+		{"5", 500000000},
+		{"50", 500000000},
+		{"123", 123000000},
+		{"123456789", 123456789},
+		{"1234567899", 123456789}, // Truncate
+		{"0", 0},
+		{"001", 1000000},
+		{"", 0},
+	}
+
+	for _, tt := range tests {
+		got := parseFractionToNanos(tt.input)
+		if got != tt.expected {
+			t.Errorf("parseFractionToNanos(%q) = %d; want %d", tt.input, got, tt.expected)
+		}
+	}
+}
