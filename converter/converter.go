@@ -64,11 +64,13 @@ func (c *Config) GenerateThumbnail(ctx context.Context, inputFile string) ([]byt
 	// Ensure standard input is closed
 	cmd.Stdin = nil
 	cmd.Stdout = &stdout
-	// We can ignore stderr or capture it for debug
-	// cmd.Stderr = os.Stderr
+
+	// Capture stderr for better error reporting
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("thumbnail generation failed: %w", err)
+		return nil, fmt.Errorf("thumbnail generation failed: %w. Log: %s", err, stderr.String())
 	}
 
 	return stdout.Bytes(), nil
