@@ -68,15 +68,11 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 		logger.Error("Error getting executable path during second instance launch", "error", err)
 	}
 
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	logger.Info("Processing second instance args", "count", len(secondInstanceData.Args))
-
+	// Pre-process files outside the lock to avoid blocking UI during IO
+	var actualFiles []string
 	if len(secondInstanceData.Args) > 0 {
-		files := secondInstanceData.Args
-		var actualFiles []string
-		for _, arg := range files {
+		logger.Info("Processing second instance args", "count", len(secondInstanceData.Args))
+		for _, arg := range secondInstanceData.Args {
 			if exePath != "" {
 				if absArg, err := filepath.Abs(arg); err == nil && strings.EqualFold(absArg, exePath) {
 					logger.Info("Skipping executable path in args", "arg", arg)
@@ -94,14 +90,18 @@ func (a *App) OnSecondInstanceLaunch(secondInstanceData options.SecondInstanceDa
 				logger.Info("Skipping invalid file in second instance args", "arg", arg, "err", err)
 			}
 		}
-		if len(actualFiles) > 0 {
-			logger.Info("Adding files from second instance", "files", actualFiles)
-			a.pendingFiles = append(a.pendingFiles, actualFiles...)
-		} else {
-			logger.Info("No valid files found in second instance args.")
-		}
 	} else {
 		logger.Info("Second instance launched with no args.")
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if len(actualFiles) > 0 {
+		logger.Info("Adding files from second instance", "files", actualFiles)
+		a.pendingFiles = append(a.pendingFiles, actualFiles...)
+	} else if len(secondInstanceData.Args) > 0 {
+		logger.Info("No valid files found in second instance args.")
 	}
 
 	// Debounce the processing to handle rapid-fire calls (e.g. from multi-file selection)
