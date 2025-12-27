@@ -89,12 +89,10 @@ func main() {
 				}
 			}
 
-			if info, err := os.Stat(arg); err == nil && !info.IsDir() {
-				if absArg, err := filepath.Abs(arg); err == nil {
-					app.pendingFiles = append(app.pendingFiles, absArg)
-				} else {
-					app.pendingFiles = append(app.pendingFiles, arg)
-				}
+			if absArg, err := filepath.Abs(arg); err == nil {
+				app.pendingFiles = append(app.pendingFiles, absArg)
+			} else {
+				app.pendingFiles = append(app.pendingFiles, arg)
 			}
 		}
 	}
