@@ -25,18 +25,39 @@ type JobStatus struct {
 
 func (a *App) processPendingFiles() {
 	a.mu.Lock()
-	defer a.mu.Unlock()
-
 	if !a.isReady {
+		a.mu.Unlock()
 		logger.Info("processPendingFiles called but DOM not ready yet.")
 		return
 	}
 
-	if len(a.pendingFiles) > 0 {
-		logger.Info("Processing pending files", "files", a.pendingFiles)
-		runtime.EventsEmit(a.ctx, "files-received", a.pendingFiles)
-		a.pendingFiles = nil
+	filesToProcess := a.pendingFiles
+	a.pendingFiles = nil
+	a.mu.Unlock()
+
+	if len(filesToProcess) == 0 {
+		return
 	}
+
+	go func(files []string) {
+		var validFiles []string
+		for _, f := range files {
+			if info, err := os.Stat(f); err == nil && !info.IsDir() {
+				if absArg, err := filepath.Abs(f); err == nil {
+					validFiles = append(validFiles, absArg)
+				} else {
+					validFiles = append(validFiles, f)
+				}
+			} else {
+				logger.Info("Skipping invalid file", "file", f)
+			}
+		}
+
+		if len(validFiles) > 0 {
+			logger.Info("Processing pending files", "files", validFiles)
+			runtime.EventsEmit(a.ctx, "files-received", validFiles)
+		}
+	}(filesToProcess)
 }
 
 func (a *App) CancelJob(id string) {
