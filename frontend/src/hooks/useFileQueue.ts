@@ -49,12 +49,10 @@ export function useFileQueue() {
 
     useEffect(() => {
         const cleanupFileAdded = EventsOn("file-added", (path: string) => {
-            console.log("File added:", path);
             addFile(path);
         });
 
         const cleanupFilesReceived = EventsOn("files-received", (paths: string[]) => {
-             console.log("Files received:", paths);
              paths.forEach(addFile);
         });
 
