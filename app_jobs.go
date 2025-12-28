@@ -116,26 +116,45 @@ func (a *App) ConvertFiles(files []string) {
 		a.mu.Unlock()
 
 		for _, f := range files {
-			fpath := f
+			// Trim surrounding quotes if present
+			cleanPath := strings.Trim(f, "\"")
+			jobID := cleanPath
+			sysPath := cleanPath
+			if abs, err := filepath.Abs(sysPath); err == nil {
+				sysPath = abs
+			}
 
-			if info, err := os.Stat(fpath); err != nil || info.IsDir() || info.Size() == 0 {
-				reporter(fpath, "", 0, "error", "File is empty or invalid", "")
+			info, err := os.Stat(sysPath)
+			if err != nil {
+				if os.IsNotExist(err) {
+					reporter(jobID, "", 0, "error", "File not found", "")
+				} else {
+					reporter(jobID, "", 0, "error", fmt.Sprintf("File access error: %s", err.Error()), "")
+				}
+				continue
+			}
+			if info.IsDir() {
+				reporter(jobID, "", 0, "error", "Path is a directory", "")
+				continue
+			}
+			if info.Size() == 0 {
+				reporter(jobID, "", 0, "error", "File is empty (0 bytes)", "")
 				continue
 			}
 
 			a.mu.Lock()
-			if _, ok := a.jobCancels[fpath]; ok {
+			if _, ok := a.jobCancels[jobID]; ok {
 				a.mu.Unlock()
-				logger.Warn("Skipping file as it is already being processed", "file", fpath)
+				logger.Warn("Skipping file as it is already being processed", "file", jobID)
 				continue
 			}
 			a.mu.Unlock()
 
-			ext := strings.ToLower(filepath.Ext(fpath))
+			ext := strings.ToLower(filepath.Ext(sysPath))
 
-			fname := filepath.Base(fpath)
+			fname := filepath.Base(sysPath)
 			stem := strings.TrimSuffix(fname, filepath.Ext(fname))
-			parent := filepath.Dir(fpath)
+			parent := filepath.Dir(sysPath)
 			cleanedParent := filepath.Clean(parent)
 
 			destDir := parent
@@ -148,16 +167,16 @@ func (a *App) ConvertFiles(files []string) {
 			}
 
 			wg.Add(1)
-			go func(src string, extension string) {
+			go func(id string, src string, extension string) {
 				defer wg.Done()
 
 				a.mu.Lock()
 				jobCtx, cancel := context.WithCancel(a.ctx)
-				a.jobCancels[src] = cancel
+				a.jobCancels[id] = cancel
 
 				for a.isPaused {
 					if jobCtx.Err() != nil {
-						delete(a.jobCancels, src)
+						delete(a.jobCancels, id)
 						a.mu.Unlock()
 						cancel()
 						return
@@ -165,7 +184,7 @@ func (a *App) ConvertFiles(files []string) {
 					a.pauseCond.Wait()
 				}
 				if jobCtx.Err() != nil {
-					delete(a.jobCancels, src)
+					delete(a.jobCancels, id)
 					a.mu.Unlock()
 					cancel()
 					return
@@ -175,7 +194,7 @@ func (a *App) ConvertFiles(files []string) {
 				defer func() {
 					cancel()
 					a.mu.Lock()
-					delete(a.jobCancels, src)
+					delete(a.jobCancels, id)
 					a.mu.Unlock()
 				}()
 
@@ -185,11 +204,11 @@ func (a *App) ConvertFiles(files []string) {
 				if extension == ".mov" {
 					dest, err = a.resolveDestination(destDir, stem, ".mp4", collisionOption)
 					if err != nil {
-						reporter(src, "", 100, "error", err.Error(), "")
+						reporter(id, "", 100, "error", err.Error(), "")
 						return
 					}
 
-					reporter(src, dest, 0, "processing", "", "")
+					reporter(id, dest, 0, "processing", "", "")
 
 					select {
 					case ffmpegSem <- struct{}{}:
@@ -199,16 +218,16 @@ func (a *App) ConvertFiles(files []string) {
 					}
 
 					err = convConfig.Ffmpeg(jobCtx, src, dest, func(progress int, speed string) {
-						reporter(src, dest, progress, "processing", "", speed)
+						reporter(id, dest, progress, "processing", "", speed)
 					})
 				} else if extension == ".heic" {
 					dest, err = a.resolveDestination(destDir, stem, ".jpg", collisionOption)
 					if err != nil {
-						reporter(src, "", 100, "error", err.Error(), "")
+						reporter(id, "", 100, "error", err.Error(), "")
 						return
 					}
 
-					reporter(src, dest, 0, "processing", "", "")
+					reporter(id, dest, 0, "processing", "", "")
 
 					select {
 					case magickSem <- struct{}{}:
@@ -219,7 +238,7 @@ func (a *App) ConvertFiles(files []string) {
 
 					err = convConfig.Magick(jobCtx, src, dest)
 				} else {
-					reporter(src, "", 0, "error", "Unsupported format", "")
+					reporter(id, "", 0, "error", "Unsupported format", "")
 					return
 				}
 
@@ -227,11 +246,11 @@ func (a *App) ConvertFiles(files []string) {
 					if dest != "" {
 						os.Remove(dest)
 					}
-					reporter(src, dest, 100, "error", err.Error(), "")
+					reporter(id, dest, 100, "error", err.Error(), "")
 				} else {
-					reporter(src, dest, 100, "done", "", "")
+					reporter(id, dest, 100, "done", "", "")
 				}
-			}(fpath, ext)
+			}(jobID, sysPath, ext)
 		}
 
 		wg.Wait()
