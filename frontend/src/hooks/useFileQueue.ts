@@ -6,7 +6,7 @@ import { FileItem } from '../components/FileItemRow';
 interface ProgressData {
     file: string;
     destFile?: string;
-    status: 'queued' | 'processing' | 'done' | 'error';
+    status: 'queued' | 'pending' | 'processing' | 'done' | 'error';
     progress: number;
     speed?: string;
     error?: string;

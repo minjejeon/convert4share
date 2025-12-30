@@ -208,7 +208,7 @@ func (a *App) ConvertFiles(files []string) {
 						return
 					}
 
-					reporter(id, dest, 0, "processing", "", "")
+					reporter(id, dest, 0, "pending", "", "")
 
 					select {
 					case ffmpegSem <- struct{}{}:
@@ -216,6 +216,8 @@ func (a *App) ConvertFiles(files []string) {
 					case <-jobCtx.Done():
 						return
 					}
+
+					reporter(id, dest, 0, "processing", "", "")
 
 					err = convConfig.Ffmpeg(jobCtx, src, dest, func(progress int, speed string) {
 						reporter(id, dest, progress, "processing", "", speed)
@@ -227,7 +229,7 @@ func (a *App) ConvertFiles(files []string) {
 						return
 					}
 
-					reporter(id, dest, 0, "processing", "", "")
+					reporter(id, dest, 0, "pending", "", "")
 
 					select {
 					case magickSem <- struct{}{}:
@@ -235,6 +237,8 @@ func (a *App) ConvertFiles(files []string) {
 					case <-jobCtx.Done():
 						return
 					}
+
+					reporter(id, dest, 0, "processing", "", "")
 
 					err = convConfig.Magick(jobCtx, src, dest)
 				} else {

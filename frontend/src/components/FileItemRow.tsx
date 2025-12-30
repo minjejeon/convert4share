@@ -6,7 +6,7 @@ export interface FileItem {
     id: string; // usually path
     path: string;
     destFile?: string;
-    status: 'queued' | 'processing' | 'done' | 'error';
+    status: 'queued' | 'pending' | 'processing' | 'done' | 'error';
     progress: number;
     speed?: string;
     error?: string;
@@ -71,10 +71,11 @@ export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; o
                             "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0",
                             file.status === 'done' && "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10",
                             file.status === 'processing' && "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10",
+                            file.status === 'pending' && "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10",
                             file.status === 'error' && "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10",
                             file.status === 'queued' && "text-slate-500 bg-slate-100 dark:bg-slate-700/50",
                         )}>
-                            {file.status === 'queued' ? 'Waiting' : file.status}
+                            {file.status === 'queued' ? 'Waiting' : (file.status === 'pending' ? 'Pending...' : file.status)}
                             {file.status === 'processing' && file.speed && <span className="normal-case ml-1 opacity-75">({file.speed})</span>}
                         </span>
                     </div>
@@ -91,7 +92,7 @@ export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; o
                             <div
                                 className={cn(
                                     "h-full transition-all duration-300 ease-out rounded-full",
-                                    file.status === 'error' ? "bg-red-500" : "bg-indigo-500",
+                                    file.status === 'error' ? "bg-red-500" : (file.status === 'pending' ? "bg-orange-500" : "bg-indigo-500"),
                                     file.status === 'done' && "bg-emerald-500"
                                 )}
                                 style={{ width: `${file.progress}%` }}
@@ -145,7 +146,7 @@ export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; o
                     </button>
 
                     <div className="w-8 h-8 flex items-center justify-center text-slate-500 ml-1">
-                        {file.status === 'processing' && <Loader2 className="w-4 h-4 animate-spin text-indigo-500 dark:text-indigo-400" />}
+                        {(file.status === 'processing' || file.status === 'pending') && <Loader2 className="w-4 h-4 animate-spin text-indigo-500 dark:text-indigo-400" />}
                         {file.status === 'done' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
                         {file.status === 'error' && <XCircle className="w-5 h-5 text-red-500" />}
                     </div>
