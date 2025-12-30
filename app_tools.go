@@ -60,6 +60,26 @@ func (a *App) InstallTool(toolName string) error {
 	}
 }
 
+func (a *App) SelectFiles() []string {
+	selections, err := runtime.OpenMultipleFilesDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select Files to Convert",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Media Files",
+				Pattern:     "*.mov;*.heic;*.png;*.jpg;*.jpeg",
+			},
+			{
+				DisplayName: "All Files",
+				Pattern:     "*.*",
+			},
+		},
+	})
+	if err != nil {
+		return []string{}
+	}
+	return selections
+}
+
 func (a *App) SelectBinaryDialog() string {
 	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select Binary",

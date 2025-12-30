@@ -39,6 +39,7 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.initConfig()
+
 	runtime.EventsOn(ctx, "frontend-ready", func(optionalData ...interface{}) {
 		logger.Info("Frontend reported ready")
 		a.processPendingFiles()

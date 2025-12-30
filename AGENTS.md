@@ -88,3 +88,22 @@ When creating a tag message, adhere to the following format:
 -   **Wails Generate Error**: Often due to build tags. Ensure `cmd/` files have appropriate `!windows` fallbacks if they import windows-specific packages.
 -   **Viper Configuration**: `viper.WriteConfig` fails if no config file exists; use `WriteConfigAs`.
 -   **Path Separators**: Use Unix-style forward slashes (`/`) when mocking paths in frontend tests to avoid escaping issues.
+-   **Drag and Drop on Windows**:
+    -   **Problem**: Go-side `runtime.OnFileDrop` may not fire consistently on Windows due to WebView2 event handling conflicts.
+    -   **Solution**: Use Frontend-side `window.runtime.OnFileDrop` to intercept dropped files directly from the WebView2 runtime.
+    -   **Backend Config**: Ensure `DragAndDrop: { EnableFileDrop: true, DisableWebViewDrop: true }` in `wails.Run` options.
+    -   **Frontend Implementation**:
+        ```typescript
+        // In App.tsx or main component
+        import * as runtime from './wailsjs/runtime/runtime';
+
+        useEffect(() => {
+            // Register runtime handler (useDropTarget = true is critical)
+            runtime.OnFileDrop((x, y, paths) => {
+                // Handle paths
+            }, true);
+
+            return () => runtime.OnFileDropOff(); // Cleanup
+        }, []);
+        ```
+    -   **CSS**: Add `body { --wails-drop-target: drop; }` in global CSS.

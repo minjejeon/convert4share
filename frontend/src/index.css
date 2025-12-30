@@ -22,3 +22,7 @@
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+body {
+  --wails-drop-target: drop;
+}

@@ -1,6 +1,7 @@
 import React, { useState, useId } from 'react';
 import { UploadCloud } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { SelectFiles } from '../wailsjs/go/main/App';
 
 interface DropZoneProps {
     onFilesAdded?: (files: string[]) => void;
@@ -9,48 +10,21 @@ interface DropZoneProps {
 
 export function DropZone({ onFilesAdded, isCompact = false }: DropZoneProps) {
     const [isDragging, setIsDragging] = useState(false);
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
     const descriptionId = useId();
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (onFilesAdded && e.target.files && e.target.files.length > 0) {
-            const paths = Array.from(e.target.files).map((f) => {
-                const file = f as File & { path?: string };
-                return file.path || file.name;
-            });
-            const validPaths = paths.filter(p => typeof p === 'string' && p.length > 0);
-            if (validPaths.length > 0) {
-                onFilesAdded(validPaths);
+    const handleClick = async () => {
+        if (onFilesAdded) {
+            const paths = await SelectFiles();
+            if (paths && paths.length > 0) {
+                onFilesAdded(paths);
             }
         }
-        if (e.target) e.target.value = '';
-    };
-
-    const handleClick = () => {
-        fileInputRef.current?.click();
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             handleClick();
-        }
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-
-        if (onFilesAdded && e.dataTransfer.files.length > 0) {
-            const paths = Array.from(e.dataTransfer.files).map((f) => {
-                const file = f as File & { path?: string };
-                return file.path || file.name;
-            });
-            const validPaths = paths.filter(p => typeof p === 'string' && p.length > 0);
-            if (validPaths.length > 0) {
-                onFilesAdded(validPaths);
-            }
         }
     };
 
@@ -74,16 +48,7 @@ export function DropZone({ onFilesAdded, isCompact = false }: DropZoneProps) {
                     setIsDragging(true);
                 }}
                 onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
             >
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    multiple
-                    accept=".mov,.heic"
-                    onChange={handleFileSelect}
-                />
                 <div className="relative z-10 flex items-center gap-4">
                     <div className={cn(
                         "shrink-0 p-2.5 rounded-full bg-white dark:bg-slate-800/50 ring-1 ring-slate-200 dark:ring-slate-700/50 shadow-sm transition-transform duration-300",
@@ -120,24 +85,14 @@ export function DropZone({ onFilesAdded, isCompact = false }: DropZoneProps) {
                 isDragging
                     ? "border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/5 scale-[1.01] shadow-lg shadow-indigo-500/10"
                     : "border-slate-300/60 dark:border-slate-700/40 bg-slate-100/50 dark:bg-slate-800/20 hover:border-indigo-500/20 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
-            )}
-            onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-        >
-            <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                multiple
-                accept=".mov,.heic"
-                onChange={handleFileSelect}
-            />
-            <div className="relative z-10 flex flex-col items-center justify-center gap-4">
-                <div className={cn(
+                        )}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setIsDragging(true);
+                            }}
+                            onDragLeave={() => setIsDragging(false)}
+                        >
+                            <div className="relative z-10 flex flex-col items-center justify-center gap-4">                <div className={cn(
                     "p-4 rounded-full bg-white dark:bg-slate-800/50 ring-1 ring-slate-200 dark:ring-slate-700/50 shadow-sm transition-transform duration-300",
                     isDragging ? "scale-110 ring-indigo-500/50" : "group-hover:scale-105 group-hover:ring-indigo-500/20"
                 )}>

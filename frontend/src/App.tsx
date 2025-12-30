@@ -7,6 +7,7 @@ import { SettingsView } from './components/Settings';
 import { AlertCircle, Loader2, UploadCloud } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 import { useFileQueue } from './hooks/useFileQueue';
+import * as runtime from './wailsjs/runtime/runtime';
 
 function App() {
     const [view, setView] = useState<'home' | 'settings'>('home');
@@ -21,18 +22,50 @@ function App() {
     useEffect(() => {
         GetContextMenuStatus().then(setIsInstalled);
 
+        // Native File Drop handling via Wails Runtime (Frontend)
+        // This is often more reliable than the Go-side OnFileDrop on Windows
+        runtime.OnFileDrop((x: number, y: number, paths: string[]) => {
+            console.log("Files dropped (JS Runtime):", paths, "at", x, y);
+            setIsDraggingGlobal(false);
+            if (paths && paths.length > 0) {
+                paths.forEach(addFile);
+            }
+        }, true);
+
         const handleWindowDragEnter = (e: DragEvent) => {
             if (e.dataTransfer?.types.includes('Files')) {
                 setIsDraggingGlobal(true);
             }
         };
 
+        const handleWindowDragOver = (e: DragEvent) => {
+            e.preventDefault();
+        };
+
+        const handleWindowDrop = (e: DragEvent) => {
+            e.preventDefault();
+            setIsDraggingGlobal(false);
+        };
+
+        const handleWindowDragLeave = (e: DragEvent) => {
+            if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+                setIsDraggingGlobal(false);
+            }
+        };
+
         window.addEventListener('dragenter', handleWindowDragEnter);
+        window.addEventListener('dragover', handleWindowDragOver);
+        window.addEventListener('drop', handleWindowDrop);
+        window.addEventListener('dragleave', handleWindowDragLeave);
 
         return () => {
+            runtime.OnFileDropOff();
             window.removeEventListener('dragenter', handleWindowDragEnter);
+            window.removeEventListener('dragover', handleWindowDragOver);
+            window.removeEventListener('drop', handleWindowDrop);
+            window.removeEventListener('dragleave', handleWindowDragLeave);
         };
-    }, []);
+    }, [addFile]);
 
     const handleInstall = async () => {
         setIsInstalling(true);
@@ -69,32 +102,16 @@ function App() {
         };
     }, []);
 
-    const handleGlobalDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDraggingGlobal(false);
-        if (e.dataTransfer.files.length > 0) {
-            const paths = Array.from(e.dataTransfer.files).map((f) => {
-                const file = f as File & { path?: string };
-                return file.path || file.name;
-            });
-            paths.filter(p => p).forEach(addFile);
-        }
-    };
-
     return (
         <Layout currentView={view} onNavigate={setView}>
             {isDraggingGlobal && (
                 <div
-                    className="fixed inset-0 z-[100] bg-indigo-500/10 backdrop-blur-sm border-4 border-indigo-500 border-dashed m-4 rounded-2xl flex items-center justify-center animate-in fade-in duration-200"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDragLeave={() => setIsDraggingGlobal(false)}
-                    onDrop={handleGlobalDrop}
+                    className="fixed inset-0 z-[100] bg-indigo-500/10 backdrop-blur-sm border-4 border-indigo-500 border-dashed m-4 rounded-2xl flex items-center justify-center animate-in fade-in duration-200 pointer-events-none"
                 >
-                    <div className="bg-white dark:bg-slate-900 p-8 rounded-full shadow-2xl pointer-events-none transform transition-transform animate-bounce">
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-full shadow-2xl transform transition-transform animate-bounce">
                         <UploadCloud className="w-16 h-16 text-indigo-500" />
                     </div>
-                    <div className="absolute bottom-1/4 pointer-events-none bg-white/90 dark:bg-slate-900/90 px-6 py-3 rounded-full shadow-lg backdrop-blur-md">
+                    <div className="absolute bottom-1/4 bg-white/90 dark:bg-slate-900/90 px-6 py-3 rounded-full shadow-lg backdrop-blur-md">
                          <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Drop files anywhere</h2>
                     </div>
                 </div>
