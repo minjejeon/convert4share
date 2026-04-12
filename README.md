@@ -11,6 +11,10 @@ It features a modern GUI and is built to be seamlessly integrated with the Windo
 - **File Conversion**:
   - Converts `.mov` (QuickTime Video) files to `.mp4` (H.264/AAC).
   - Converts `.heic` (High-Efficiency Image Format) files to `.jpg`.
+  - **HEIC Max Resolution**: Configurable limit for the longest side of converted images (default: 2560px).
+  - **Pass-through (Copy Only)**: Optionally skip conversion and copy files directly for specific extensions (e.g., `.jpg`, `.mp4`).
+- **Live Photo Detection**:
+  - Automatically detects and skips the `.mov` component of Apple Live Photos if the corresponding `.heic` file is in the same batch.
 - **Drag & Drop Interface**:
   - Simply drag files onto the application window to add them to the conversion queue.
 - **Hardware Acceleration**:
@@ -38,18 +42,20 @@ The application automatically attempts to detect these binaries in your system `
 
 ## Building from Source
 
-To build the application from source, you need **Go** and **Node.js** (with **npm**) installed.
+To build the application from source, you need **Go** and **Node.js** (with **npm**) installed. We recommend using **go-task** for a simplified build process.
 
-1.  Install frontend dependencies:
+1.  **Using Task (Recommended)**:
     ```shell
-    cd frontend
-    npm install
-    cd ..
+    # This will install frontend dependencies and build the app
+    task build
     ```
 
-2.  Build the application using Wails:
+2.  **Using Wails directly**:
     ```shell
-    wails build
+    # Install frontend dependencies
+    cd frontend && npm install && cd ..
+    # Build the application
+    wails build -ldflags="-s -w"
     ```
 
     *Note: Ensure the `frontend/dist` directory is generated if running `go build` directly.*
