@@ -45,9 +45,21 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
                         type="text"
                         className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
                         value={settings.excludePatterns?.join(', ')}
-                        onChange={(e) => onChange({ ...settings, excludePatterns: e.target.value.split(',').map(s => s.trim()) })}
+                        onChange={(e) => onChange({ ...settings, excludePatterns: e.target.value.split(',').filter(s => s.trim() !== '').map(s => s.trim()) })}
                         placeholder="e.g. \Pictures\, \DCIM\"
                     />
+                </div>
+                <div className="space-y-2">
+                    <label htmlFor="paths-copy-only" className="text-xs font-medium text-slate-500 dark:text-slate-400">Copy Only Extensions (comma separated)</label>
+                     <input
+                        id="paths-copy-only"
+                        type="text"
+                        className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm px-3 py-2.5 transition-shadow"
+                        value={settings.copyOnlyExtensions?.join(', ')}
+                        onChange={(e) => onChange({ ...settings, copyOnlyExtensions: e.target.value.split(',').filter(s => s.trim() !== '').map(s => s.trim()) })}
+                        placeholder="e.g. .jpg, .jpeg, .mp4"
+                    />
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">Files with these extensions will be copied to the destination without conversion.</p>
                 </div>
              </div>
         </div>

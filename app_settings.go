@@ -12,12 +12,16 @@ type Settings struct {
 	MagickBinary        string   `json:"magickBinary"`
 	FfmpegBinary        string   `json:"ffmpegBinary"`
 	MaxSize             int      `json:"maxSize"`
+	MaxImageSize        int      `json:"maxImageSize"`
+	AutoLivePhoto       bool     `json:"autoLivePhoto"`
+	CopyOnlyExtensions  []string `json:"copyOnlyExtensions"`
 	HardwareAccelerator string   `json:"hardwareAccelerator"`
 	FfmpegCustomArgs    string   `json:"ffmpegCustomArgs"`
 	DefaultDestDir      string   `json:"defaultDestDir"`
 	ExcludePatterns     []string `json:"excludePatterns"`
 	VideoQuality        string   `json:"videoQuality"`
 	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
+	MaxMagickWorkers    int      `json:"maxMagickWorkers"`
 	CollisionOption     string   `json:"collisionOption"`
 }
 
@@ -37,6 +41,9 @@ func (a *App) initConfig() {
 	viper.SetDefault("magickBinary", "magick")
 	viper.SetDefault("ffmpegBinary", "ffmpeg")
 	viper.SetDefault("maxSize", 1920)
+	viper.SetDefault("maxImageSize", 2560)
+	viper.SetDefault("autoLivePhoto", true)
+	viper.SetDefault("copyOnlyExtensions", []string{".jpg", ".jpeg", ".mp4"})
 	viper.SetDefault("maxMagickWorkers", 5)
 	viper.SetDefault("maxFfmpegWorkers", 1)
 	viper.SetDefault("hardwareAccelerator", "none")
@@ -111,12 +118,16 @@ func (a *App) GetSettings() Settings {
 		MagickBinary:        viper.GetString("magickBinary"),
 		FfmpegBinary:        viper.GetString("ffmpegBinary"),
 		MaxSize:             viper.GetInt("maxSize"),
+		MaxImageSize:        viper.GetInt("maxImageSize"),
+		AutoLivePhoto:       viper.GetBool("autoLivePhoto"),
+		CopyOnlyExtensions:  viper.GetStringSlice("copyOnlyExtensions"),
 		HardwareAccelerator: viper.GetString("hardwareAccelerator"),
 		FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
 		DefaultDestDir:      viper.GetString("defaultDestDir"),
 		ExcludePatterns:     viper.GetStringSlice("excludeStringPatterns"),
 		VideoQuality:        viper.GetString("videoQuality"),
 		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
+		MaxMagickWorkers:    viper.GetInt("maxMagickWorkers"),
 		CollisionOption:     viper.GetString("collisionOption"),
 	}
 }
@@ -125,12 +136,16 @@ func (a *App) SaveSettings(s Settings) error {
 	viper.Set("magickBinary", s.MagickBinary)
 	viper.Set("ffmpegBinary", s.FfmpegBinary)
 	viper.Set("maxSize", s.MaxSize)
+	viper.Set("maxImageSize", s.MaxImageSize)
+	viper.Set("autoLivePhoto", s.AutoLivePhoto)
+	viper.Set("copyOnlyExtensions", s.CopyOnlyExtensions)
 	viper.Set("hardwareAccelerator", s.HardwareAccelerator)
 	viper.Set("ffmpegCustomArgs", s.FfmpegCustomArgs)
 	viper.Set("defaultDestDir", s.DefaultDestDir)
 	viper.Set("excludeStringPatterns", s.ExcludePatterns)
 	viper.Set("videoQuality", s.VideoQuality)
 	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
+	viper.Set("maxMagickWorkers", s.MaxMagickWorkers)
 	viper.Set("collisionOption", s.CollisionOption)
 
 	exePath, err := os.Executable()

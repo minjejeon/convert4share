@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 import { LicenseViewer } from './LicenseViewer';
 import { SettingsIntegration } from './SettingsIntegration';
 import { SettingsVideo } from './SettingsVideo';
+import { SettingsImage } from './SettingsImage';
 import { SettingsTools } from './SettingsTools';
 import { SettingsPaths } from './SettingsPaths';
 import { SettingsAbout } from './SettingsAbout';
@@ -69,6 +70,11 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
                 />
 
                 <SettingsVideo
+                    settings={settings}
+                    onChange={setSettings}
+                />
+
+                <SettingsImage
                     settings={settings}
                     onChange={setSettings}
                 />

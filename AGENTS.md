@@ -42,18 +42,29 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
     -   **Validation**: Always check `!info.IsDir()` and ensure the file is not the running executable itself.
     -   **Regex**: When parsing FFmpeg output, use `\d+` for the hour component to support >99 hours.
     -   **Concurrency**: Use `sync.WaitGroup` when parsing `stderr` in goroutines.
--   **Video Encoding**:
+- **Video Encoding**:
     -   Supports 'High' (5Mbps), 'Medium' (2.5Mbps), 'Low' (1Mbps) presets.
     -   Flags adapt to hardware (AMD: `quality`/`balanced`/`speed`, NVIDIA: `slow`/`medium`/`fast`).
+-   **Image Conversion**:
+    -   Converts `.heic` to `.jpg` using ImageMagick (`magick`).
+    -   Supports `maxImageSize` to limit the longest side. Resizing uses the `>` flag (e.g., `2560x2560>`) to only downscale if the image exceeds the target size.
+    -   Default quality is set to 90.
+-   **Live Photo Detection**:
+    -   If `autoLivePhoto` is enabled (default: true), the app scans the batch for `.heic` files.
+    -   If a `.mov` file shares the same base name and directory as a `.heic` file in the same batch, the `.mov` is skipped (treated as the video part of a Live Photo).
+-   **Pass-through (Copy Only)**:
+    -   Files with extensions listed in `copyOnlyExtensions` (default: `.jpg`, `.jpeg`, `.mp4`) are copied directly to the destination without conversion.
+    -   The app uses a standard file copy (`io.Copy`) and respects collision resolution rules.
 
 ### 4. Windows Specifics
+
 -   **Context Menu**: Uses `SystemFileAssociations` (Classic) and `OpenWithProgids` (Win11).
 -   **Clipboard**: `CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`.
     -   **Escaping**: Sanitize paths in PowerShell commands by replacing `'` with `''`.
 
 ## Instructions for Agents
 
-1.  **Always Verify**: After editing code, run `go mod tidy` or a build check.
+1.  **Always Verify**: After editing code, run `go mod tidy`, `task build`, or `wails build` to verify changes and update bindings.
 2.  **Verify Frontend**: If touching UI, consider how to verify it (mocking Wails if using standard browser tools).
 3.  **Cross-Platform Awareness**: Ensure `GOOS=windows` checks or build tags are respected.
 4.  **Dependencies**: Use `npm`. Do not use `pnpm` or `yarn`.

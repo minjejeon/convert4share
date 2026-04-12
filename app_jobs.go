@@ -11,6 +11,7 @@ import (
 	"github.com/minjejeon/convert4share/converter"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"io"
 )
 
 type JobStatus struct {
@@ -92,6 +93,7 @@ func (a *App) ConvertFiles(files []string) {
 			MagickBinary:        viper.GetString("magickBinary"),
 			FfmpegBinary:        viper.GetString("ffmpegBinary"),
 			MaxSize:             viper.GetInt("maxSize"),
+			MaxImageSize:        viper.GetInt("maxImageSize"),
 			HardwareAccelerator: viper.GetString("hardwareAccelerator"),
 			FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
 			VideoQuality:        viper.GetString("videoQuality"),
@@ -114,6 +116,20 @@ func (a *App) ConvertFiles(files []string) {
 		ffmpegSem := a.ffmpegSem
 		magickSem := a.magickSem
 		a.mu.Unlock()
+
+		autoLivePhoto := viper.GetBool("autoLivePhoto")
+		copyOnlyExts := viper.GetStringSlice("copyOnlyExtensions")
+		heicStems := make(map[string]bool)
+		if autoLivePhoto {
+			for _, f := range files {
+				cleanPath := strings.Trim(f, "\"")
+				if strings.ToLower(filepath.Ext(cleanPath)) == ".heic" {
+					stem := strings.TrimSuffix(filepath.Base(cleanPath), filepath.Ext(cleanPath))
+					dir := filepath.Dir(cleanPath)
+					heicStems[filepath.Join(dir, stem)] = true
+				}
+			}
+		}
 
 		for _, f := range files {
 			// Trim surrounding quotes if present
@@ -201,8 +217,33 @@ func (a *App) ConvertFiles(files []string) {
 				var err error
 				var dest string
 
-				if extension == ".mov" {
+				isCopyOnly := false
+				for _, copyExt := range copyOnlyExts {
+					if strings.EqualFold(extension, copyExt) {
+						isCopyOnly = true
+						break
+					}
+				}
+
+				if isCopyOnly {
+					dest, err = a.resolveDestination(destDir, stem, extension, collisionOption)
+					if err != nil {
+						reporter(id, "", 100, "error", err.Error(), "")
+						return
+					}
+					reporter(id, dest, 0, "processing", "", "")
+					err = a.copyFile(src, dest)
+				} else if extension == ".mov" {
+					if autoLivePhoto {
+						if _, ok := heicStems[filepath.Join(parent, stem)]; ok {
+							logger.Info("Skipping .mov as it is a Live Photo (paired with .heic)", "file", sysPath)
+							reporter(jobID, "", 100, "done", "Skipped (Live Photo)", "")
+							return
+						}
+					}
+
 					dest, err = a.resolveDestination(destDir, stem, ".mp4", collisionOption)
+
 					if err != nil {
 						reporter(id, "", 100, "error", err.Error(), "")
 						return
@@ -318,4 +359,21 @@ func (a *App) AddFiles(files []string) {
 			}
 		}
 	}
+}
+
+func (a *App) copyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	destFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	return err
 }

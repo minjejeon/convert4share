@@ -16,6 +16,7 @@ type Config struct {
 	MagickBinary        string
 	FfmpegBinary        string
 	MaxSize             int
+	MaxImageSize        int
 	HardwareAccelerator string
 	FfmpegCustomArgs    string
 	VideoQuality        string // "high", "medium", "low"

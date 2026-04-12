@@ -40,6 +40,25 @@ videoQuality: "high"
 # with maxSize: 1920 will become 1920x1280.
 maxSize: 1920
 
+# Image scaling option for ImageMagick.
+# The image will be resized to fit within a `maxImageSize` x `maxImageSize` square,
+# while maintaining the original aspect ratio. For example, a 4032x3024 image
+# with maxImageSize: 2560 will become 2560x1920.
+maxImageSize: 2560
+
+# Automatic live photo detection.
+# If a .heic and a .mov file with the same base name are found in the same batch,
+# the .mov file will be skipped, assuming it's the video component of a Live Photo.
+autoLivePhoto: true
+
+# List of extensions to copy directly without conversion.
+# If a file matches one of these extensions, it will be copied to the destination
+# instead of being processed by ffmpeg or ImageMagick.
+copyOnlyExtensions:
+  - ".jpg"
+  - ".jpeg"
+  - ".mp4"
+
 # Number of concurrent workers for image conversion.
 # More workers can speed up processing for many images, but uses more CPU.
 maxMagickWorkers: 5
