@@ -26,11 +26,13 @@ type App struct {
 	pauseCond    *sync.Cond
 	ffmpegSem    chan struct{}
 	magickSem    chan struct{}
+	thumbSem     chan struct{}
 }
 
 func NewApp() *App {
 	app := &App{
 		jobCancels: make(map[string]context.CancelFunc),
+		thumbSem:   make(chan struct{}, 1),
 	}
 	app.pauseCond = sync.NewCond(&app.mu)
 	return app

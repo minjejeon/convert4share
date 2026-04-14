@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check } from 'lucide-react';
+import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export interface FileItem {
@@ -15,9 +15,34 @@ export interface FileItem {
     completedAt?: number;
 }
 
-export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; onRemove: (id: string) => void; onCopy: (path: string) => void }) => {
+export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibility }: { 
+    file: FileItem; 
+    onRemove: (id: string) => void; 
+    onRetry: (id: string) => void;
+    onCopy: (path: string) => void;
+    trackVisibility: (path: string, isVisible: boolean) => void;
+}) => {
     const [isCopied, setIsCopied] = useState(false);
     const [isErrorCopied, setIsErrorCopied] = useState(false);
+    const rowRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (file.thumbnail) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            trackVisibility(file.path, entries[0].isIntersecting);
+        }, { threshold: 0.1 });
+
+        if (rowRef.current) {
+            observer.observe(rowRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+            trackVisibility(file.path, false);
+        };
+    }, [file.path, file.thumbnail, trackVisibility]);
+
     const lastSeparatorIndex = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
     const fileName = lastSeparatorIndex >= 0 ? file.path.substring(lastSeparatorIndex + 1) : file.path;
     const dirName = lastSeparatorIndex >= 0 ? file.path.substring(0, lastSeparatorIndex) : '';
@@ -36,7 +61,7 @@ export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; o
     };
 
     return (
-        <div className="px-1 pb-2">
+        <div className="px-1 pb-2" ref={rowRef}>
             <div
                 className="group flex items-center gap-4 bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-all duration-200 h-full shadow-sm dark:shadow-none"
             >
@@ -131,6 +156,15 @@ export const FileItemRow = memo(({ file, onRemove, onCopy }: { file: FileItem; o
                             aria-label="Copy file to clipboard"
                         >
                             {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                    ) : file.status === 'error' ? (
+                        <button
+                            onClick={() => onRetry(file.id)}
+                            className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
+                            title="Retry Conversion"
+                            aria-label="Retry conversion"
+                        >
+                            <RotateCcw className="w-4 h-4" />
                         </button>
                     ) : (
                         <div className="w-8 h-8" />

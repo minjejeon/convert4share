@@ -15,7 +15,7 @@ function App() {
     const [isInstalling, setIsInstalling] = useState<boolean>(false);
     const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
     const { theme, setTheme } = useTheme();
-    const { files, addFile, handleRemove, handleClearCompleted, handleCopy, isPaused, pauseQueue, resumeQueue } = useFileQueue();
+    const { files, addFile, trackVisibility, handleRemove, handleRetry, handleClearCompleted, handleCopy, isPaused, pauseQueue, resumeQueue } = useFileQueue();
     const installIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const installTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -154,8 +154,10 @@ function App() {
                         <FileList
                             files={files}
                             onRemove={handleRemove}
+                            onRetry={handleRetry}
                             onCopy={handleCopy}
                             onClearCompleted={handleClearCompleted}
+                            trackVisibility={trackVisibility}
                             isPaused={isPaused}
                             onPause={pauseQueue}
                             onResume={resumeQueue}

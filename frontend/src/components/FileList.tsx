@@ -5,8 +5,10 @@ import { FileItemRow, FileItem } from './FileItemRow';
 interface FileListProps {
     files: FileItem[];
     onRemove: (id: string) => void;
+    onRetry: (id: string) => void;
     onCopy: (path: string) => void;
     onClearCompleted: () => void;
+    trackVisibility: (path: string, isVisible: boolean) => void;
     isPaused?: boolean;
     onPause?: () => void;
     onResume?: () => void;
@@ -21,7 +23,7 @@ const Header = ({ title, count, children }: { title: string; count: number; chil
     </div>
 );
 
-export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, onPause, onResume }: FileListProps) {
+export function FileList({ files, onRemove, onRetry, onCopy, onClearCompleted, trackVisibility, isPaused, onPause, onResume }: FileListProps) {
     const activeFiles = files.filter(f => f.status !== 'done');
     const [sortField, setSortField] = useState<'name' | 'added' | 'completed'>('completed');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -58,7 +60,7 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, 
                         </button>
                     </Header>
                     {activeFiles.map(file => (
-                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onRetry={onRetry} onCopy={onCopy} trackVisibility={trackVisibility} />
                     ))}
                 </div>
              )}
@@ -98,7 +100,7 @@ export function FileList({ files, onRemove, onCopy, onClearCompleted, isPaused, 
                         </div>
                     </Header>
                     {completedFiles.map(file => (
-                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onCopy={onCopy} />
+                        <FileItemRow key={file.id} file={file} onRemove={onRemove} onRetry={onRetry} onCopy={onCopy} trackVisibility={trackVisibility} />
                     ))}
                 </div>
              )}

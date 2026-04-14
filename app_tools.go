@@ -179,6 +179,10 @@ func (a *App) DetectBinaries() map[string]string {
 }
 
 func (a *App) GetThumbnail(path string) (string, error) {
+	// Limit concurrent thumbnail generation to 1
+	a.thumbSem <- struct{}{}
+	defer func() { <-a.thumbSem }()
+
 	convConfig := &converter.Config{
 		MagickBinary: viper.GetString("magickBinary"),
 		FfmpegBinary: viper.GetString("ffmpegBinary"),
