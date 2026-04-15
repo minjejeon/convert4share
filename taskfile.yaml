@@ -1,5 +1,9 @@
 version: '3'
 
+vars:
+  VERSION:
+    sh: powershell -NoProfile -Command "[Console]::Write((Get-Content wails.json | ConvertFrom-Json).info.productVersion)"
+
 tasks:
   build:
     desc: "Build the application for production"
@@ -9,3 +13,8 @@ tasks:
     desc: "Run the application in development mode"
     cmds:
       - wails dev
+  release:
+    desc: "Create a release zip file"
+    deps: [build]
+    cmds:
+      - powershell -NoProfile -Command "Compress-Archive -Path build/bin/convert4share.exe -DestinationPath build/bin/convert4share-v{{.VERSION}}-windows-amd64.zip -Force"
