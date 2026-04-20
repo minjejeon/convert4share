@@ -3,7 +3,7 @@
 package cmd
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/spf13/cobra"
 )
@@ -12,7 +12,7 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install the application to the Windows context menu (Windows only).",
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Context menu installation is only supported on Windows.")
+		slog.Info("Context menu installation is only supported on Windows.")
 	},
 }
 

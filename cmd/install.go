@@ -3,7 +3,8 @@
 package cmd
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/minjejeon/convert4share/windows"
 	"github.com/spf13/cobra"
@@ -20,9 +21,10 @@ for .mov and .heic files. This command must be run with administrator privileges
 			return
 		}
 		if err := windows.RegisterContextMenu(); err != nil {
-			log.Fatalf("Failed to install context menu: %v. Please ensure you are running this command as an administrator.", err)
+			slog.Error("Failed to install context menu", "error", err)
+			os.Exit(1)
 		}
-		log.Println("Context menu installed successfully for .mov and .heic files.")
+		slog.Info("Context menu installed successfully for .mov and .heic files.")
 	},
 }
 

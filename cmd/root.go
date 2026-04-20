@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	_ "embed"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,7 +41,7 @@ func initConfig() {
 
 	configReadErr := viper.ReadInConfig()
 	if configReadErr == nil {
-		log.Println("Using config file:", viper.ConfigFileUsed())
+		slog.Info("Using config file", "path", viper.ConfigFileUsed())
 	}
 
 	viper.SetDefault("magickBinary", "magick")
@@ -60,16 +60,16 @@ func initConfig() {
 	viper.SetDefault("ffmpegCustomArgs", "")
 
 	if !viper.IsSet("hardwareAccelerator") {
-		log.Println("hardwareAccelerator not set. Detecting GPU...")
+		slog.Info("hardwareAccelerator not set. Detecting GPU...")
 		detectedAccelerator := "none"
 		if isNvidiaGpu() {
-			log.Println("NVIDIA GPU detected.")
+			slog.Info("NVIDIA GPU detected.")
 			detectedAccelerator = "nvidia"
 		} else if isAmdGpu() {
-			log.Println("AMD GPU detected.")
+			slog.Info("AMD GPU detected.")
 			detectedAccelerator = "amd"
 		} else {
-			log.Println("No supported GPU detected, defaulting to software encoding.")
+			slog.Info("No supported GPU detected, defaulting to software encoding.")
 		}
 		viper.Set("hardwareAccelerator", detectedAccelerator)
 
@@ -81,13 +81,13 @@ func initConfig() {
 
 func createDefaultConfig(dir string) {
 	configPath := filepath.Join(dir, "config.yaml")
-	log.Printf("Config file not found. Creating a new one at: %s", configPath)
+	slog.Info("Config file not found. Creating a new one", "path", configPath)
 
 	detectedAccelerator := viper.GetString("hardwareAccelerator")
 	content := strings.Replace(string(ConfigTemplate), `hardwareAccelerator: "none"`, `hardwareAccelerator: "`+detectedAccelerator+`"`, 1)
 
 	if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
-		log.Printf("Error creating config file: %v", err)
+		slog.Error("Error creating config file", "error", err)
 	}
 }
 
@@ -99,7 +99,7 @@ func isNvidiaGpu() bool {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		log.Printf("Failed to detect GPU using PowerShell: %v", err)
+		slog.Error("Failed to detect GPU using PowerShell", "error", err)
 		return false
 	}
 	return strings.Contains(strings.ToUpper(out.String()), "NVIDIA")
@@ -113,7 +113,7 @@ func isAmdGpu() bool {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		log.Printf("Failed to detect GPU using PowerShell: %v", err)
+		slog.Error("Failed to detect GPU using PowerShell", "error", err)
 		return false
 	}
 	return strings.Contains(strings.ToUpper(out.String()), "AMD")

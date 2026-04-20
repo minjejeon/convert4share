@@ -67,6 +67,8 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
                     onStatusChange={onStatusChange}
                     theme={theme}
                     onThemeChange={onThemeChange}
+                    settings={settings}
+                    onChange={setSettings}
                 />
 
                 <SettingsVideo

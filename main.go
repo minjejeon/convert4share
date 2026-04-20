@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"fmt"
 	"io"
 	"log"
 	"log/slog"
@@ -16,6 +15,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 //go:embed all:frontend/dist
@@ -25,34 +25,58 @@ var assets embed.FS
 var configTemplate []byte
 
 var logger *slog.Logger
+var levelVar = &slog.LevelVar{}
 
 func initLogger() {
-	if !isDev() {
-		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
-		log.SetOutput(io.Discard)
-		return
-	}
-
 	exePath, err := os.Executable()
 	if err != nil {
-		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+		logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: levelVar}))
+		slog.SetDefault(logger)
 		logger.Error("Could not get executable path", "error", err)
 		return
 	}
 
-	logPath := filepath.Join(filepath.Dir(exePath), fmt.Sprintf("convert4share-debug-%d.log", os.Getpid()))
-	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
-		logger.Error("Could not open log file", "path", logPath, "error", err)
-		return
+	logPath := filepath.Join(filepath.Dir(exePath), "convert4share.log")
+	
+	rotator := &lumberjack.Logger{
+		Filename:   logPath,
+		MaxSize:    10, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28,   //days
+		Compress:   true, // disabled by default
 	}
 
-	handler := slog.NewTextHandler(logFile, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
+	multi := io.MultiWriter(os.Stderr, rotator)
+
+	handler := slog.NewTextHandler(multi, &slog.HandlerOptions{
+		Level: levelVar,
 	})
 	logger = slog.New(handler)
-	log.SetOutput(logFile)
+	slog.SetDefault(logger)
+	log.SetOutput(rotator) // Redirect standard log to lumberjack
+
+	// Initial level
+	if isDev() {
+		levelVar.Set(slog.LevelDebug)
+	} else {
+		levelVar.Set(slog.LevelInfo)
+	}
+}
+
+func updateLoggerLevel(level string) {
+	switch strings.ToLower(level) {
+	case "debug":
+		levelVar.Set(slog.LevelDebug)
+	case "info":
+		levelVar.Set(slog.LevelInfo)
+	case "warn":
+		levelVar.Set(slog.LevelWarn)
+	case "error":
+		levelVar.Set(slog.LevelError)
+	default:
+		levelVar.Set(slog.LevelInfo)
+	}
+	logger.Info("Logger level updated", "level", level)
 }
 
 func init() {

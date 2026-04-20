@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"strconv"
 	"strings"
 	"sync"
@@ -53,7 +53,7 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 	accelerator := strings.ToLower(c.HardwareAccelerator)
 	switch accelerator {
 	case "amd":
-		log.Println("Using 'amd' hardware accelerator (h264_amf) from config.")
+		slog.Info("Using 'amd' hardware accelerator (h264_amf) from config.")
 		args = append(args,
 			"-i", orig,
 			"-c:v", "h264_amf",
@@ -87,7 +87,7 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 		case "speed": // Low
 		}
 	case "nvidia":
-		log.Println("Using 'nvidia' hardware accelerator (h264_nvenc) from config.")
+		slog.Info("Using 'nvidia' hardware accelerator (h264_nvenc) from config.")
 		// User reported success with software scale + format=yuv420p
 		args = append(args,
 			"-hwaccel", "cuda",
@@ -98,15 +98,15 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 			"-vf", scaleArg+",format=yuv420p",
 		)
 	case "none", "":
-		log.Println("Using software encoder (libx264).")
+		slog.Info("Using software encoder (libx264).")
 		args = append(args, "-i", orig, "-c:v", "libx264", "-vf", scaleArg)
 	default:
-		log.Printf("Unknown hardwareAccelerator '%s', falling back to software encoder (libx264).", accelerator)
+		slog.Warn("Unknown hardwareAccelerator, falling back to software encoder (libx264).", "accelerator", accelerator)
 		args = append(args, "-i", orig, "-c:v", "libx264", "-vf", scaleArg)
 	}
 
 	if c.FfmpegCustomArgs != "" {
-		log.Printf("Adding custom ffmpeg arguments: %s", c.FfmpegCustomArgs)
+		slog.Info("Adding custom ffmpeg arguments", "args", c.FfmpegCustomArgs)
 		args = append(args, strings.Fields(c.FfmpegCustomArgs)...)
 	}
 
@@ -121,6 +121,8 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress ProgressCallback) error {
 	args := c.BuildFfmpegArgs(orig, dest)
 	cmd := prepareCommandContext(ctx, c.FfmpegBinary, args...)
+
+	slog.Info("Launching ffmpeg", "command", cmd.String())
 
 	// Ensure standard input is closed to prevent ffmpeg from waiting for input
 	cmd.Stdin = nil
@@ -161,7 +163,7 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 			// Only log lines that don't look like standard progress to avoid flooding logs too much.
 			isProgress := timeRegex.MatchString(line)
 			if !isProgress {
-				log.Printf("ffmpeg: %s", line)
+				slog.Debug("ffmpeg output", "line", line)
 			}
 
 			if duration == 0 {
@@ -173,7 +175,7 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 
 					nanos := parseFractionToNanos(matches[4])
 					duration = time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second + time.Duration(nanos)*time.Nanosecond
-					log.Printf("Detected video duration: %s", duration)
+					slog.Info("Detected video duration", "duration", duration)
 				}
 			}
 
@@ -212,6 +214,7 @@ func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress Progr
 		stderrMu.Lock()
 		logs := strings.Join(stderrLog, "\n")
 		stderrMu.Unlock()
+		slog.Error("ffmpeg failed", "error", err, "command", cmd.String(), "last_logs", logs)
 		return fmt.Errorf("ffmpeg finished with error: %w. Log: %s", err, logs)
 	}
 	return nil

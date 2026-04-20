@@ -23,6 +23,7 @@ type Settings struct {
 	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
 	MaxMagickWorkers    int      `json:"maxMagickWorkers"`
 	CollisionOption     string   `json:"collisionOption"`
+	LogLevel            string   `json:"logLevel"`
 }
 
 func (a *App) initConfig() {
@@ -50,6 +51,12 @@ func (a *App) initConfig() {
 	viper.SetDefault("videoQuality", "high")
 	viper.SetDefault("collisionOption", "rename")
 
+	defaultLogLevel := "info"
+	if isDev() {
+		defaultLogLevel = "debug"
+	}
+	viper.SetDefault("logLevel", defaultLogLevel)
+
 	defaultDest := "$HOMEDRIVE/$HOMEPATH/Pictures"
 	if home, err := os.UserHomeDir(); err == nil {
 		defaultDest = filepath.Join(home, "Pictures")
@@ -59,6 +66,9 @@ func (a *App) initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		logger.Info("Config file not found, using defaults", "error", err)
 	}
+
+	// Update logger level from config
+	updateLoggerLevel(viper.GetString("logLevel"))
 
 	detected := a.DetectBinaries()
 
@@ -129,6 +139,7 @@ func (a *App) GetSettings() Settings {
 		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
 		MaxMagickWorkers:    viper.GetInt("maxMagickWorkers"),
 		CollisionOption:     viper.GetString("collisionOption"),
+		LogLevel:            viper.GetString("logLevel"),
 	}
 }
 
@@ -147,6 +158,7 @@ func (a *App) SaveSettings(s Settings) error {
 	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
 	viper.Set("maxMagickWorkers", s.MaxMagickWorkers)
 	viper.Set("collisionOption", s.CollisionOption)
+	viper.Set("logLevel", s.LogLevel)
 
 	exePath, err := os.Executable()
 	if err != nil {
@@ -158,6 +170,7 @@ func (a *App) SaveSettings(s Settings) error {
 	err = viper.WriteConfigAs(configPath)
 	if err == nil {
 		a.updateSemaphores()
+		updateLoggerLevel(s.LogLevel)
 	}
 	return err
 }

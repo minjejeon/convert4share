@@ -3,7 +3,7 @@ package converter
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 )
 
 func (c *Config) Magick(ctx context.Context, orig, dest string) error {
@@ -16,11 +16,12 @@ func (c *Config) Magick(ctx context.Context, orig, dest string) error {
 	cmd := prepareCommandContext(ctx, c.MagickBinary, args...)
 	// Ensure standard input is closed to prevent magick from waiting for input
 	cmd.Stdin = nil
-	log.Printf("Running magick command: %s", cmd.String())
+	slog.Info("Running magick command", "command", cmd.String())
 
 	// Use CombinedOutput to avoid hanging on Windows GUI if stdout/stderr are not consumed.
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		slog.Error("magick failed", "error", err, "command", cmd.String(), "output", string(output))
 		return fmt.Errorf("magick failed: %w. Output: %s", err, string(output))
 	}
 	return nil

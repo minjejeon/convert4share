@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Monitor, Loader2, Sun, Moon, Laptop } from 'lucide-react';
+import { Monitor, Loader2, Sun, Moon, Laptop, Terminal } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { InstallContextMenu, UninstallContextMenu, GetContextMenuStatus } from '../wailsjs/go/main/App';
+import { main } from '../wailsjs/go/models';
 
 interface SettingsIntegrationProps {
     isInstalled: boolean;
     onStatusChange: (status: boolean) => void;
     theme: 'dark' | 'light' | 'system';
     onThemeChange: (theme: 'dark' | 'light' | 'system') => void;
+    settings: main.Settings;
+    onChange: (settings: main.Settings) => void;
 }
 
-export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThemeChange }: SettingsIntegrationProps) {
+export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThemeChange, settings, onChange }: SettingsIntegrationProps) {
     const [togglingMenu, setTogglingMenu] = useState(false);
 
     const handleToggleMenu = async () => {
@@ -46,7 +49,7 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors shadow-sm dark:shadow-none">
+        <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors shadow-sm dark:shadow-none space-y-4">
              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                 <Monitor className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                 Windows Integration
@@ -73,7 +76,7 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
                 </button>
              </div>
 
-             <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50 mt-4">
+             <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50">
                 <div>
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Theme</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -118,6 +121,29 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
                         <Laptop className="w-4 h-4" />
                     </button>
                 </div>
+             </div>
+
+             <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50">
+                <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                        <Terminal className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Log Level</p>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Control logging verbosity for troubleshooting.
+                    </p>
+                </div>
+                <select
+                    id="log-level"
+                    className="rounded-lg bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs px-3 py-1.5 transition-shadow"
+                    value={settings.logLevel || "info"}
+                    onChange={(e) => onChange({ ...settings, logLevel: e.target.value })}
+                >
+                    <option value="debug">Debug</option>
+                    <option value="info">Info</option>
+                    <option value="warn">Warning</option>
+                    <option value="error">Error</option>
+                </select>
              </div>
         </div>
     );

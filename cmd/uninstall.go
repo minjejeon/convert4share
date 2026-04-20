@@ -3,7 +3,8 @@
 package cmd
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/minjejeon/convert4share/windows"
 	"github.com/spf13/cobra"
@@ -20,9 +21,10 @@ This command must be run with administrator privileges.`,
 			return
 		}
 		if err := windows.UnregisterContextMenu(); err != nil {
-			log.Fatalf("Failed to uninstall context menu: %v. Please ensure you are running this command as an administrator.", err)
+			slog.Error("Failed to uninstall context menu", "error", err)
+			os.Exit(1)
 		}
-		log.Println("Context menu uninstalled successfully.")
+		slog.Info("Context menu uninstalled successfully.")
 	},
 }
 
