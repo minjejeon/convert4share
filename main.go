@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -30,7 +31,14 @@ var levelVar = &slog.LevelVar{}
 func initLogger() {
 	exePath, err := os.Executable()
 	if err != nil {
-		logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: levelVar}))
+		// Fallback to stderr if available, otherwise discard
+		var w io.Writer = os.Stderr
+		if runtime.GOOS == "windows" {
+			if _, err := os.Stderr.Stat(); err != nil {
+				w = io.Discard
+			}
+		}
+		logger = slog.New(slog.NewTextHandler(w, &slog.HandlerOptions{Level: levelVar}))
 		slog.SetDefault(logger)
 		logger.Error("Could not get executable path", "error", err)
 		return
@@ -46,7 +54,13 @@ func initLogger() {
 		Compress:   true, // disabled by default
 	}
 
-	multi := io.MultiWriter(os.Stderr, rotator)
+	// In windowsgui mode, stderr is unavailable. Log only to file in that case.
+	multi := io.Writer(rotator)
+	if runtime.GOOS != "windows" {
+		multi = io.MultiWriter(os.Stderr, rotator)
+	} else if _, err := os.Stderr.Stat(); err == nil {
+		multi = io.MultiWriter(os.Stderr, rotator)
+	}
 
 	handler := slog.NewTextHandler(multi, &slog.HandlerOptions{
 		Level: levelVar,
