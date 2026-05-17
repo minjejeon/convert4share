@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/minjejeon/convert4share/internal/converter"
+	"github.com/minjejeon/convert4share/internal/livephoto"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"io"
@@ -117,16 +118,9 @@ func (a *App) ConvertFiles(files []string) {
 
 		autoLivePhoto := viper.GetBool("autoLivePhoto")
 		copyOnlyExts := viper.GetStringSlice("copyOnlyExtensions")
-		heicStems := make(map[string]bool)
+		var heicStems map[string]bool
 		if autoLivePhoto {
-			for _, f := range files {
-				cleanPath := strings.Trim(f, "\"")
-				if strings.ToLower(filepath.Ext(cleanPath)) == ".heic" {
-					stem := strings.TrimSuffix(filepath.Base(cleanPath), filepath.Ext(cleanPath))
-					dir := filepath.Dir(cleanPath)
-					heicStems[filepath.Join(dir, stem)] = true
-				}
-			}
+			heicStems = livephoto.PairedHeicStems(files)
 		}
 
 		for _, f := range files {
