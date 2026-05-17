@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/minjejeon/convert4share/internal/converter"
+	platformwindows "github.com/minjejeon/convert4share/internal/platform/windows"
 	"github.com/minjejeon/convert4share/windows"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -27,7 +28,7 @@ func (a *App) UninstallContextMenu() error {
 }
 
 func (a *App) CopyFileToClipboard(path string) error {
-	return windows.CopyFileToClipboard(path)
+	return platformwindows.CopyFileToClipboard(path)
 }
 
 func (a *App) InstallTool(toolName string) error {
@@ -41,7 +42,7 @@ func (a *App) InstallTool(toolName string) error {
 		return fmt.Errorf("unknown tool: %s", toolName)
 	}
 
-	if err := windows.InstallWingetPackage(packageID); err != nil {
+	if err := platformwindows.InstallWingetPackage(packageID); err != nil {
 		return err
 	}
 
