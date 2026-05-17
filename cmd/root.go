@@ -1,3 +1,5 @@
+//go:build wails2_legacy
+
 package cmd
 
 import (

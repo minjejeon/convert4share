@@ -1,4 +1,4 @@
-//go:build windows
+//go:build wails2_legacy && windows
 
 package windows
 
