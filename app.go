@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/minjejeon/convert4share/converter"
+	"github.com/minjejeon/convert4share/internal/converter"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )

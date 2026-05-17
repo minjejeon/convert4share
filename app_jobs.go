@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/minjejeon/convert4share/converter"
+	"github.com/minjejeon/convert4share/internal/converter"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"io"
