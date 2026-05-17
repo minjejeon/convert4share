@@ -1,0 +1,54 @@
+version: '3'
+
+includes:
+  common: Taskfile.common.yml
+
+vars:
+  SYSO_OUT: "cmd/convert4share/rsrc_windows_{{.ARCH | default ARCH}}.syso"
+
+tasks:
+  build:
+    summary: Builds the application for Windows
+    deps:
+      - task: common:build:frontend
+      - task: common:generate:icons
+      - task: generate:syso
+    cmds:
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}.exe ./cmd/convert4share
+      - powershell -NoProfile -Command "Remove-Item cmd/convert4share/*.syso -ErrorAction SilentlyContinue"
+    vars:
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -ldflags="-w -s -H windowsgui"{{else}}-gcflags=all="-l"{{end}}'
+    env:
+      GOOS: windows
+      CGO_ENABLED: 0
+      GOARCH: '{{.ARCH | default ARCH}}'
+      PRODUCTION: '{{.PRODUCTION | default "false"}}'
+
+  package:
+    summary: Packages a production build of the application into a `.exe` bundle
+    cmds:
+      - task: create:nsis:installer
+
+  generate:syso:
+    summary: Generates Windows `.syso` file alongside the main package so `go build` embeds it
+    cmds:
+      - wails3 generate syso -arch {{.ARCH}} -icon build/windows/icon.ico -manifest build/windows/wails.exe.manifest -info build/windows/info.json -out {{.SYSO_OUT}}
+    vars:
+      ARCH: '{{.ARCH | default ARCH}}'
+
+  create:nsis:installer:
+    summary: Creates an NSIS installer (requires makensis on PATH)
+    dir: build/windows/nsis
+    deps:
+      - task: build
+        vars:
+          PRODUCTION: "true"
+    cmds:
+      - makensis -DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\{{.APP_NAME}}.exe" project.nsi
+    vars:
+      ARCH: '{{.ARCH | default ARCH}}'
+      ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'
+
+  run:
+    cmds:
+      - '{{.BIN_DIR}}\\{{.APP_NAME}}.exe'

@@ -1,0 +1,80 @@
+version: '3'
+
+tasks:
+  go:mod:tidy:
+    summary: Runs `go mod tidy`
+    internal: true
+    generates:
+      - go.sum
+    sources:
+      - go.mod
+    cmds:
+      - go mod tidy
+
+  install:frontend:deps:
+    summary: Install frontend dependencies
+    dir: frontend
+    sources:
+      - package.json
+      - package-lock.json
+    generates:
+      - node_modules/*
+    preconditions:
+      - sh: npm version
+        msg: "Looks like npm isn't installed. Npm is part of the Node installer: https://nodejs.org/en/download/"
+    cmds:
+      - npm install
+
+  build:frontend:
+    summary: Build the frontend project and sync dist into the embedded asset directory
+    deps:
+      - task: install:frontend:deps
+      - task: generate:bindings
+    sources:
+      - frontend/**/*
+      - exclude: frontend/node_modules/**/*
+      - exclude: frontend/dist/**/*
+    generates:
+      - cmd/convert4share/dist/index.html
+    cmds:
+      - npm --prefix frontend run build -s
+      - powershell -NoProfile -Command "if (-not (Test-Path 'cmd/convert4share/dist')) { New-Item -ItemType Directory -Path 'cmd/convert4share/dist' | Out-Null }"
+      - powershell -NoProfile -Command "Get-ChildItem -Path 'cmd/convert4share/dist' -Exclude '.gitkeep' -Force | Remove-Item -Recurse -Force"
+      - powershell -NoProfile -Command "Copy-Item -Path 'frontend/dist/*' -Destination 'cmd/convert4share/dist/' -Recurse -Force"
+
+  generate:bindings:
+    summary: Generates bindings for the frontend
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "frontend/bindings/**/*"
+    cmds:
+      # Scan all packages so services under internal/services/ are picked up;
+      # the root `main.go` is gated by the legacy `wails2_legacy` build tag.
+      - wails3 generate bindings -clean=true -ts ./...
+
+  generate:icons:
+    summary: Generates Windows `.ico` from build/appicon.png
+    sources:
+      - build/appicon.png
+    generates:
+      - build/windows/icon.ico
+    cmds:
+      - wails3 generate icons -input build/appicon.png -windowsfilename build/windows/icon.ico
+
+  dev:frontend:
+    summary: Runs the frontend in development mode
+    dir: frontend
+    deps:
+      - task: install:frontend:deps
+    cmds:
+      - npm run dev
+
+  update:build-assets:
+    summary: Updates the build assets from build/config.yml
+    cmds:
+      # Pass the company name explicitly so wails3 alpha doesn't fall back
+      # to its "My Company" default when the value is blank in config.yml.
+      - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config build/config.yml -dir build -productcompany ""
