@@ -123,6 +123,64 @@ func TestApplySettingsResizesSemaphores(t *testing.T) {
 	}
 }
 
+func TestExtractFileArgs(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "convert4share-extract-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	validFile := filepath.Join(tempDir, "valid.mov")
+	if err := os.WriteFile(validFile, []byte("data"), 0644); err != nil {
+		t.Fatalf("create valid: %v", err)
+	}
+	emptyFile := filepath.Join(tempDir, "empty.mov")
+	if err := os.WriteFile(emptyFile, []byte{}, 0644); err != nil {
+		t.Fatalf("create empty: %v", err)
+	}
+	exePath := filepath.Join(tempDir, "Convert4Share.exe")
+	if err := os.WriteFile(exePath, []byte("MZ"), 0644); err != nil {
+		t.Fatalf("create exe: %v", err)
+	}
+	subDir := filepath.Join(tempDir, "subdir")
+	if err := os.Mkdir(subDir, 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	missingFile := filepath.Join(tempDir, "does-not-exist.mov")
+
+	args := []string{
+		exePath,         // own executable, must be filtered
+		validFile,       // accepted
+		emptyFile,       // 0 bytes, filtered
+		subDir,          // directory, filtered
+		missingFile,     // missing, filtered
+		"",              // blank, filtered
+		`"` + validFile + `"`, // quoted, but de-dups path to validFile
+	}
+
+	got := ExtractFileArgs(args, exePath)
+
+	// validFile must appear (possibly twice — once direct, once dequoted).
+	foundValid := 0
+	for _, g := range got {
+		if g == validFile {
+			foundValid++
+		}
+		if g == exePath {
+			t.Errorf("exe path was not filtered out: %v", got)
+		}
+		if g == emptyFile {
+			t.Errorf("empty file was not filtered out: %v", got)
+		}
+		if g == subDir {
+			t.Errorf("directory was not filtered out: %v", got)
+		}
+	}
+	if foundValid == 0 {
+		t.Errorf("valid file missing from result: %v", got)
+	}
+}
+
 func TestCancelJobAndPauseQueue_NoApp(t *testing.T) {
 	// Verifies the methods are safe to call without an associated
 	// application (s.app == nil), which is how unit tests exercise the

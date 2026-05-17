@@ -187,6 +187,36 @@ func (s *Service) EmitFilesReceived(files []string) {
 	s.emit("files-received", files)
 }
 
+// ExtractFileArgs filters a list of CLI arguments down to existing,
+// non-empty regular files (resolved to absolute paths). The path
+// matching exePath (case-insensitive) is skipped so we never feed the
+// app its own binary as input — Windows sometimes hands it back in
+// argv. exePath may be empty to disable that filter (tests).
+func ExtractFileArgs(args []string, exePath string) []string {
+	var out []string
+	for _, arg := range args {
+		if arg == "" {
+			continue
+		}
+		clean := strings.Trim(arg, "\"")
+		absArg, err := filepath.Abs(clean)
+		if err != nil {
+			absArg = clean
+		}
+		if exePath != "" {
+			if strings.EqualFold(absArg, exePath) {
+				continue
+			}
+		}
+		info, err := os.Stat(absArg)
+		if err != nil || info.IsDir() || info.Size() == 0 {
+			continue
+		}
+		out = append(out, absArg)
+	}
+	return out
+}
+
 // ConvertFiles is the main entry point invoked by the frontend. It
 // runs entirely in a background goroutine so the IPC call returns
 // immediately; per-file progress is reported via `conversion-progress`
