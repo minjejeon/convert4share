@@ -1,96 +1,30 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Monitor, Loader2, Sun, Moon, Laptop, Terminal } from 'lucide-react';
+import { Monitor, Sun, Moon, Laptop, Terminal, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { InstallContextMenu, UninstallContextMenu, GetContextMenuStatus } from '../wailsjs/go/main/App';
-import { main } from '../wailsjs/go/models';
+import type { Settings } from '@bindings/config/models';
 
 interface SettingsIntegrationProps {
-    isInstalled: boolean;
-    onStatusChange: (status: boolean) => void;
     theme: 'dark' | 'light' | 'system';
     onThemeChange: (theme: 'dark' | 'light' | 'system') => void;
-    settings: main.Settings;
-    onChange: (settings: main.Settings) => void;
+    settings: Settings;
+    onChange: (settings: Settings) => void;
 }
 
-export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThemeChange, settings, onChange }: SettingsIntegrationProps) {
-    const [togglingMenu, setTogglingMenu] = useState(false);
-    const togglePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    const clearTogglePoll = () => {
-        if (togglePollRef.current) {
-            clearInterval(togglePollRef.current);
-            togglePollRef.current = null;
-        }
-    };
-
-    useEffect(() => {
-        return () => {
-            clearTogglePoll();
-        };
-    }, []);
-
-    const handleToggleMenu = async () => {
-        setTogglingMenu(true);
-        try {
-            if (isInstalled) {
-                await UninstallContextMenu();
-            } else {
-                await InstallContextMenu();
-            }
-
-            // Poll for status change
-            const targetStatus = !isInstalled;
-            const start = Date.now();
-            clearTogglePoll();
-            togglePollRef.current = setInterval(async () => {
-                const status = await GetContextMenuStatus();
-                if (status === targetStatus) {
-                    onStatusChange(status);
-                    setTogglingMenu(false);
-                    clearTogglePoll();
-                    return;
-                }
-                if (Date.now() - start > 15000) { // 15s timeout
-                     setTogglingMenu(false);
-                     clearTogglePoll();
-                     onStatusChange(await GetContextMenuStatus());
-                }
-            }, 1000);
-
-        } catch (e) {
-            console.error(e);
-            setTogglingMenu(false);
-            clearTogglePoll();
-        }
-    };
-
+export function SettingsIntegration({ theme, onThemeChange, settings, onChange }: SettingsIntegrationProps) {
     return (
         <div className="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-colors shadow-sm dark:shadow-none space-y-4">
              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                 <Monitor className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                Windows Integration
+                Application
              </h3>
-             <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50">
+
+             <div className="flex items-start gap-3 bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50">
+                <Info className="h-4 w-4 mt-0.5 text-slate-500 dark:text-slate-400 shrink-0" />
                 <div>
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-200">Context Menu</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {isInstalled ? "Currently installed. Right-click files to convert." : "Not installed. Install to add to right-click menu."}
+                        The right-click "Convert with Convert4Share" entry is registered by the installer. Re-run the installer to add or remove it.
                     </p>
                 </div>
-                <button
-                    onClick={handleToggleMenu}
-                    disabled={togglingMenu}
-                    className={cn(
-                        "px-4 py-2 text-xs font-semibold rounded-lg transition-all border flex items-center justify-center min-w-[90px] shadow-sm",
-                        isInstalled
-                            ? "border-red-500/20 text-red-500 dark:text-red-400 hover:bg-red-500/10 hover:border-red-500/30"
-                            : "border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/30",
-                        togglingMenu && "opacity-50 cursor-wait"
-                    )}
-                >
-                    {togglingMenu ? <Loader2 className="animate-spin h-4 w-4" /> : (isInstalled ? "Uninstall" : "Install")}
-                </button>
              </div>
 
              <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800/50">

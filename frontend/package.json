@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@wailsapp/runtime": "file:src/wailsjs/runtime",
+    "@wailsio/runtime": "3.0.0-alpha.79",
     "clsx": "^2.1.1",
     "lucide-react": "^0.560.0",
     "react": "^19.2.0",

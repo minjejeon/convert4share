@@ -1,7 +1,7 @@
 import React, { useState, useId } from 'react';
 import { UploadCloud } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { SelectFiles } from '../wailsjs/go/main/App';
+import { SelectFiles } from '@bindings/services/tools/service';
 
 interface DropZoneProps {
     onFilesAdded?: (files: string[]) => void;
@@ -35,6 +35,7 @@ export function DropZone({ onFilesAdded, isCompact = false }: DropZoneProps) {
                 tabIndex={0}
                 aria-label="Upload files"
                 aria-describedby={descriptionId}
+                data-file-drop-target
                 onClick={handleClick}
                 onKeyDown={handleKeyDown}
                 className={cn(
@@ -78,6 +79,7 @@ export function DropZone({ onFilesAdded, isCompact = false }: DropZoneProps) {
             tabIndex={0}
             aria-label="Upload files"
             aria-describedby={descriptionId}
+            data-file-drop-target
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(

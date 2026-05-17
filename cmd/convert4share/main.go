@@ -208,6 +208,22 @@ func main() {
 		window.OnWindowEvent(events.Common.WindowRuntimeReady, func(*application.WindowEvent) {
 			logger.Info("Window runtime ready")
 		})
+
+		// Forward native file drops onto the React `files-dropped` event.
+		// The v3 runtime only fires WindowFilesDropped on the window
+		// listener path; the frontend's Events.On API listens to custom
+		// app-level events, so we bridge here. Mirrors the canonical
+		// pattern in examples/drag-n-drop/main.go.
+		window.OnWindowEvent(events.Common.WindowFilesDropped, func(e *application.WindowEvent) {
+			ctx := e.Context()
+			files := ctx.DroppedFiles()
+			details := ctx.DropTargetDetails()
+			logger.Info("Files dropped", "count", len(files))
+			app.Event.Emit("files-dropped", map[string]any{
+				"files":   files,
+				"details": details,
+			})
+		})
 	}
 
 	if err := app.Run(); err != nil {

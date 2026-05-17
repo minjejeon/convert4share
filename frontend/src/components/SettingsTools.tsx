@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Sliders, Search, FolderOpen, Download, Loader2 } from 'lucide-react';
-import { main } from '../wailsjs/go/models';
-import { SelectBinaryDialog, InstallTool, DetectBinaries } from '../wailsjs/go/main/App';
+import type { Settings } from '@bindings/config/models';
+import { SelectBinaryDialog, InstallTool, DetectBinaries } from '@bindings/services/tools/service';
 
 interface SettingsToolsProps {
-    settings: main.Settings;
-    onChange: (settings: main.Settings) => void;
+    settings: Settings;
+    onChange: (settings: Settings) => void;
 }
 
 export function SettingsTools({ settings, onChange }: SettingsToolsProps) {

@@ -1,16 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { EventsOn, EventsEmit } from '../wailsjs/runtime/runtime';
-import { ConvertFiles, GetThumbnail, CancelJob, PauseQueue, ResumeQueue, CopyFileToClipboard } from '../wailsjs/go/main/App';
+import { Events } from '@wailsio/runtime';
+import {
+    ConvertFiles,
+    CancelJob,
+    PauseQueue,
+    ResumeQueue,
+} from '@bindings/services/jobs/service';
+import { GetThumbnail, CopyFileToClipboard } from '@bindings/services/tools/service';
 import { FileItem } from '../components/FileItemRow';
-
-interface ProgressData {
-    file: string;
-    destFile?: string;
-    status: 'queued' | 'pending' | 'processing' | 'done' | 'error';
-    progress: number;
-    speed?: string;
-    error?: string;
-}
+import type { JobStatus, FilesDroppedPayload } from '../types/events';
 
 export function useFileQueue() {
     const [files, setFiles] = useState<FileItem[]>([]);
@@ -57,9 +55,9 @@ export function useFileQueue() {
 
         if (nextPath) {
             setFetchingPath(nextPath);
-            GetThumbnail(nextPath).then(thumb => {
+            GetThumbnail(nextPath).then((thumb: string) => {
                 setFiles(prev => prev.map(f => f.path === nextPath ? { ...f, thumbnail: thumb } : f));
-            }).catch(err => {
+            }).catch((err: unknown) => {
                 console.error("Failed to load thumbnail for", nextPath, err);
             }).finally(() => {
                 setFetchingPath(null);
@@ -74,7 +72,7 @@ export function useFileQueue() {
     }, []);
 
     const handleRetry = useCallback((id: string) => {
-        setFiles(prev => prev.map(f => 
+        setFiles(prev => prev.map(f =>
             f.id === id ? { ...f, status: 'queued', progress: 0, error: undefined, speed: undefined } : f
         ));
     }, []);
@@ -92,15 +90,25 @@ export function useFileQueue() {
     }, []);
 
     useEffect(() => {
-        const cleanupFileAdded = EventsOn("file-added", (path: string) => {
+        const cleanupFileAdded = Events.On("file-added", (event) => {
+            const path = event.data as string;
             addFileRef.current(path);
         });
 
-        const cleanupFilesReceived = EventsOn("files-received", (paths: string[]) => {
-             paths.forEach(p => addFileRef.current(p));
+        const cleanupFilesReceived = Events.On("files-received", (event) => {
+            const paths = event.data as string[];
+            paths.forEach(p => addFileRef.current(p));
         });
 
-        const cleanupProgress = EventsOn("conversion-progress", (data: ProgressData) => {
+        const cleanupFilesDropped = Events.On("files-dropped", (event) => {
+            const payload = event.data as FilesDroppedPayload;
+            if (payload?.files) {
+                payload.files.forEach(p => addFileRef.current(p));
+            }
+        });
+
+        const cleanupProgress = Events.On("conversion-progress", (event) => {
+            const data = event.data as JobStatus;
             setFiles(prev => prev.map(f => {
                 if (f.id === data.file) {
                     const now = Date.now();
@@ -119,14 +127,15 @@ export function useFileQueue() {
             }));
         });
 
-        const cleanupPaused = EventsOn("queue-paused", () => setIsPaused(true));
-        const cleanupResumed = EventsOn("queue-resumed", () => setIsPaused(false));
+        const cleanupPaused = Events.On("queue-paused", () => setIsPaused(true));
+        const cleanupResumed = Events.On("queue-resumed", () => setIsPaused(false));
 
-        EventsEmit("frontend-ready");
+        Events.Emit("frontend-ready", null);
 
         return () => {
             cleanupFileAdded();
             cleanupFilesReceived();
+            cleanupFilesDropped();
             cleanupProgress();
             cleanupPaused();
             cleanupResumed();
@@ -148,6 +157,9 @@ export function useFileQueue() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [queuedCount]);
 
+    const pauseQueue = useCallback(() => { PauseQueue(); }, []);
+    const resumeQueue = useCallback(() => { ResumeQueue(); }, []);
+
     return {
         files,
         addFile,
@@ -157,7 +169,7 @@ export function useFileQueue() {
         handleClearCompleted,
         handleCopy,
         isPaused,
-        pauseQueue: PauseQueue,
-        resumeQueue: ResumeQueue
+        pauseQueue,
+        resumeQueue
     };
 }

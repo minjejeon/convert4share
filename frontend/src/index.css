@@ -23,6 +23,9 @@
   background: transparent;
 }
 
-body {
-  --wails-drop-target: drop;
+/* Wails v3 adds this class while files are being dragged over a
+   `data-file-drop-target` element. Mirror the DropZone hover styling so
+   the cue stays consistent with the in-component drag state. */
+.file-drop-target-active {
+  @apply border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/5 shadow-lg shadow-indigo-500/10;
 }

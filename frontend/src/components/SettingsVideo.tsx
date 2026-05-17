@@ -1,10 +1,9 @@
-import React from 'react';
 import { Film, Cpu, Layers } from 'lucide-react';
-import { main } from '../wailsjs/go/models';
+import type { Settings } from '@bindings/config/models';
 
 interface SettingsVideoProps {
-    settings: main.Settings;
-    onChange: (settings: main.Settings) => void;
+    settings: Settings;
+    onChange: (settings: Settings) => void;
 }
 
 export function SettingsVideo({ settings, onChange }: SettingsVideoProps) {

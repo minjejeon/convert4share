@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { GetSettings, SaveSettings } from '../wailsjs/go/main/App';
-import { main } from '../wailsjs/go/models';
+import { useEffect, useState } from 'react';
+import { GetSettings, SaveSettings } from '@bindings/services/settings/service';
+import { Settings as SettingsModel } from '@bindings/config/models';
 import { Loader2, Save, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { LicenseViewer } from './LicenseViewer';
@@ -12,21 +12,19 @@ import { SettingsPaths } from './SettingsPaths';
 import { SettingsAbout } from './SettingsAbout';
 
 interface SettingsViewProps {
-    isInstalled: boolean;
-    onStatusChange: (status: boolean) => void;
     theme: 'dark' | 'light' | 'system';
     onThemeChange: (theme: 'dark' | 'light' | 'system') => void;
 }
 
-export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange }: SettingsViewProps) {
-    const [settings, setSettings] = useState<main.Settings | null>(null);
+export function SettingsView({ theme, onThemeChange }: SettingsViewProps) {
+    const [settings, setSettings] = useState<SettingsModel | null>(null);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
     const [showLicenses, setShowLicenses] = useState(false);
 
     useEffect(() => {
-        GetSettings().then((s) => {
+        GetSettings().then((s: SettingsModel) => {
             setSettings(s);
             setLoading(false);
         });
@@ -63,8 +61,6 @@ export function SettingsView({ isInstalled, onStatusChange, theme, onThemeChange
 
             <div className="space-y-6">
                 <SettingsIntegration
-                    isInstalled={isInstalled}
-                    onStatusChange={onStatusChange}
                     theme={theme}
                     onThemeChange={onThemeChange}
                     settings={settings}

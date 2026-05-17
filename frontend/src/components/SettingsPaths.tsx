@@ -1,10 +1,9 @@
-import React from 'react';
 import { FolderOpen } from 'lucide-react';
-import { main } from '../wailsjs/go/models';
+import type { Settings } from '@bindings/config/models';
 
 interface SettingsPathsProps {
-    settings: main.Settings;
-    onChange: (settings: main.Settings) => void;
+    settings: Settings;
+    onChange: (settings: Settings) => void;
 }
 
 export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {

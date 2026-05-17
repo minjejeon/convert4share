@@ -6,8 +6,14 @@ import { resolve } from 'path';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': resolve(__dirname, './src'),
-    },
+    alias: [
+      // The v3 binding generator emits `import ... from "/wails/runtime.js"`.
+      // At runtime Wails serves the runtime under that path, but for the
+      // bundled build we redirect to the npm package so Rollup can resolve
+      // the type/symbol surface.
+      { find: /^\/wails\/runtime\.js$/, replacement: '@wailsio/runtime' },
+      { find: '@bindings', replacement: resolve(__dirname, './src/bindings/github.com/minjejeon/convert4share/internal') },
+      { find: '@', replacement: resolve(__dirname, './src') },
+    ],
   },
 })

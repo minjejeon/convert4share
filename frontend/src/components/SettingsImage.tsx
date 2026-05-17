@@ -1,10 +1,9 @@
-import React from 'react';
-import { Image, Layers } from 'lucide-react';
-import { main } from '../wailsjs/go/models';
+import { Image } from 'lucide-react';
+import type { Settings } from '@bindings/config/models';
 
 interface SettingsImageProps {
-    settings: main.Settings;
-    onChange: (settings: main.Settings) => void;
+    settings: Settings;
+    onChange: (settings: Settings) => void;
 }
 
 export function SettingsImage({ settings, onChange }: SettingsImageProps) {
