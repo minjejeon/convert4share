@@ -42,55 +42,53 @@ The application automatically attempts to detect these binaries in your system `
 
 ## Building from Source
 
-To build the application from source, you need **Go** and **Node.js** (with **npm**) installed. We recommend using **go-task** for a simplified build process.
+You need **Go** (1.23+), **Node.js** with **npm**, and **go-task** installed. The Wails v3 CLI is fetched on demand by Taskfile targets.
 
-1.  **Using Task (Recommended)**:
-    ```shell
-    # This will install frontend dependencies and build the app
-    task build
-    ```
+```shell
+# Development build (frontend + Go binary -> bin/convert4share.exe)
+task build
 
-2.  **Using Wails directly**:
-    ```shell
-    # Install frontend dependencies
-    cd frontend && npm install && cd ..
-    # Build the application
-    wails build -ldflags="-s -w"
-    ```
+# Production build (-tags production, stripped, -H windowsgui)
+task build PRODUCTION=true
 
-    *Note: Ensure the `frontend/dist` directory is generated if running `go build` directly.*
+# Run the built executable
+task run
+
+# Live dev mode (Vite + wails3 dev)
+task dev
+
+# Regenerate Wails v3 frontend bindings after changing internal/services/* method signatures
+task generate:bindings
+
+# Regenerate build assets (manifest, .syso, NSIS templates) after editing build/config.yml
+task common:update:build-assets
+```
+
+The Go entry point is `cmd/convert4share/main.go` and embeds `cmd/convert4share/dist/` (populated by `task common:build:frontend` from `frontend/dist`).
+
+### Packaging (NSIS installer)
+
+`task package` builds a Windows installer. It requires `makensis` on `PATH` (NSIS 3+). The installer registers Convert4Share as the handler for `.mov` and `.heic` (declared in `build/config.yml`) so no separate install step is needed at runtime.
 
 ## How to Use
 
-The tool is designed to be used from the command line, via Drag & Drop, or through the Windows File Explorer.
+### Windows Explorer Integration (Recommended)
+
+The NSIS installer (`task package`) registers Convert4Share as a handler for `.mov` and `.heic` files at install time. After installation, right-click a `.mov` or `.heic` in Explorer and choose **Open with → Convert4Share** to launch a conversion. No in-app install button or admin CLI is needed — the file associations are declared in `build/config.yml`.
+
+If you prefer not to use the installer, you can still launch the app and drop files into the window (see Drag & Drop) or invoke it from the command line.
 
 ### Command Line
 
-Run the executable with the paths to the files you want to convert as arguments:
+Pass file paths as arguments. The running instance (if any) receives them via the Wails v3 single-instance lock and queues them automatically:
 
 ```shell
-# Convert a single file
-convert4share.exe "C:\path\to\your\video.mov"
+convert4share.exe "C:\path\to\your\video.mov" "C:\path\to\your\photo.heic"
 ```
 
-### Windows Explorer Integration (Recommended)
+### Drag & Drop
 
-The application can be integrated directly into the Windows context menu for `.mov` and `.heic` files.
-
-**To install the context menu:**
-
-1.  Run `convert4share.exe`.
-2.  Go to the **Settings** page.
-3.  Under the "Windows Integration" section, click the **Install** button.
-
-Alternatively, via CLI (requires Admin):
-```shell
-convert4share.exe install
-```
-
-**To uninstall the context menu:**
-
-You can uninstall it from the **Settings** page in the application, or by running `convert4share.exe uninstall`.
+Drag files onto the application window; the drop target is the main DropZone (highlighted via Wails v3's `.file-drop-target-active` class).
 
 ## License
 

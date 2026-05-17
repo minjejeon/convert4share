@@ -81,8 +81,9 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 
 ### 4. Windows Specifics
 
--   **Context Menu**: Uses `SystemFileAssociations` (Classic) and `OpenWithProgids` (Win11).
--   **Clipboard**: `CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`.
+-   **Context Menu / File Associations**: Declared in `build/config.yml` (`fileAssociations:` for `.mov` and `.heic`). The NSIS installer (generated via `task package`) registers them in the Windows registry at install time and removes them on uninstall. There is no longer any in-app install/uninstall flow or `cmd/install` CLI — the legacy `windows/registry_*.go` and `cmd/install*.go` files were removed during the v3 migration.
+-   **File Open Hand-off**: When the OS launches Convert4Share via a file association, Wails v3 fires `events.Common.ApplicationOpenedWithFile`; `cmd/convert4share/main.go` reads `e.Context().Filename()` / `OpenedFiles()` and forwards into `JobsService.EmitFilesReceived`. Second-instance launches go through `SingleInstanceOptions.OnSecondInstanceLaunch` with `data.Args`.
+-   **Clipboard**: `internal/platform/windows.CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`.
     -   **Escaping**: Sanitize paths in PowerShell commands by replacing `'` with `''`.
 
 ## Build Commands (Wails v3)
@@ -143,25 +144,20 @@ When creating a tag message, adhere to the following format:
 
 ## Common Issues / Solutions
 
--   **Wails Generate Error**: Often due to build tags. Ensure `cmd/` files have appropriate `!windows` fallbacks if they import windows-specific packages.
--   **Viper Configuration**: `viper.WriteConfig` fails if no config file exists; use `WriteConfigAs`.
+-   **Bindings Out of Sync**: After changing exposed methods or models on `internal/services/{jobs,settings,tools}`, run `task generate:bindings`. The generator writes to `frontend/src/bindings/` (matching the `@bindings` Vite/tsconfig alias). If a binding file imports `/wails/runtime.js` instead of `@wailsio/runtime`, the Vite alias in `frontend/vite.config.ts` rewrites it at build time; if it stops working, check that alias.
+-   **Viper Configuration**: `viper.WriteConfig` fails if no config file exists; use `WriteConfigAs`. See `internal/config/settings.go`.
 -   **Path Separators**: Use Unix-style forward slashes (`/`) when mocking paths in frontend tests to avoid escaping issues.
--   **Drag and Drop on Windows**:
-    -   **Problem**: Go-side `runtime.OnFileDrop` may not fire consistently on Windows due to WebView2 event handling conflicts.
-    -   **Solution**: Use Frontend-side `window.runtime.OnFileDrop` to intercept dropped files directly from the WebView2 runtime.
-    -   **Backend Config**: Ensure `DragAndDrop: { EnableFileDrop: true, DisableWebViewDrop: true }` in `wails.Run` options.
-    -   **Frontend Implementation**:
+-   **Drag and Drop (Wails v3)**:
+    -   **Backend**: Enable via `WebviewWindowOptions{ EnableFileDrop: true }` and forward `events.Common.WindowFilesDropped` to a custom `files-dropped` event (see `cmd/convert4share/main.go`). Wails v3 unified the v2 `EnableFileDrop` + `DisableWebViewDrop` pair into the single window option.
+    -   **Frontend**: Mark the drop target with the `data-file-drop-target` attribute. Wails toggles the `.file-drop-target-active` class during a drag; style it from `frontend/src/index.css`. Subscribe via:
         ```typescript
-        // In App.tsx or main component
-        import * as runtime from './wailsjs/runtime/runtime';
+        import { Events } from '@wailsio/runtime';
+        import type { FilesDroppedPayload } from '../types/events';
 
         useEffect(() => {
-            // Register runtime handler (useDropTarget = true is critical)
-            runtime.OnFileDrop((x, y, paths) => {
-                // Handle paths
-            }, true);
-
-            return () => runtime.OnFileDropOff(); // Cleanup
+            return Events.On('files-dropped', (e) => {
+                const { files } = e.data as FilesDroppedPayload;
+                files.forEach(addFile);
+            });
         }, []);
         ```
-    -   **CSS**: Add `body { --wails-drop-target: drop; }` in global CSS.
