@@ -183,12 +183,11 @@ func (a *App) GetThumbnail(path string) (string, error) {
 	// Limit concurrent thumbnail generation to 1. Acquire with context awareness
 	// so we don't block forever if the app is shutting down; only register the
 	// release after a successful acquire.
-	select {
-	case a.thumbSem <- struct{}{}:
-		defer func() { <-a.thumbSem }()
-	case <-a.ctx.Done():
-		return "", a.ctx.Err()
+	release, err := a.thumbSem.Acquire(a.ctx)
+	if err != nil {
+		return "", err
 	}
+	defer release()
 
 	convConfig := &converter.Config{
 		MagickBinary: viper.GetString("magickBinary"),

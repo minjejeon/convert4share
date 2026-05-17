@@ -112,10 +112,8 @@ func (a *App) ConvertFiles(files []string) {
 			})
 		}
 
-		a.mu.Lock()
 		ffmpegSem := a.ffmpegSem
 		magickSem := a.magickSem
-		a.mu.Unlock()
 
 		autoLivePhoto := viper.GetBool("autoLivePhoto")
 		copyOnlyExts := viper.GetStringSlice("copyOnlyExtensions")
@@ -251,12 +249,11 @@ func (a *App) ConvertFiles(files []string) {
 
 					reporter(id, dest, 0, "pending", "", "")
 
-					select {
-					case ffmpegSem <- struct{}{}:
-						defer func() { <-ffmpegSem }()
-					case <-jobCtx.Done():
+					release, acqErr := ffmpegSem.Acquire(jobCtx)
+					if acqErr != nil {
 						return
 					}
+					defer release()
 
 					reporter(id, dest, 0, "processing", "", "")
 
@@ -272,12 +269,11 @@ func (a *App) ConvertFiles(files []string) {
 
 					reporter(id, dest, 0, "pending", "", "")
 
-					select {
-					case magickSem <- struct{}{}:
-						defer func() { <-magickSem }()
-					case <-jobCtx.Done():
+					release, acqErr := magickSem.Acquire(jobCtx)
+					if acqErr != nil {
 						return
 					}
+					defer release()
 
 					reporter(id, dest, 0, "processing", "", "")
 

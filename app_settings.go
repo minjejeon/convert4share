@@ -99,15 +99,8 @@ func (a *App) updateSemaphores() {
 		maxMagick = 1
 	}
 
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	if a.ffmpegSem == nil || cap(a.ffmpegSem) != maxFfmpeg {
-		a.ffmpegSem = make(chan struct{}, maxFfmpeg)
-	}
-	if a.magickSem == nil || cap(a.magickSem) != maxMagick {
-		a.magickSem = make(chan struct{}, maxMagick)
-	}
+	a.ffmpegSem.Resize(maxFfmpeg)
+	a.magickSem.Resize(maxMagick)
 }
 
 func (a *App) GetSettings() Settings {

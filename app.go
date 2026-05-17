@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/minjejeon/convert4share/internal/concurrency"
 	"github.com/minjejeon/convert4share/internal/converter"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -24,19 +25,20 @@ type App struct {
 	jobCancels   map[string]context.CancelFunc
 	isPaused     bool
 	pauseCond    *sync.Cond
-	ffmpegSem    chan struct{}
-	magickSem    chan struct{}
-	thumbSem     chan struct{}
+	ffmpegSem    *concurrency.Sem
+	magickSem    *concurrency.Sem
+	thumbSem     *concurrency.Sem
 }
 
 func NewApp() *App {
 	app := &App{
 		jobCancels: make(map[string]context.CancelFunc),
-		thumbSem:   make(chan struct{}, 1),
-		// Initialize with safe defaults so any send/receive prior to
-		// updateSemaphores (driven by settings) cannot block on a nil channel.
-		ffmpegSem: make(chan struct{}, 1),
-		magickSem: make(chan struct{}, 1),
+		thumbSem:   concurrency.New(1),
+		// Initialize with safe defaults so any acquire prior to
+		// updateSemaphores (driven by settings) does not block on a
+		// zero-capacity semaphore.
+		ffmpegSem: concurrency.New(1),
+		magickSem: concurrency.New(1),
 	}
 	app.pauseCond = sync.NewCond(&app.mu)
 	return app
