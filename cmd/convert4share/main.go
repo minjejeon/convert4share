@@ -160,15 +160,16 @@ func main() {
 	})
 
 	// ApplicationOpenedWithFile fires on Windows when the OS opens a
-	// single file with our registered extension. The filename arrives
-	// via the event context.
+	// single file with our registered extension; on macOS the context
+	// can carry multiple files at once via OpenedFiles().
 	app.Event.OnApplicationEvent(events.Common.ApplicationOpenedWithFile, func(e *application.ApplicationEvent) {
-		filename := e.Context().Filename()
-		logger.Info("ApplicationOpenedWithFile", "file", filename)
-		if filename == "" {
-			return
+		ctx := e.Context()
+		raw := ctx.OpenedFiles()
+		if filename := ctx.Filename(); filename != "" {
+			raw = append(raw, filename)
 		}
-		files := jobs.ExtractFileArgs([]string{filename}, exePath)
+		logger.Info("ApplicationOpenedWithFile", "files", raw)
+		files := jobs.ExtractFileArgs(raw, exePath)
 		if len(files) == 0 {
 			return
 		}
