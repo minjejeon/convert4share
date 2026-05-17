@@ -47,4 +47,4 @@ tasks:
   clean:
     summary: Removes build artifacts
     cmds:
-      - powershell -NoProfile -Command "Remove-Item -Recurse -Force {{.BIN_DIR}}, cmd/convert4share/dist, frontend/dist, frontend/bindings -ErrorAction SilentlyContinue"
+      - powershell -NoProfile -Command "Remove-Item -Recurse -Force {{.BIN_DIR}}, cmd/convert4share/dist, frontend/dist, frontend/src/bindings -ErrorAction SilentlyContinue"
