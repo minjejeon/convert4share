@@ -2,21 +2,18 @@ package main
 
 import (
 	"embed"
-	"io"
-	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
 	"github.com/minjejeon/convert4share/cmd"
+	"github.com/minjejeon/convert4share/internal/logging"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 //go:embed all:frontend/dist
@@ -29,46 +26,7 @@ var logger *slog.Logger
 var levelVar = &slog.LevelVar{}
 
 func initLogger() {
-	exePath, err := os.Executable()
-	if err != nil {
-		// Fallback to stderr if available, otherwise discard
-		var w io.Writer = os.Stderr
-		if runtime.GOOS == "windows" {
-			if _, err := os.Stderr.Stat(); err != nil {
-				w = io.Discard
-			}
-		}
-		logger = slog.New(slog.NewTextHandler(w, &slog.HandlerOptions{Level: levelVar}))
-		slog.SetDefault(logger)
-		logger.Error("Could not get executable path", "error", err)
-		return
-	}
-
-	logPath := filepath.Join(filepath.Dir(exePath), "convert4share.log")
-	
-	rotator := &lumberjack.Logger{
-		Filename:   logPath,
-		MaxSize:    10, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28,   //days
-		Compress:   true, // disabled by default
-	}
-
-	// In windowsgui mode, stderr is unavailable. Log only to file in that case.
-	multi := io.Writer(rotator)
-	if runtime.GOOS != "windows" {
-		multi = io.MultiWriter(os.Stderr, rotator)
-	} else if _, err := os.Stderr.Stat(); err == nil {
-		multi = io.MultiWriter(os.Stderr, rotator)
-	}
-
-	handler := slog.NewTextHandler(multi, &slog.HandlerOptions{
-		Level: levelVar,
-	})
-	logger = slog.New(handler)
-	slog.SetDefault(logger)
-	log.SetOutput(rotator) // Redirect standard log to lumberjack
-
+	logger = logging.New(levelVar)
 	// Initial level
 	if isDev() {
 		levelVar.Set(slog.LevelDebug)
@@ -78,18 +36,7 @@ func initLogger() {
 }
 
 func updateLoggerLevel(level string) {
-	switch strings.ToLower(level) {
-	case "debug":
-		levelVar.Set(slog.LevelDebug)
-	case "info":
-		levelVar.Set(slog.LevelInfo)
-	case "warn":
-		levelVar.Set(slog.LevelWarn)
-	case "error":
-		levelVar.Set(slog.LevelError)
-	default:
-		levelVar.Set(slog.LevelInfo)
-	}
+	levelVar.Set(logging.ParseLevel(level))
 	logger.Info("Logger level updated", "level", level)
 }
 
