@@ -53,7 +53,7 @@ func initConfig() {
 	}
 	viper.SetDefault("defaultDestDir", defaultDest)
 
-	viper.SetDefault("excludeStringPatterns", []string{})
+	viper.SetDefault("excludePatterns", []string{})
 	viper.SetDefault("maxSize", 1920)
 	viper.SetDefault("maxMagickWorkers", 5)
 	viper.SetDefault("maxFfmpegWorkers", 1)

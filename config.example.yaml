@@ -10,15 +10,17 @@ ffmpegBinary: "ffmpeg"
 
 # A list of path patterns. If a source file's path contains one of these strings,
 # the output will be saved to the `defaultDestDir` instead of the source directory.
-excludeStringPatterns: []
+# Note: the legacy key `excludeStringPatterns` is still read for backward compatibility,
+# but new configs should use `excludePatterns`.
+excludePatterns: []
 
 # To add more patterns, uncomment and edit the lines below.
 # For example:
-# excludeStringPatterns:
+# excludePatterns:
 #   - "Some Cloud/Photos"
 #   - "Google Drive/My Pictures"
 
-# The default destination directory for files matching one of the `excludeStringPatterns`.
+# The default destination directory for files matching one of the `excludePatterns`.
 # Environment variables like $HOMEDRIVE, $HOMEPATH are supported.
 defaultDestDir: "$HOMEDRIVE/$HOMEPATH/Pictures"
 

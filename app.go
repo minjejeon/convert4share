@@ -33,6 +33,10 @@ func NewApp() *App {
 	app := &App{
 		jobCancels: make(map[string]context.CancelFunc),
 		thumbSem:   make(chan struct{}, 1),
+		// Initialize with safe defaults so any send/receive prior to
+		// updateSemaphores (driven by settings) cannot block on a nil channel.
+		ffmpegSem: make(chan struct{}, 1),
+		magickSem: make(chan struct{}, 1),
 	}
 	app.pauseCond = sync.NewCond(&app.mu)
 	return app

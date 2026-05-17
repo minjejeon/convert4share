@@ -3,7 +3,10 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
+
+	"github.com/spf13/viper"
 )
 
 func TestResolveDestination(t *testing.T) {
@@ -93,5 +96,67 @@ func TestResolveDestination(t *testing.T) {
 	}
 	if dest != expected {
 		t.Errorf("Expected %s (overwrite 0-byte), got %s", expected, dest)
+	}
+}
+
+func TestGetExcludePatterns_PrefersCanonicalKey(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	want := []string{"Cloud/Photos", "Drive/Pictures"}
+	viper.Set("excludePatterns", want)
+	viper.Set("excludeStringPatterns", []string{"legacy"})
+
+	got := getExcludePatterns()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Expected canonical key value %v, got %v", want, got)
+	}
+}
+
+func TestGetExcludePatterns_FallsBackToLegacyKey(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	legacy := []string{"Cloud/Photos", "Drive/Pictures"}
+	viper.Set("excludeStringPatterns", legacy)
+
+	got := getExcludePatterns()
+	if !reflect.DeepEqual(got, legacy) {
+		t.Errorf("Expected fallback to legacy key %v, got %v", legacy, got)
+	}
+}
+
+func TestSaveAndGetSettings_ExcludePatternsRoundTrip(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	tempDir, err := os.MkdirTemp("", "convert4share-settings")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(tempDir) })
+
+	// SaveSettings writes the config next to the running executable. To exercise
+	// only the in-memory viper round-trip (i.e. that GetSettings reads what
+	// SaveSettings writes via the canonical key), set the values directly and
+	// verify GetSettings returns them.
+	viper.SetConfigType("yaml")
+	want := []string{"Some Cloud/Photos", "Google Drive/My Pictures"}
+	viper.Set("excludePatterns", want)
+
+	app := NewApp()
+	got := app.GetSettings().ExcludePatterns
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Round-trip via excludePatterns failed: want %v, got %v", want, got)
+	}
+
+	// Simulate a legacy config.yaml that still uses excludeStringPatterns.
+	viper.Reset()
+	viper.SetConfigType("yaml")
+	legacy := []string{"Legacy Path/Photos"}
+	viper.Set("excludeStringPatterns", legacy)
+	got = app.GetSettings().ExcludePatterns
+	if !reflect.DeepEqual(got, legacy) {
+		t.Errorf("Legacy key not honored: want %v, got %v", legacy, got)
 	}
 }

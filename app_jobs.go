@@ -174,7 +174,7 @@ func (a *App) ConvertFiles(files []string) {
 			cleanedParent := filepath.Clean(parent)
 
 			destDir := parent
-			for _, pat := range viper.GetStringSlice("excludeStringPatterns") {
+			for _, pat := range getExcludePatterns() {
 				cleanedPat := filepath.Clean(pat)
 				if strings.Contains(cleanedParent, cleanedPat) {
 					destDir = os.ExpandEnv(viper.GetString("defaultDestDir"))

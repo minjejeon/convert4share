@@ -134,13 +134,24 @@ func (a *App) GetSettings() Settings {
 		HardwareAccelerator: viper.GetString("hardwareAccelerator"),
 		FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
 		DefaultDestDir:      viper.GetString("defaultDestDir"),
-		ExcludePatterns:     viper.GetStringSlice("excludeStringPatterns"),
+		ExcludePatterns:     getExcludePatterns(),
 		VideoQuality:        viper.GetString("videoQuality"),
 		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
 		MaxMagickWorkers:    viper.GetInt("maxMagickWorkers"),
 		CollisionOption:     viper.GetString("collisionOption"),
 		LogLevel:            viper.GetString("logLevel"),
 	}
+}
+
+// getExcludePatterns reads the exclude patterns list, preferring the canonical
+// `excludePatterns` key but falling back to the legacy `excludeStringPatterns`
+// key for backward compatibility with existing config.yaml files.
+func getExcludePatterns() []string {
+	patterns := viper.GetStringSlice("excludePatterns")
+	if len(patterns) == 0 {
+		patterns = viper.GetStringSlice("excludeStringPatterns")
+	}
+	return patterns
 }
 
 func (a *App) SaveSettings(s Settings) error {
@@ -153,7 +164,7 @@ func (a *App) SaveSettings(s Settings) error {
 	viper.Set("hardwareAccelerator", s.HardwareAccelerator)
 	viper.Set("ffmpegCustomArgs", s.FfmpegCustomArgs)
 	viper.Set("defaultDestDir", s.DefaultDestDir)
-	viper.Set("excludeStringPatterns", s.ExcludePatterns)
+	viper.Set("excludePatterns", s.ExcludePatterns)
 	viper.Set("videoQuality", s.VideoQuality)
 	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
 	viper.Set("maxMagickWorkers", s.MaxMagickWorkers)
