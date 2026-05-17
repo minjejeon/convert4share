@@ -9,9 +9,27 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Settings is re-exported via a type alias so existing Wails bindings keep
-// the same signature when frontend code is regenerated.
-type Settings = config.Settings
+// Settings remains declared in the main package so the Wails-generated
+// TypeScript bindings keep the `main.Settings` namespace. A future
+// phase (post-frontend migration) will move the struct into
+// internal/config.
+type Settings struct {
+	MagickBinary        string   `json:"magickBinary"`
+	FfmpegBinary        string   `json:"ffmpegBinary"`
+	MaxSize             int      `json:"maxSize"`
+	MaxImageSize        int      `json:"maxImageSize"`
+	AutoLivePhoto       bool     `json:"autoLivePhoto"`
+	CopyOnlyExtensions  []string `json:"copyOnlyExtensions"`
+	HardwareAccelerator string   `json:"hardwareAccelerator"`
+	FfmpegCustomArgs    string   `json:"ffmpegCustomArgs"`
+	DefaultDestDir      string   `json:"defaultDestDir"`
+	ExcludePatterns     []string `json:"excludePatterns"`
+	VideoQuality        string   `json:"videoQuality"`
+	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
+	MaxMagickWorkers    int      `json:"maxMagickWorkers"`
+	CollisionOption     string   `json:"collisionOption"`
+	LogLevel            string   `json:"logLevel"`
+}
 
 func (a *App) initConfig() {
 	exePath, err := os.Executable()
@@ -104,20 +122,60 @@ func (a *App) updateSemaphores() {
 }
 
 func (a *App) GetSettings() Settings {
-	return config.Load()
+	return Settings{
+		MagickBinary:        viper.GetString("magickBinary"),
+		FfmpegBinary:        viper.GetString("ffmpegBinary"),
+		MaxSize:             viper.GetInt("maxSize"),
+		MaxImageSize:        viper.GetInt("maxImageSize"),
+		AutoLivePhoto:       viper.GetBool("autoLivePhoto"),
+		CopyOnlyExtensions:  viper.GetStringSlice("copyOnlyExtensions"),
+		HardwareAccelerator: viper.GetString("hardwareAccelerator"),
+		FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
+		DefaultDestDir:      viper.GetString("defaultDestDir"),
+		ExcludePatterns:     config.ExcludePatterns(),
+		VideoQuality:        viper.GetString("videoQuality"),
+		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
+		MaxMagickWorkers:    viper.GetInt("maxMagickWorkers"),
+		CollisionOption:     viper.GetString("collisionOption"),
+		LogLevel:            viper.GetString("logLevel"),
+	}
 }
 
-// getExcludePatterns is kept as a thin wrapper for legacy callers within the
-// main package; new code should call config.ExcludePatterns directly.
+// getExcludePatterns is kept as a thin wrapper for legacy callers within
+// the main package; new code should call config.ExcludePatterns
+// directly.
 func getExcludePatterns() []string {
 	return config.ExcludePatterns()
 }
 
 func (a *App) SaveSettings(s Settings) error {
-	if err := config.Save(s); err != nil {
+	viper.Set("magickBinary", s.MagickBinary)
+	viper.Set("ffmpegBinary", s.FfmpegBinary)
+	viper.Set("maxSize", s.MaxSize)
+	viper.Set("maxImageSize", s.MaxImageSize)
+	viper.Set("autoLivePhoto", s.AutoLivePhoto)
+	viper.Set("copyOnlyExtensions", s.CopyOnlyExtensions)
+	viper.Set("hardwareAccelerator", s.HardwareAccelerator)
+	viper.Set("ffmpegCustomArgs", s.FfmpegCustomArgs)
+	viper.Set("defaultDestDir", s.DefaultDestDir)
+	viper.Set("excludePatterns", s.ExcludePatterns)
+	viper.Set("videoQuality", s.VideoQuality)
+	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
+	viper.Set("maxMagickWorkers", s.MaxMagickWorkers)
+	viper.Set("collisionOption", s.CollisionOption)
+	viper.Set("logLevel", s.LogLevel)
+
+	exePath, err := os.Executable()
+	if err != nil {
 		return err
 	}
-	a.updateSemaphores()
-	updateLoggerLevel(s.LogLevel)
-	return nil
+	exeDir := filepath.Dir(exePath)
+	configPath := filepath.Join(exeDir, "config.yaml")
+
+	err = viper.WriteConfigAs(configPath)
+	if err == nil {
+		a.updateSemaphores()
+		updateLoggerLevel(s.LogLevel)
+	}
+	return err
 }
