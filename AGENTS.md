@@ -17,6 +17,19 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 ## Architecture & Coding Guidelines
 
 ### 1. Wails Integration
+
+> **Wails v3 migration status (Phase 2.1)**
+> The branch `worktree-wails3-migration` has begun the migration to
+> Wails v3 alpha.92. The new entry point is `cmd/convert4share/main.go`
+> and registers empty `Jobs`/`Settings`/`Tools` services under
+> `internal/services/`. All files that still depend on Wails v2 are
+> isolated behind the `wails2_legacy` build tag and are excluded from
+> the default `go build ./...`. The frontend continues to reference the
+> v2 `frontend/src/wailsjs/` bridge until Phase 5 swaps it for
+> `@wailsio/runtime`, so the application does **not** run at this point
+> in the migration even though it builds. See
+> `docs/plans/2026-05-17-wails3-migration.md` for the full phase plan.
+
 -   `main.go`: Entry point. Checks for CLI args (`install`, `uninstall`). If none, launches Wails `Run()`.
 -   **Bindings**: Located in `frontend/src/wailsjs/`. This directory is often gitignored.
     -   **Important**: If you modify `App` struct methods or `models` in Go, you **MUST** run `wails generate module` to update the frontend bindings.
