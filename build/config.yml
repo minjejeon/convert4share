@@ -1,0 +1,28 @@
+# This file contains the configuration for this project.
+# When you update `info` or `fileAssociations`, run `wails3 task common:update:build-assets` to update the assets.
+# Note that this will overwrite any changes you have made to the assets.
+version: '3'
+
+# This information is used to generate the build assets.
+info:
+  companyName: ""
+  productName: "Convert4Share"
+  productIdentifier: "io.github.minjejeon.convert4share"
+  description: "Converts MOV/HEIC to MP4/JPG"
+  copyright: "(c) 2026, minjejeon"
+  comments: "Wails 3 migration release"
+  version: "0.3.0"
+
+# File Associations
+# More information at: https://v3.wails.io/noit/done/yet
+fileAssociations:
+  - ext: mov
+    name: "QuickTime Video"
+    description: "QuickTime Video (handled by Convert4Share)"
+    iconName: icon
+    role: Editor
+  - ext: heic
+    name: "HEIC Image"
+    description: "High Efficiency Image (handled by Convert4Share)"
+    iconName: icon
+    role: Editor

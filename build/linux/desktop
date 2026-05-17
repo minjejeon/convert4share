@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Convert4Share
+Comment=Converts MOV/HEIC to MP4/JPG
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/convert4share %u
+Terminal=false
+Type=Application
+Icon=convert4share
+Categories=Utility;
+StartupWMClass=convert4share
+
+ 

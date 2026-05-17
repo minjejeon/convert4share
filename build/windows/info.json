@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.3.0"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.3.0",
+			"CompanyName": "",
+			"FileDescription": "Converts MOV/HEIC to MP4/JPG",
+			"LegalCopyright": "(c) 2026, minjejeon",
+			"ProductName": "Convert4Share",
+			"Comments": "Wails 3 migration release"
+		}
+	}
+}

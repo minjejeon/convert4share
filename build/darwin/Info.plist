@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>CFBundleDocumentTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>mov</string>
+				</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>icon</string>
+				<key>CFBundleTypeName</key>
+				<string>QuickTime Video</string>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+			</dict>
+			<dict>
+				<key>CFBundleTypeExtensions</key>
+				<array>
+					<string>heic</string>
+				</array>
+				<key>CFBundleTypeIconFile</key>
+				<string>icon</string>
+				<key>CFBundleTypeName</key>
+				<string>HEIC Image</string>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+			</dict>
+		</array>
+		<key>CFBundleExecutable</key>
+		<string>convert4share</string>
+		<key>CFBundleGetInfoString</key>
+		<string>Wails 3 migration release</string>
+		<key>CFBundleIconFile</key>
+		<string>icons</string>
+		<key>CFBundleIdentifier</key>
+		<string>io.github.minjejeon.convert4share</string>
+		<key>CFBundleName</key>
+		<string>Convert4Share</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>0.3.0</string>
+		<key>CFBundleVersion</key>
+		<string>0.3.0</string>
+		<key>LSMinimumSystemVersion</key>
+		<string>10.15.0</string>
+		<key>NSHighResolutionCapable</key>
+		<string>true</string>
+		<key>NSHumanReadableCopyright</key>
+		<string>(c) 2026, minjejeon</string>
+	</dict>
+</plist>
