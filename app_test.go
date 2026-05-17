@@ -126,37 +126,24 @@ func TestGetExcludePatterns_FallsBackToLegacyKey(t *testing.T) {
 	}
 }
 
-func TestSaveAndGetSettings_ExcludePatternsRoundTrip(t *testing.T) {
+func TestGetSettings_ExcludePatternsCanonicalAndLegacy(t *testing.T) {
 	viper.Reset()
 	t.Cleanup(viper.Reset)
 
-	tempDir, err := os.MkdirTemp("", "convert4share-settings")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	t.Cleanup(func() { os.RemoveAll(tempDir) })
-
-	// SaveSettings writes the config next to the running executable. To exercise
-	// only the in-memory viper round-trip (i.e. that GetSettings reads what
-	// SaveSettings writes via the canonical key), set the values directly and
-	// verify GetSettings returns them.
-	viper.SetConfigType("yaml")
 	want := []string{"Some Cloud/Photos", "Google Drive/My Pictures"}
 	viper.Set("excludePatterns", want)
 
 	app := NewApp()
 	got := app.GetSettings().ExcludePatterns
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Round-trip via excludePatterns failed: want %v, got %v", want, got)
+		t.Errorf("Canonical key not honored by GetSettings: want %v, got %v", want, got)
 	}
 
-	// Simulate a legacy config.yaml that still uses excludeStringPatterns.
 	viper.Reset()
-	viper.SetConfigType("yaml")
 	legacy := []string{"Legacy Path/Photos"}
 	viper.Set("excludeStringPatterns", legacy)
 	got = app.GetSettings().ExcludePatterns
 	if !reflect.DeepEqual(got, legacy) {
-		t.Errorf("Legacy key not honored: want %v, got %v", legacy, got)
+		t.Errorf("Legacy key not honored by GetSettings fallback: want %v, got %v", legacy, got)
 	}
 }
