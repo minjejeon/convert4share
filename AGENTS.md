@@ -18,24 +18,33 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 
 ### 1. Wails Integration
 
-> **Wails v3 migration status (Phase 2.1)**
-> The branch `worktree-wails3-migration` has begun the migration to
-> Wails v3 alpha.92. The new entry point is `cmd/convert4share/main.go`
-> and registers empty `Jobs`/`Settings`/`Tools` services under
-> `internal/services/`. All files that still depend on Wails v2 are
+> **Wails v3 migration status (Phase 6)**
+> The branch `worktree-wails3-migration` is migrating to Wails v3
+> alpha.92. The entry point is `cmd/convert4share/main.go`. The build
+> system has moved to `build/config.yml` + `Taskfile.yml` + per-OS
+> Taskfiles under `build/`. `wails.json` and the old `taskfile.yaml`
+> have been removed. All files that still depend on Wails v2 are
 > isolated behind the `wails2_legacy` build tag and are excluded from
-> the default `go build ./...`. The frontend continues to reference the
-> v2 `frontend/src/wailsjs/` bridge until Phase 5 swaps it for
-> `@wailsio/runtime`, so the application does **not** run at this point
-> in the migration even though it builds. See
+> the default `go build ./...`. The frontend now uses
+> `@wailsio/runtime` with bindings under `frontend/bindings/`. See
 > `docs/plans/2026-05-17-wails3-migration.md` for the full phase plan.
 
--   `main.go`: Entry point. Checks for CLI args (`install`, `uninstall`). If none, launches Wails `Run()`.
--   **Bindings**: Located in `frontend/src/wailsjs/`. This directory is often gitignored.
-    -   **Important**: If you modify `App` struct methods or `models` in Go, you **MUST** run `wails generate module` to update the frontend bindings.
-    -   **Verification**: When verifying frontend changes in a browser environment (without the Wails runtime), you must mock these bindings (e.g., inject `window.go.main.App` via Playwright).
--   **Events**: The frontend listens to `conversion-progress` events. Ensure any new long-running tasks emit appropriate events.
--   **Window Management**: To bring the window to front on a second instance launch, use `runtime.WindowUnminimise`, `runtime.WindowShow`, and toggle `runtime.WindowSetAlwaysOnTop`.
+-   `cmd/convert4share/main.go`: Entry point. The legacy root `main.go`
+    is gated by the `wails2_legacy` build tag and is no longer used.
+-   **Bindings**: v3 bindings live in `frontend/bindings/` (gitignored).
+    -   **Important**: If you modify exposed methods or models on
+        `internal/services/{jobs,settings,tools}`, run
+        `task generate:bindings` (= `wails3 generate bindings -ts ./...`)
+        to update the frontend bindings.
+    -   **Verification**: When verifying frontend changes in a browser
+        environment (without the Wails runtime), mock the bindings.
+-   **Events**: The frontend listens to `conversion-progress` events.
+    Ensure any new long-running tasks emit appropriate events via
+    `application.Get().Event.Emit(...)`.
+-   **Window Management**: To bring the window to front on a second
+    instance launch, use `window.UnMinimise()`, `window.Show()`,
+    `window.Restore()`, and `window.Focus()` (see
+    `cmd/convert4share/main.go`).
 
 ### 2. Frontend Development
 -   **Tailwind CSS**: Uses **v4** syntax with `darkMode: 'selector'`. To toggle themes, add/remove the `dark` class on the root HTML element.
@@ -75,15 +84,39 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 -   **Clipboard**: `CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`.
     -   **Escaping**: Sanitize paths in PowerShell commands by replacing `'` with `''`.
 
+## Build Commands (Wails v3)
+
+| Task                            | Command                                       |
+| ------------------------------- | --------------------------------------------- |
+| Production build                | `task build PRODUCTION=true`                  |
+| Development build               | `task build`                                  |
+| Run the built app               | `task run`                                    |
+| Dev mode (vite + wails3 dev)    | `task dev`                                    |
+| Regenerate frontend bindings    | `task generate:bindings`                      |
+| Regenerate build assets         | `task common:update:build-assets`             |
+| Build NSIS installer (Windows)  | `task package` (requires `makensis` on PATH)  |
+| Clean build artifacts           | `task clean`                                  |
+
+The legacy v2 commands (`wails build`, `wails dev`, `wails generate module`)
+are no longer used. Build assets are configured in `build/config.yml`;
+re-run `task common:update:build-assets` after editing it.
+
 ## Instructions for Agents
 
-1.  **Always Verify**: After editing code, run `go mod tidy`, `task build`, or `wails build` to verify changes and update bindings.
-2.  **Verify Frontend**: If touching UI, consider how to verify it (mocking Wails if using standard browser tools).
-3.  **Cross-Platform Awareness**: Ensure `GOOS=windows` checks or build tags are respected.
+1.  **Always Verify**: After editing code, run `go mod tidy` and `task build`
+    (or at minimum `go build ./...` + `go test ./...`).
+2.  **Verify Frontend**: If touching UI, consider how to verify it
+    (mocking Wails if using standard browser tools).
+3.  **Cross-Platform Awareness**: Ensure `GOOS=windows` checks or build
+    tags are respected.
 4.  **Dependencies**: Use `npm`. Do not use `pnpm` or `yarn`.
 5.  **Code Style**: Avoid verbose comments. Code should be self-documenting.
-6.  **Git**: `frontend/dist` is embedded. `go build` requires it to exist.
-7.  **Dependency Lock**: Do not change `src/wailsjs/runtime` in `@frontend/package-lock.json`.
+6.  **Embedded assets**: The Go embed source is `cmd/convert4share/dist/`,
+    populated by `task common:build:frontend` (copy of `frontend/dist`).
+    `cmd/convert4share/dist/.gitkeep` keeps the directory tracked so
+    `//go:embed` always resolves.
+7.  **Dependency Lock**: Treat `frontend/package-lock.json` as authoritative;
+    do not rewrite Wails runtime entries manually.
 
 ### Tag Message Guidelines
 When creating a tag message, adhere to the following format:
