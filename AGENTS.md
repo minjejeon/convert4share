@@ -18,19 +18,19 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 
 ### 1. Wails Integration
 
-> **Wails v3 migration status (Phase 6)**
-> The branch `worktree-wails3-migration` is migrating to Wails v3
-> alpha.92. The entry point is `cmd/convert4share/main.go`. The build
-> system has moved to `build/config.yml` + `Taskfile.yml` + per-OS
-> Taskfiles under `build/`. `wails.json` and the old `taskfile.yaml`
-> have been removed. All files that still depend on Wails v2 are
-> isolated behind the `wails2_legacy` build tag and are excluded from
-> the default `go build ./...`. The frontend now uses
-> `@wailsio/runtime` with bindings under `frontend/bindings/`. See
+> **Wails v3 migration status (Phase 7 + 8 complete)**
+> The branch `worktree-wails3-migration` runs on Wails v3 alpha.92. The
+> entry point is `cmd/convert4share/main.go`. The build system uses
+> `build/config.yml` + `Taskfile.yml` + per-OS Taskfiles under `build/`.
+> `wails.json` and the old `taskfile.yaml` have been removed. All
+> legacy v2 code (root `app*.go`, `main.go`, `build_*.go`, `cmd/install*.go`,
+> `cmd/uninstall*.go`, `cmd/root.go`, `windows/admin*.go`,
+> `windows/registry*.go`) has been deleted; nothing in the tree depends
+> on `wails/v2` anymore. The frontend uses `@wailsio/runtime` with
+> bindings under `frontend/bindings/`. See
 > `docs/plans/2026-05-17-wails3-migration.md` for the full phase plan.
 
--   `cmd/convert4share/main.go`: Entry point. The legacy root `main.go`
-    is gated by the `wails2_legacy` build tag and is no longer used.
+-   `cmd/convert4share/main.go`: Entry point for the v3 application.
 -   **Bindings**: v3 bindings live in `frontend/bindings/` (gitignored).
     -   **Important**: If you modify exposed methods or models on
         `internal/services/{jobs,settings,tools}`, run

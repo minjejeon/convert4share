@@ -51,8 +51,7 @@ tasks:
     generates:
       - "frontend/bindings/**/*"
     cmds:
-      # Scan all packages so services under internal/services/ are picked up;
-      # the root `main.go` is gated by the legacy `wails2_legacy` build tag.
+      # Scan all packages so services under internal/services/ are picked up.
       - wails3 generate bindings -clean=true -ts ./...
 
   generate:icons:
