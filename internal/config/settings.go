@@ -1,13 +1,38 @@
-// Package config holds settings-related helpers that are independent
-// of the Wails App. The Settings struct itself currently lives in the
-// main package to keep the existing Wails-generated TypeScript
-// bindings stable (the binding namespace tracks the package the type
-// is declared in, not type aliases). A later phase will fold the
-// struct definition into this package once the frontend is migrated
-// off the implicit `main.Settings` reference.
+// Package config owns the Settings struct and the viper-backed helpers
+// that load it from / write it to the user's config file. The struct
+// definition lived in the main package during the Wails v2 era so that
+// the generated TypeScript bindings would track the `main.Settings`
+// namespace; the Wails v3 migration regenerates bindings against the
+// new services, so the struct is now defined here for clarity.
 package config
 
-import "github.com/spf13/viper"
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/viper"
+)
+
+// Settings is the user-facing configuration surface exposed by the
+// SettingsService. The JSON tags are preserved verbatim from the v2
+// binding so existing config.yaml files round-trip unchanged.
+type Settings struct {
+	MagickBinary        string   `json:"magickBinary"`
+	FfmpegBinary        string   `json:"ffmpegBinary"`
+	MaxSize             int      `json:"maxSize"`
+	MaxImageSize        int      `json:"maxImageSize"`
+	AutoLivePhoto       bool     `json:"autoLivePhoto"`
+	CopyOnlyExtensions  []string `json:"copyOnlyExtensions"`
+	HardwareAccelerator string   `json:"hardwareAccelerator"`
+	FfmpegCustomArgs    string   `json:"ffmpegCustomArgs"`
+	DefaultDestDir      string   `json:"defaultDestDir"`
+	ExcludePatterns     []string `json:"excludePatterns"`
+	VideoQuality        string   `json:"videoQuality"`
+	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
+	MaxMagickWorkers    int      `json:"maxMagickWorkers"`
+	CollisionOption     string   `json:"collisionOption"`
+	LogLevel            string   `json:"logLevel"`
+}
 
 // ExcludePatterns reads the exclude patterns list, preferring the
 // canonical `excludePatterns` key but falling back to the legacy
@@ -19,4 +44,83 @@ func ExcludePatterns() []string {
 		patterns = viper.GetStringSlice("excludeStringPatterns")
 	}
 	return patterns
+}
+
+// SetDefaults registers viper defaults for every Settings field. The
+// defaultLogLevel argument lets callers vary the baseline ("debug" in
+// dev builds, "info" otherwise) without dragging build-tag plumbing
+// into this package.
+func SetDefaults(defaultLogLevel string) {
+	viper.SetDefault("magickBinary", "magick")
+	viper.SetDefault("ffmpegBinary", "ffmpeg")
+	viper.SetDefault("maxSize", 1920)
+	viper.SetDefault("maxImageSize", 2560)
+	viper.SetDefault("autoLivePhoto", true)
+	viper.SetDefault("copyOnlyExtensions", []string{".jpg", ".jpeg", ".mp4"})
+	viper.SetDefault("maxMagickWorkers", 5)
+	viper.SetDefault("maxFfmpegWorkers", 1)
+	viper.SetDefault("hardwareAccelerator", "none")
+	viper.SetDefault("videoQuality", "high")
+	viper.SetDefault("collisionOption", "rename")
+
+	if defaultLogLevel == "" {
+		defaultLogLevel = "info"
+	}
+	viper.SetDefault("logLevel", defaultLogLevel)
+
+	defaultDest := "$HOMEDRIVE/$HOMEPATH/Pictures"
+	if home, err := os.UserHomeDir(); err == nil {
+		defaultDest = filepath.Join(home, "Pictures")
+	}
+	viper.SetDefault("defaultDestDir", defaultDest)
+}
+
+// Load materialises the current viper view as a Settings value.
+func Load() Settings {
+	return Settings{
+		MagickBinary:        viper.GetString("magickBinary"),
+		FfmpegBinary:        viper.GetString("ffmpegBinary"),
+		MaxSize:             viper.GetInt("maxSize"),
+		MaxImageSize:        viper.GetInt("maxImageSize"),
+		AutoLivePhoto:       viper.GetBool("autoLivePhoto"),
+		CopyOnlyExtensions:  viper.GetStringSlice("copyOnlyExtensions"),
+		HardwareAccelerator: viper.GetString("hardwareAccelerator"),
+		FfmpegCustomArgs:    viper.GetString("ffmpegCustomArgs"),
+		DefaultDestDir:      viper.GetString("defaultDestDir"),
+		ExcludePatterns:     ExcludePatterns(),
+		VideoQuality:        viper.GetString("videoQuality"),
+		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
+		MaxMagickWorkers:    viper.GetInt("maxMagickWorkers"),
+		CollisionOption:     viper.GetString("collisionOption"),
+		LogLevel:            viper.GetString("logLevel"),
+	}
+}
+
+// Save writes the provided Settings back into viper and persists the
+// view to <exeDir>/config.yaml via viper.WriteConfigAs. The explicit
+// path is required because viper.WriteConfig fails when there is no
+// pre-existing config file.
+func Save(s Settings) error {
+	viper.Set("magickBinary", s.MagickBinary)
+	viper.Set("ffmpegBinary", s.FfmpegBinary)
+	viper.Set("maxSize", s.MaxSize)
+	viper.Set("maxImageSize", s.MaxImageSize)
+	viper.Set("autoLivePhoto", s.AutoLivePhoto)
+	viper.Set("copyOnlyExtensions", s.CopyOnlyExtensions)
+	viper.Set("hardwareAccelerator", s.HardwareAccelerator)
+	viper.Set("ffmpegCustomArgs", s.FfmpegCustomArgs)
+	viper.Set("defaultDestDir", s.DefaultDestDir)
+	viper.Set("excludePatterns", s.ExcludePatterns)
+	viper.Set("videoQuality", s.VideoQuality)
+	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
+	viper.Set("maxMagickWorkers", s.MaxMagickWorkers)
+	viper.Set("collisionOption", s.CollisionOption)
+	viper.Set("logLevel", s.LogLevel)
+
+	exePath, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	configPath := filepath.Join(filepath.Dir(exePath), "config.yaml")
+	return viper.WriteConfigAs(configPath)
 }
