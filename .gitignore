@@ -49,3 +49,6 @@ config.yaml
 
 # Claude Code personal overrides
 .claude/settings.local.json
+
+# Claude Code session worktrees
+.claude/worktrees/
