@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Monitor, Loader2, Sun, Moon, Laptop, Terminal } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { InstallContextMenu, UninstallContextMenu, GetContextMenuStatus } from '../wailsjs/go/main/App';
@@ -15,6 +15,20 @@ interface SettingsIntegrationProps {
 
 export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThemeChange, settings, onChange }: SettingsIntegrationProps) {
     const [togglingMenu, setTogglingMenu] = useState(false);
+    const togglePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const clearTogglePoll = () => {
+        if (togglePollRef.current) {
+            clearInterval(togglePollRef.current);
+            togglePollRef.current = null;
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            clearTogglePoll();
+        };
+    }, []);
 
     const handleToggleMenu = async () => {
         setTogglingMenu(true);
@@ -28,16 +42,18 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
             // Poll for status change
             const targetStatus = !isInstalled;
             const start = Date.now();
-            const interval = setInterval(async () => {
+            clearTogglePoll();
+            togglePollRef.current = setInterval(async () => {
                 const status = await GetContextMenuStatus();
                 if (status === targetStatus) {
                     onStatusChange(status);
                     setTogglingMenu(false);
-                    clearInterval(interval);
+                    clearTogglePoll();
+                    return;
                 }
                 if (Date.now() - start > 15000) { // 15s timeout
                      setTogglingMenu(false);
-                     clearInterval(interval);
+                     clearTogglePoll();
                      onStatusChange(await GetContextMenuStatus());
                 }
             }, 1000);
@@ -45,6 +61,7 @@ export function SettingsIntegration({ isInstalled, onStatusChange, theme, onThem
         } catch (e) {
             console.error(e);
             setTogglingMenu(false);
+            clearTogglePoll();
         }
     };
 

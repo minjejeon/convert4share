@@ -28,6 +28,9 @@ export function useFileQueue() {
         });
     }, []);
 
+    const addFileRef = useRef(addFile);
+    addFileRef.current = addFile;
+
     const [visiblePaths, setVisiblePaths] = useState<string[]>([]);
     const [fetchingPath, setFetchingPath] = useState<string | null>(null);
 
@@ -90,11 +93,11 @@ export function useFileQueue() {
 
     useEffect(() => {
         const cleanupFileAdded = EventsOn("file-added", (path: string) => {
-            addFile(path);
+            addFileRef.current(path);
         });
 
         const cleanupFilesReceived = EventsOn("files-received", (paths: string[]) => {
-             paths.forEach(addFile);
+             paths.forEach(p => addFileRef.current(p));
         });
 
         const cleanupProgress = EventsOn("conversion-progress", (data: ProgressData) => {
@@ -128,7 +131,7 @@ export function useFileQueue() {
             cleanupPaused();
             cleanupResumed();
         };
-    }, [addFile]);
+    }, []);
 
     const queuedCount = files.filter(f => f.status === 'queued').length;
     useEffect(() => {

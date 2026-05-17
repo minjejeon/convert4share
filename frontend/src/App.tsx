@@ -67,38 +67,48 @@ function App() {
         };
     }, [addFile]);
 
+    const clearInstallTimers = () => {
+        if (installIntervalRef.current) {
+            clearInterval(installIntervalRef.current);
+            installIntervalRef.current = null;
+        }
+        if (installTimeoutRef.current) {
+            clearTimeout(installTimeoutRef.current);
+            installTimeoutRef.current = null;
+        }
+    };
+
     const handleInstall = async () => {
         setIsInstalling(true);
         try {
             await InstallContextMenu();
-            const interval = setInterval(() => {
+            installIntervalRef.current = setInterval(() => {
                 GetContextMenuStatus().then(status => {
                     if (status) {
                         setIsInstalled(true);
                         setIsInstalling(false);
-                        clearInterval(interval);
+                        clearInstallTimers();
                     }
                 });
             }, 1000);
-            installIntervalRef.current = interval;
-            const timeout = setTimeout(() => {
-                clearInterval(interval);
+            installTimeoutRef.current = setTimeout(() => {
                 GetContextMenuStatus().then(status => {
                     if (status) setIsInstalled(true);
                     setIsInstalling(false);
+                }).finally(() => {
+                    clearInstallTimers();
                 });
             }, 10000);
-            installTimeoutRef.current = timeout;
         } catch (e) {
             console.error(e);
             setIsInstalling(false);
+            clearInstallTimers();
         }
     };
 
     useEffect(() => {
         return () => {
-            if (installIntervalRef.current) clearInterval(installIntervalRef.current);
-            if (installTimeoutRef.current) clearTimeout(installTimeoutRef.current);
+            clearInstallTimers();
         };
     }, []);
 

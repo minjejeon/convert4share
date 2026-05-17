@@ -54,6 +54,8 @@ export function FileList({ files, onRemove, onRetry, onCopy, onClearCompleted, t
                         <button
                             onClick={isPaused ? onResume : onPause}
                             className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-indigo-600 dark:text-indigo-400 transition-colors"
+                            aria-label={isPaused ? "Resume conversion queue" : "Pause conversion queue"}
+                            aria-pressed={isPaused}
                         >
                             {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
                             {isPaused ? "Resume" : "Pause"}
