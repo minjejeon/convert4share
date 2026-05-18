@@ -4,8 +4,8 @@ set -e
 # Build configuration
 APP_NAME="convert4share"
 BUNDLE_ID="io.github.minjejeon.convert4share"
-VERSION="0.3.0"
-BUILD_NUMBER="0.3.0"
+VERSION="0.3.1"
+BUILD_NUMBER="0.3.1"
 BUILD_DIR="build/ios"
 TARGET="simulator"
 
