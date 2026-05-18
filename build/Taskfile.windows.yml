@@ -43,11 +43,19 @@ tasks:
       - task: build
         vars:
           PRODUCTION: "true"
+      - task: ensure:webview2:bootstrapper
     cmds:
       - makensis -DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\{{.APP_NAME}}.exe" project.nsi
     vars:
       ARCH: '{{.ARCH | default ARCH}}'
       ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'
+
+  ensure:webview2:bootstrapper:
+    summary: Downloads the Microsoft WebView2 evergreen bootstrapper if missing (referenced by wails_tools.nsh)
+    status:
+      - powershell -NoProfile -Command "if (-not (Test-Path 'build/windows/nsis/MicrosoftEdgeWebview2Setup.exe')) { exit 1 }"
+    cmds:
+      - powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile 'build/windows/nsis/MicrosoftEdgeWebview2Setup.exe'"
 
   run:
     cmds:
