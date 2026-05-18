@@ -23,9 +23,65 @@
   background: transparent;
 }
 
-/* Wails v3 adds this class while files are being dragged over a
-   `data-file-drop-target` element. Mirror the DropZone hover styling so
-   the cue stays consistent with the in-component drag state. */
-.file-drop-target-active {
-  @apply border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/5 shadow-lg shadow-indigo-500/10;
+/* Wails v3 adds this class to every `data-file-drop-target` element
+   while files are being dragged. The Layout root and the DropZone
+   both opt in, so the whole window accepts drops and the DropZone
+   gets its own emphasized highlight.
+
+   Scoped to .dropzone-cue so the rule only restyles the DropZone,
+   not the full-window root — the root has its own overlay below. */
+.dropzone-cue.file-drop-target-active {
+  @apply border-indigo-500/50 bg-indigo-50 dark:bg-indigo-500/5 shadow-lg shadow-indigo-500/10 scale-[1.01];
+}
+.dropzone-cue.file-drop-target-active .dropzone-icon-wrap {
+  @apply scale-110 ring-indigo-500/50;
+}
+.dropzone-cue.file-drop-target-active .dropzone-icon {
+  @apply text-indigo-600 dark:text-indigo-400;
+}
+
+/* Full-window cue shown while a drag is hovering anywhere over the
+   app: a dashed indigo outline at the window edge (::after) plus a
+   centered chip (::before) that names the action. Pseudo-elements
+   keep this out of the React tree and out of layout flow. */
+.drop-window.file-drop-target-active {
+  position: relative;
+}
+.drop-window.file-drop-target-active::after {
+  content: '';
+  position: fixed;
+  inset: 8px;
+  pointer-events: none;
+  z-index: 100;
+  border: 2px dashed rgb(99 102 241 / 0.6);
+  border-radius: 12px;
+  animation: drop-pulse 1.6s ease-in-out infinite;
+}
+.drop-window.file-drop-target-active::before {
+  content: 'Drop files to convert';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 101;
+  padding: 0.875rem 1.75rem;
+  border-radius: 9999px;
+  background: rgb(79 70 229);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 24px 56px -12px rgb(99 102 241 / 0.55), 0 0 0 6px rgb(99 102 241 / 0.12);
+  animation: drop-chip-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes drop-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes drop-chip-in {
+  from { transform: translate(-50%, -42%) scale(0.92); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }

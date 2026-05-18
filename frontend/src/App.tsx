@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { DropZone } from './components/DropZone';
 import { FileList } from './components/FileList';
-import { SettingsView } from './components/Settings';
 import { useTheme } from './hooks/useTheme';
 import { useFileQueue } from './hooks/useFileQueue';
+
+// Lazy-load the settings screen so the home view ships with a smaller
+// initial bundle. Settings pulls in 6 form sub-components, the license
+// viewer, and licenses.json — none of which the home view needs.
+const SettingsView = lazy(() =>
+    import('./components/Settings').then((m) => ({ default: m.SettingsView })),
+);
+
+function SettingsFallback() {
+    return (
+        <div className="flex justify-center p-12">
+            <Loader2 className="animate-spin text-slate-500" aria-label="Loading settings" />
+        </div>
+    );
+}
 
 function App() {
     const [view, setView] = useState<'home' | 'settings'>('home');
@@ -49,7 +64,9 @@ function App() {
             )}
             {view === 'settings' && (
                 <div className="h-full overflow-y-auto px-6">
-                    <SettingsView theme={theme} onThemeChange={setTheme} />
+                    <Suspense fallback={<SettingsFallback />}>
+                        <SettingsView theme={theme} onThemeChange={setTheme} />
+                    </Suspense>
                 </div>
             )}
         </Layout>

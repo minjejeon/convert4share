@@ -14,6 +14,16 @@ interface FileListProps {
     onResume?: () => void;
 }
 
+type SortField = 'name' | 'added' | 'completed';
+
+const SORT_LABEL: Record<SortField, string> = {
+    completed: 'Completed',
+    added: 'Created',
+    name: 'Name',
+};
+
+const SORT_ORDER: SortField[] = ['completed', 'added', 'name'];
+
 const Header = ({ title, count, children }: { title: string; count: number; children: React.ReactNode }) => (
     <div className="flex items-center justify-between px-2 pb-2 pt-2">
         <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
@@ -25,8 +35,13 @@ const Header = ({ title, count, children }: { title: string; count: number; chil
 
 export function FileList({ files, onRemove, onRetry, onCopy, onClearCompleted, trackVisibility, isPaused, onPause, onResume }: FileListProps) {
     const activeFiles = files.filter(f => f.status !== 'done');
-    const [sortField, setSortField] = useState<'name' | 'added' | 'completed'>('completed');
+    const [sortField, setSortField] = useState<SortField>('completed');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+    const cycleSortField = () => {
+        const idx = SORT_ORDER.indexOf(sortField);
+        setSortField(SORT_ORDER[(idx + 1) % SORT_ORDER.length]);
+    };
 
     const completedFiles = files.filter(f => f.status === 'done').sort((a, b) => {
         let cmp = 0;
@@ -70,34 +85,32 @@ export function FileList({ files, onRemove, onRetry, onCopy, onClearCompleted, t
              {completedFiles.length > 0 && (
                 <div className="mb-4">
                     <Header title="Completed" count={completedFiles.length}>
-                        <div className="flex items-center gap-2">
-                             <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700/50">
-                                <select
-                                    value={sortField}
-                                    onChange={(e) => setSortField(e.target.value as 'name' | 'added' | 'completed')}
-                                    className="bg-transparent text-[10px] font-medium uppercase tracking-wide text-slate-600 dark:text-slate-300 px-2 py-0.5 outline-none border-none cursor-pointer hover:bg-white/50 dark:hover:bg-black/20 rounded"
-                                    aria-label="Sort files by"
+                        <div className="flex items-center gap-1.5">
+                            <div className="inline-flex items-stretch bg-slate-100 dark:bg-slate-800 rounded-md overflow-hidden border border-slate-200/60 dark:border-slate-700/50">
+                                <button
+                                    onClick={cycleSortField}
+                                    className="text-[10px] font-medium uppercase tracking-wide text-slate-600 dark:text-slate-300 px-2 py-1 hover:bg-white/70 dark:hover:bg-black/20 transition-colors"
+                                    title="Cycle sort field"
+                                    aria-label={`Sort by ${SORT_LABEL[sortField]} — click to change field`}
                                 >
-                                    <option className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200" value="completed">Completed Time</option>
-                                    <option className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200" value="added">Created Time</option>
-                                    <option className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200" value="name">Name</option>
-                                </select>
+                                    {SORT_LABEL[sortField]}
+                                </button>
                                 <button
                                     onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                    className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded text-slate-500 hover:text-indigo-500 transition-colors"
-                                    title={sortDirection === 'asc' ? "Ascending" : "Descending"}
-                                    aria-label={sortDirection === 'asc' ? "Sort ascending" : "Sort descending"}
+                                    className="px-1.5 border-l border-slate-200/70 dark:border-slate-700/60 text-slate-500 hover:text-indigo-500 hover:bg-white/70 dark:hover:bg-black/20 transition-colors"
+                                    title={sortDirection === 'asc' ? 'Ascending — click to flip' : 'Descending — click to flip'}
+                                    aria-label={sortDirection === 'asc' ? 'Sort ascending' : 'Sort descending'}
                                 >
                                     {sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                                 </button>
-                             </div>
+                            </div>
 
                             <button
                                 onClick={onClearCompleted}
                                 className="text-[10px] font-medium text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1.5 uppercase tracking-wide px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded"
                                 aria-label="Clear completed files history"
                             >
-                                <Trash2 className="w-3 h-3" aria-hidden="true" /> Clear History
+                                <Trash2 className="w-3 h-3" aria-hidden="true" /> Clear
                             </button>
                         </div>
                     </Header>

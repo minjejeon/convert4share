@@ -1,12 +1,14 @@
 import React, { memo, useState } from 'react';
-import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check, RotateCcw } from 'lucide-react';
+import { FileVideo, FileImage, AlertCircle, CheckCircle2, Loader2, XCircle, Copy, Trash2, Check, RotateCcw, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
+
+export type FileStatus = 'queued' | 'pending' | 'processing' | 'done' | 'error';
 
 export interface FileItem {
     id: string; // usually path
     path: string;
     destFile?: string;
-    status: 'queued' | 'pending' | 'processing' | 'done' | 'error';
+    status: FileStatus;
     progress: number;
     speed?: string;
     error?: string;
@@ -15,15 +17,32 @@ export interface FileItem {
     completedAt?: number;
 }
 
-export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibility }: { 
-    file: FileItem; 
-    onRemove: (id: string) => void; 
+const STATUS_LABEL: Record<FileStatus, string> = {
+    queued: 'Waiting',
+    pending: 'Pending',
+    processing: 'Processing',
+    done: 'Done',
+    error: 'Error',
+};
+
+const STATUS_BADGE: Record<FileStatus, string> = {
+    queued: 'text-slate-500 bg-slate-100 dark:bg-slate-700/50',
+    pending: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10',
+    processing: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10',
+    done: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10',
+    error: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10',
+};
+
+export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibility }: {
+    file: FileItem;
+    onRemove: (id: string) => void;
     onRetry: (id: string) => void;
     onCopy: (path: string) => void;
     trackVisibility: (path: string, isVisible: boolean) => void;
 }) => {
     const [isCopied, setIsCopied] = useState(false);
     const [isErrorCopied, setIsErrorCopied] = useState(false);
+    const [errorExpanded, setErrorExpanded] = useState(false);
     const rowRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
@@ -48,7 +67,8 @@ export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibil
     const dirName = lastSeparatorIndex >= 0 ? file.path.substring(0, lastSeparatorIndex) : '';
 
     const handleCopy = () => {
-        onCopy(file.destFile!);
+        if (!file.destFile) return;
+        onCopy(file.destFile);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
     };
@@ -60,10 +80,35 @@ export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibil
         }).catch(console.error);
     };
 
+    // Keyboard shortcuts when the row has focus:
+    //   Delete/Backspace → remove
+    //   Enter            → copy destination (when done)
+    //   r                → retry (when error)
+    const handleRowKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement;
+        // ignore keystrokes that originated inside an interactive child
+        if (target !== e.currentTarget) return;
+
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            e.preventDefault();
+            onRemove(file.id);
+        } else if (e.key === 'Enter' && file.status === 'done' && file.destFile) {
+            e.preventDefault();
+            handleCopy();
+        } else if ((e.key === 'r' || e.key === 'R') && file.status === 'error') {
+            e.preventDefault();
+            onRetry(file.id);
+        }
+    };
+
     return (
         <div className="px-1 pb-2" ref={rowRef}>
             <div
-                className="group flex items-center gap-4 bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-all duration-200 h-full shadow-sm dark:shadow-none"
+                tabIndex={0}
+                role="group"
+                aria-label={`${fileName} — ${STATUS_LABEL[file.status]}`}
+                onKeyDown={handleRowKeyDown}
+                className="group flex items-center gap-4 bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600/50 transition-all duration-200 h-full shadow-sm dark:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:border-indigo-400/50"
             >
                 <div className="shrink-0 relative overflow-hidden w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-900/50 ring-1 ring-slate-900/5 dark:ring-white/5 flex items-center justify-center">
                     {file.thumbnail ? (
@@ -94,14 +139,12 @@ export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibil
 
                         <span className={cn(
                             "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0",
-                            file.status === 'done' && "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10",
-                            file.status === 'processing' && "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10",
-                            file.status === 'pending' && "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10",
-                            file.status === 'error' && "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10",
-                            file.status === 'queued' && "text-slate-500 bg-slate-100 dark:bg-slate-700/50",
+                            STATUS_BADGE[file.status],
                         )}>
-                            {file.status === 'queued' ? 'Waiting' : (file.status === 'pending' ? 'Pending...' : file.status)}
-                            {file.status === 'processing' && file.speed && <span className="normal-case ml-1 opacity-75">({file.speed})</span>}
+                            {STATUS_LABEL[file.status]}
+                            {file.status === 'processing' && file.speed && (
+                                <span className="normal-case ml-1 opacity-75">({file.speed})</span>
+                            )}
                         </span>
                     </div>
 
@@ -126,9 +169,18 @@ export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibil
                         {file.error && (
                             <div className="mt-2 w-full text-xs text-red-500 dark:text-red-400 flex items-start gap-1.5 animate-in fade-in">
                                 <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
-                                <span className="break-all line-clamp-3 flex-1" title={file.error}>
-                                    {file.error}
-                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setErrorExpanded((v) => !v)}
+                                    aria-expanded={errorExpanded}
+                                    aria-label={errorExpanded ? 'Collapse error detail' : 'Expand error detail'}
+                                    className="flex items-start gap-1 flex-1 min-w-0 text-left rounded hover:text-red-600 dark:hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60 transition-colors"
+                                >
+                                    <span className={cn("break-words flex-1", !errorExpanded && "line-clamp-3")} title={errorExpanded ? undefined : file.error}>
+                                        {file.error}
+                                    </span>
+                                    <ChevronDown className={cn("w-3 h-3 mt-0.5 shrink-0 transition-transform duration-200", errorExpanded && "rotate-180")} />
+                                </button>
                                 <button
                                     onClick={() => handleCopyError(file.error!)}
                                     className="shrink-0 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
@@ -152,7 +204,7 @@ export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibil
                                     ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
                                     : "text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                             )}
-                            title={isCopied ? "Copied!" : "Copy File"}
+                            title={isCopied ? "Copied!" : "Copy File (Enter)"}
                             aria-label="Copy file to clipboard"
                         >
                             {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -161,7 +213,7 @@ export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibil
                         <button
                             onClick={() => onRetry(file.id)}
                             className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
-                            title="Retry Conversion"
+                            title="Retry Conversion (R)"
                             aria-label="Retry conversion"
                         >
                             <RotateCcw className="w-4 h-4" />
@@ -173,7 +225,7 @@ export const FileItemRow = memo(({ file, onRemove, onRetry, onCopy, trackVisibil
                     <button
                         onClick={() => onRemove(file.id)}
                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                        title="Remove"
+                        title="Remove (Del)"
                         aria-label="Remove file from queue"
                     >
                         <Trash2 className="w-4 h-4" />
