@@ -3,7 +3,6 @@ package settings
 import (
 	"log/slog"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -50,28 +49,18 @@ func TestGetSettings_ReflectsViperState(t *testing.T) {
 }
 
 func TestSaveSettings_UpdatesLevelAndWritesConfig(t *testing.T) {
-	// Save() writes to <exeDir>/config.yaml; redirect the test
-	// executable directory by jumping into an isolated temp dir via
-	// HOMEDRIVE/HOMEPATH manipulation is overkill here, so we just
-	// verify the post-save side effects (viper state + level callback)
-	// and let the IO succeed against the real test-binary directory.
 	viper.Reset()
 	t.Cleanup(viper.Reset)
 
-	// Constrain to a temp config so we do not litter the test binary
-	// directory. We achieve this by chdir'ing into the temp dir AND
-	// pointing viper at it; the SaveSettings call still uses os.Executable
-	// but that file lives in a go test cache directory, which we
-	// tolerate for now. Confirm the file is created next to whatever
-	// os.Executable reports.
-	exePath, err := os.Executable()
+	// Save() writes to the per-user config dir (%APPDATA%\Convert4Share
+	// on Windows) so an all-users install under Program Files stays
+	// writable for standard users. Redirect that base to a temp dir so
+	// the test never touches the real profile.
+	t.Setenv("AppData", t.TempDir())
+	configPath, err := config.FilePath()
 	if err != nil {
-		t.Skipf("os.Executable unavailable: %v", err)
+		t.Fatalf("resolve config path: %v", err)
 	}
-	configPath := filepath.Join(filepath.Dir(exePath), "config.yaml")
-	t.Cleanup(func() {
-		os.Remove(configPath)
-	})
 
 	lv := &fakeLevel{}
 	s := New(nil, lv)

@@ -13,6 +13,36 @@ import (
 	"github.com/spf13/viper"
 )
 
+// appDirName is the per-user folder Convert4Share owns under the OS
+// config root.
+const appDirName = "Convert4Share"
+
+// Dir returns the per-user configuration directory for Convert4Share
+// (%APPDATA%\Convert4Share on Windows), creating it if missing. This
+// location is always writable by the current user — unlike the install
+// directory under Program Files for an all-users install, where storing
+// config next to the executable would silently fail for standard users.
+func Dir() (string, error) {
+	base, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	dir := filepath.Join(base, appDirName)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// FilePath returns the absolute path to config.yaml within Dir().
+func FilePath() (string, error) {
+	dir, err := Dir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "config.yaml"), nil
+}
+
 // Settings is the user-facing configuration surface exposed by the
 // SettingsService. The JSON tags are preserved verbatim from the v2
 // binding so existing config.yaml files round-trip unchanged.
@@ -97,9 +127,9 @@ func Load() Settings {
 }
 
 // Save writes the provided Settings back into viper and persists the
-// view to <exeDir>/config.yaml via viper.WriteConfigAs. The explicit
-// path is required because viper.WriteConfig fails when there is no
-// pre-existing config file.
+// view to the per-user config file (see FilePath) via
+// viper.WriteConfigAs. The explicit path is required because
+// viper.WriteConfig fails when there is no pre-existing config file.
 func Save(s Settings) error {
 	viper.Set("magickBinary", s.MagickBinary)
 	viper.Set("ffmpegBinary", s.FfmpegBinary)
@@ -117,10 +147,9 @@ func Save(s Settings) error {
 	viper.Set("collisionOption", s.CollisionOption)
 	viper.Set("logLevel", s.LogLevel)
 
-	exePath, err := os.Executable()
+	configPath, err := FilePath()
 	if err != nil {
 		return err
 	}
-	configPath := filepath.Join(filepath.Dir(exePath), "config.yaml")
 	return viper.WriteConfigAs(configPath)
 }

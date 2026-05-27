@@ -12,7 +12,6 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -232,18 +231,17 @@ func main() {
 	}
 }
 
-// loadConfig registers viper defaults and reads <exeDir>/config.yaml
-// when present. A missing file is logged but not fatal — defaults are
-// sufficient for first launch.
+// loadConfig registers viper defaults and reads the per-user
+// config.yaml (see config.Dir) when present. A missing file is logged
+// but not fatal — defaults are sufficient for first launch.
 func loadConfig(logger *slog.Logger) {
-	exePath, err := os.Executable()
+	configDir, err := config.Dir()
 	if err != nil {
-		logger.Error("Error getting executable path", "error", err)
+		logger.Error("Error resolving config directory", "error", err)
 		return
 	}
-	exeDir := filepath.Dir(exePath)
 
-	viper.AddConfigPath(exeDir)
+	viper.AddConfigPath(configDir)
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AutomaticEnv()
