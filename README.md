@@ -42,7 +42,7 @@ The application automatically attempts to detect these binaries in your system `
 
 ## Building from Source
 
-You need **Go** (1.23+), **Node.js** with **npm**, and **go-task** installed. The Wails v3 CLI is fetched on demand by Taskfile targets.
+You need **Go** (1.25+), **Node.js** with **npm**, and **go-task** installed. The Wails v3 CLI is fetched on demand by Taskfile targets.
 
 ```shell
 # Development build (frontend + Go binary -> bin/convert4share.exe)

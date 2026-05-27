@@ -1,4 +1,8 @@
 # Configuration for Convert4Share
+#
+# Copy this file to the per-user config path so the app loads it:
+#   Windows: %APPDATA%\Convert4Share\config.yaml
+# Settings changed inside the app are written back to that same location.
 
 # Path to the ImageMagick executable.
 # If not set or invalid, the application will attempt to auto-detect it.
