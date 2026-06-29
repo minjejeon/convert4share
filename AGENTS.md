@@ -4,7 +4,7 @@ This file provides context and guidelines for AI agents (and human developers) w
 
 ## Project Overview
 
-**Convert4Share** is a Windows utility for converting `.mov` and `.heic` files to `.mp4` and `.jpg` respectively.
+**Convert4Share** is a cross-platform (Windows and Linux) desktop app for converting `.mov` and `.heic` files to `.mp4` and `.jpg` respectively.
 It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend).
 
 ## Tech Stack
@@ -12,7 +12,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 -   **Backend**: Go (Wails framework)
 -   **Frontend**: React, TypeScript, Vite, Tailwind CSS (v4)
 -   **Package Manager**: `npm` (Enforced. Do not use `pnpm` or `yarn` for frontend dependencies).
--   **OS**: Windows (Target), but development environment might be Linux/macOS (requiring conditional builds).
+-   **OS**: Windows and Linux (both supported targets). Linux builds require `CGO_ENABLED=1` and the GTK3 / WebKit2GTK 4.1 dev packages (`libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `pkg-config` on Debian/Ubuntu). Platform differences are handled via build tags / per-OS files.
 
 ## Architecture & Coding Guidelines
 
@@ -74,9 +74,10 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
     -   **Concurrency**: Use `sync.WaitGroup` when parsing `stderr` in goroutines.
 - **Video Encoding**:
     -   Supports 'High' (5Mbps), 'Medium' (2.5Mbps), 'Low' (1Mbps) presets.
-    -   Flags adapt to hardware (AMD: `quality`/`balanced`/`speed`, NVIDIA: `slow`/`medium`/`fast`).
+    -   Flags adapt to hardware (AMD AMF: `quality`/`balanced`/`speed`, NVIDIA NVENC: `slow`/`medium`/`fast`).
+    -   **Encoders by platform**: NVIDIA NVENC (`h264_nvenc`) works on both Windows and Linux; AMD AMF (`h264_amf`) is Windows-only; VAAPI (`h264_vaapi`) covers Intel/AMD GPUs on Linux.
 -   **Image Conversion**:
-    -   Converts `.heic` to `.jpg` using ImageMagick (`magick`).
+    -   Converts `.heic` to `.jpg` using ImageMagick (`magick`, or `convert` on ImageMagick v6 — the app handles both binary names).
     -   Supports `maxImageSize` to limit the longest side. Resizing uses the `>` flag (e.g., `2560x2560>`) to only downscale if the image exceeds the target size.
     -   Default quality is set to 90.
 -   **Live Photo Detection**:
@@ -86,14 +87,20 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
     -   Files with extensions listed in `copyOnlyExtensions` (default: `.jpg`, `.jpeg`, `.mp4`) are copied directly to the destination without conversion.
     -   The app uses a standard file copy (`io.Copy`) and respects collision resolution rules.
 
-### 4. Windows Specifics
+### 4. Platform Specifics (Windows & Linux)
 
--   **Context Menu / File Associations**: Declared in `build/config.yml` (`fileAssociations:` for `.mov` and `.heic`). The NSIS installer (generated via `task package`) registers them in the Windows registry at install time and removes them on uninstall. There is no longer any in-app install/uninstall flow or `cmd/install` CLI — the legacy `windows/registry_*.go` and `cmd/install*.go` files were removed during the v3 migration.
+-   **Context Menu / File Associations**: Declared in `build/config.yml` (`fileAssociations:` for `.mov` and `.heic`).
+    -   **Windows**: The NSIS installer (generated via `task package`) registers them in the Windows registry at install time and removes them on uninstall. There is no longer any in-app install/uninstall flow or `cmd/install` CLI — the legacy `windows/registry_*.go` and `cmd/install*.go` files were removed during the v3 migration.
+    -   **Linux**: The `.deb`/`.rpm`/archlinux package (built via nfpm, also through `task package`) ships a `.desktop` entry whose `MimeType` declaration registers the associations in the desktop database. There is no registry equivalent — associations live in the desktop file.
 -   **File Open Hand-off**: When the OS launches Convert4Share via a file association, Wails v3 fires `events.Common.ApplicationOpenedWithFile`; `cmd/convert4share/main.go` reads `e.Context().Filename()` / `OpenedFiles()` and forwards into `JobsService.EmitFilesReceived`. Second-instance launches go through `SingleInstanceOptions.OnSecondInstanceLaunch` with `data.Args`.
--   **Clipboard**: `internal/platform/windows.CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`.
-    -   **Escaping**: Sanitize paths in PowerShell commands by replacing `'` with `''`.
+-   **Clipboard**:
+    -   **Windows**: `internal/platform/windows.CopyFileToClipboard` uses PowerShell `Set-Clipboard -AsHtml` or `CF_HDROP`. Sanitize paths in PowerShell commands by replacing `'` with `''`.
+    -   **Linux**: copies via `wl-clipboard` (Wayland) or `xclip` (X11). These are optional runtime dependencies for the Copy button — absent them, the copy is unavailable.
+-   **Hardware Encoders**: AMD AMF (`h264_amf`) is Windows-only; NVIDIA NVENC (`h264_nvenc`) works on both OSes; VAAPI (`h264_vaapi`) is the Linux path for Intel/AMD GPUs.
 
 ## Build Commands (Wails v3)
+
+Build output is `bin/convert4share.exe` on Windows and `bin/convert4share` on Linux.
 
 | Task                            | Command                                       |
 | ------------------------------- | --------------------------------------------- |
@@ -103,7 +110,7 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
 | Dev mode (vite + wails3 dev)    | `task dev`                                    |
 | Regenerate frontend bindings    | `task generate:bindings`                      |
 | Regenerate build assets         | `task common:update:build-assets`             |
-| Build NSIS installer (Windows)  | `task package` (requires `makensis` on PATH)  |
+| Package installer               | `task package` (Windows: NSIS, needs `makensis` on PATH; Linux: `.deb`/`.rpm`/archlinux via nfpm) |
 | Clean build artifacts           | `task clean`                                  |
 
 The legacy v2 commands (`wails build`, `wails dev`, `wails generate module`)
@@ -116,8 +123,10 @@ re-run `task common:update:build-assets` after editing it.
     (or at minimum `go build ./...` + `go test ./...`).
 2.  **Verify Frontend**: If touching UI, consider how to verify it
     (mocking Wails if using standard browser tools).
-3.  **Cross-Platform Awareness**: Ensure `GOOS=windows` checks or build
-    tags are respected.
+3.  **Cross-Platform Awareness**: The app targets both Windows and Linux.
+    Respect build tags / per-OS files (e.g. `//go:build windows` vs
+    `//go:build linux`) so platform-specific code (clipboard, exec, file
+    associations) partitions cleanly. Build Linux with `CGO_ENABLED=1`.
 4.  **Dependencies**: Use `npm`. Do not use `pnpm` or `yarn`.
 5.  **Code Style**: Avoid verbose comments. Code should be self-documenting.
 6.  **Embedded assets**: The Go embed source is `cmd/convert4share/dist/`,

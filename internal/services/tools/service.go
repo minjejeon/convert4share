@@ -16,10 +16,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log/slog"
-	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
+	"runtime"
 
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -93,9 +91,11 @@ func (s *Service) SelectBinaryDialog() (string, error) {
 		return "", fmt.Errorf("application not initialised")
 	}
 	dialog := s.app.Dialog.OpenFile().
-		SetTitle("Select Binary").
-		AddFilter("Executables", "*.exe;*.bat;*.cmd").
-		AddFilter("All Files", "*")
+		SetTitle("Select Binary")
+	if runtime.GOOS == "windows" {
+		dialog.AddFilter("Executables", "*.exe;*.bat;*.cmd")
+	}
+	dialog.AddFilter("All Files", "*")
 	return dialog.PromptForSingleSelection()
 }
 
@@ -106,8 +106,10 @@ func (s *Service) CopyFileToClipboard(path string) error {
 	return platformwindows.CopyFileToClipboard(path)
 }
 
-// DetectBinaries searches PATH plus standard WinGet install locations
-// for ffmpeg.exe / magick.exe and returns a map keyed by tool name.
+// DetectBinaries searches PATH (and platform-specific install
+// locations) for ffmpeg / magick and returns a map keyed by tool name.
+// On ImageMagick v6, where the binary is named 'convert' rather than
+// 'magick', the 'convert' path is used for the "magick" key.
 func (s *Service) DetectBinaries() map[string]string {
 	results := make(map[string]string)
 
@@ -116,71 +118,11 @@ func (s *Service) DetectBinaries() map[string]string {
 	}
 	if path, err := exec.LookPath("magick"); err == nil {
 		results["magick"] = path
+	} else if path, err := exec.LookPath("convert"); err == nil {
+		results["magick"] = path
 	}
 
-	exists := func(p string) bool {
-		info, err := os.Stat(p)
-		return err == nil && !info.IsDir()
-	}
-
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return results
-	}
-
-	localAppData := filepath.Join(home, "AppData", "Local")
-	wingetBase := filepath.Join(localAppData, "Microsoft", "WinGet")
-
-	linksDir := filepath.Join(wingetBase, "Links")
-	if _, ok := results["ffmpeg"]; !ok {
-		if p := filepath.Join(linksDir, "ffmpeg.exe"); exists(p) {
-			results["ffmpeg"] = p
-		}
-	}
-	if _, ok := results["magick"]; !ok {
-		if p := filepath.Join(linksDir, "magick.exe"); exists(p) {
-			results["magick"] = p
-		}
-	}
-
-	packagesDir := filepath.Join(wingetBase, "Packages")
-	entries, err := os.ReadDir(packagesDir)
-	if err != nil {
-		return results
-	}
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		lowerName := strings.ToLower(entry.Name())
-
-		findInDir := func(dir, binName string) string {
-			var found string
-			filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-				if err != nil {
-					return nil
-				}
-				if !d.IsDir() && strings.EqualFold(d.Name(), binName) {
-					found = path
-					return filepath.SkipAll
-				}
-				return nil
-			})
-			return found
-		}
-
-		if _, ok := results["ffmpeg"]; !ok && strings.Contains(lowerName, "ffmpeg") {
-			if p := findInDir(filepath.Join(packagesDir, entry.Name()), "ffmpeg.exe"); p != "" {
-				results["ffmpeg"] = p
-			}
-		}
-
-		if _, ok := results["magick"]; !ok && (strings.Contains(lowerName, "imagemagick") || strings.Contains(lowerName, "magick")) {
-			if p := findInDir(filepath.Join(packagesDir, entry.Name()), "magick.exe"); p != "" {
-				results["magick"] = p
-			}
-		}
-	}
+	detectPlatformBinaries(results)
 
 	return results
 }
@@ -197,6 +139,10 @@ func (s *Service) InstallTool(toolName string) error {
 		packageID = "ImageMagick.ImageMagick"
 	default:
 		return fmt.Errorf("unknown tool: %s", toolName)
+	}
+
+	if runtime.GOOS != "windows" {
+		return fmt.Errorf("automatic install is not supported on this OS; install ffmpeg and ImageMagick with your package manager (e.g. 'sudo apt install ffmpeg imagemagick', 'sudo dnf install ffmpeg ImageMagick', or 'sudo pacman -S ffmpeg imagemagick')")
 	}
 
 	if err := platformwindows.InstallWingetPackage(packageID); err != nil {

@@ -38,9 +38,11 @@ tasks:
       - cmd/convert4share/dist/index.html
     cmds:
       - npm --prefix frontend run build -s
-      - powershell -NoProfile -Command "if (-not (Test-Path 'cmd/convert4share/dist')) { New-Item -ItemType Directory -Path 'cmd/convert4share/dist' | Out-Null }"
-      - powershell -NoProfile -Command "Get-ChildItem -Path 'cmd/convert4share/dist' -Exclude '.gitkeep' -Force | Remove-Item -Recurse -Force"
-      - powershell -NoProfile -Command "Copy-Item -Path 'frontend/dist/*' -Destination 'cmd/convert4share/dist/' -Recurse -Force"
+      # Sync frontend/dist into the embedded asset dir, preserving .gitkeep.
+      # Windows keeps PowerShell; other platforms use POSIX sh.
+      - '{{if eq OS "windows"}}powershell -NoProfile -Command "if (-not (Test-Path ''cmd/convert4share/dist'')) { New-Item -ItemType Directory -Path ''cmd/convert4share/dist'' | Out-Null }"{{else}}mkdir -p cmd/convert4share/dist{{end}}'
+      - '{{if eq OS "windows"}}powershell -NoProfile -Command "Get-ChildItem -Path ''cmd/convert4share/dist'' -Exclude ''.gitkeep'' -Force | Remove-Item -Recurse -Force"{{else}}find cmd/convert4share/dist -mindepth 1 ! -name .gitkeep -exec rm -rf {} +{{end}}'
+      - '{{if eq OS "windows"}}powershell -NoProfile -Command "Copy-Item -Path ''frontend/dist/*'' -Destination ''cmd/convert4share/dist/'' -Recurse -Force"{{else}}cp -r frontend/dist/. cmd/convert4share/dist/{{end}}'
 
   generate:bindings:
     summary: Generates bindings for the frontend

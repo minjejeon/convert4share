@@ -28,6 +28,7 @@ export function SettingsVideo({ settings, onChange }: SettingsVideoProps) {
                         <option value="none">None (CPU - libx264)</option>
                         <option value="nvidia">NVIDIA (CUDA/NVENC)</option>
                         <option value="amd">AMD (AMF)</option>
+                        <option value="vaapi">VAAPI (Intel/AMD - Linux)</option>
                     </select>
                 </div>
 

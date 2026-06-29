@@ -3,6 +3,7 @@ version: '3'
 includes:
   common: ./build/Taskfile.common.yml
   windows: ./build/Taskfile.windows.yml
+  linux: ./build/Taskfile.linux.yml
 
 vars:
   APP_NAME: "convert4share"
@@ -42,9 +43,9 @@ tasks:
         vars:
           PRODUCTION: "true"
     cmds:
-      - powershell -NoProfile -Command "Compress-Archive -Path {{.BIN_DIR}}/{{.APP_NAME}}.exe -DestinationPath {{.BIN_DIR}}/{{.APP_NAME}}-windows-amd64.zip -Force"
+      - '{{if eq OS "windows"}}powershell -NoProfile -Command "Compress-Archive -Path {{.BIN_DIR}}/{{.APP_NAME}}.exe -DestinationPath {{.BIN_DIR}}/{{.APP_NAME}}-windows-amd64.zip -Force"{{else}}tar czf {{.BIN_DIR}}/{{.APP_NAME}}-linux-{{ARCH}}.tar.gz -C {{.BIN_DIR}} {{.APP_NAME}}{{end}}'
 
   clean:
     summary: Removes build artifacts
     cmds:
-      - powershell -NoProfile -Command "Remove-Item -Recurse -Force {{.BIN_DIR}}, cmd/convert4share/dist, frontend/dist, frontend/src/bindings -ErrorAction SilentlyContinue"
+      - '{{if eq OS "windows"}}powershell -NoProfile -Command "Remove-Item -Recurse -Force {{.BIN_DIR}}, cmd/convert4share/dist, frontend/dist, frontend/src/bindings -ErrorAction SilentlyContinue"{{else}}rm -rf {{.BIN_DIR}} cmd/convert4share/dist frontend/dist frontend/src/bindings{{end}}'

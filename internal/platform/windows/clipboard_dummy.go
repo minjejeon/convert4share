@@ -1,15 +1,13 @@
-//go:build !windows
+//go:build !windows && !linux
 
 package windows
 
 import (
 	"fmt"
+	"runtime"
 )
 
-// CopyFileToClipboard is a no-op on non-Windows systems for now.
+// CopyFileToClipboard is a no-op stub on platforms without a clipboard implementation.
 func CopyFileToClipboard(path string) error {
-	// Alternatively, we could try to implement for Mac/Linux, but sticking to Windows per request context.
-	// Maybe return error or print?
-	fmt.Println("CopyFileToClipboard not implemented for this OS")
-	return nil
+	return fmt.Errorf("CopyFileToClipboard not implemented for %s", runtime.GOOS)
 }

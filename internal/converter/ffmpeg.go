@@ -97,6 +97,17 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 			"-b:v", bitrate,
 			"-vf", scaleArg+",format=yuv420p",
 		)
+	case "vaapi":
+		slog.Info("Using 'vaapi' hardware accelerator (h264_vaapi) from config.")
+		vaapiFilter := fmt.Sprintf("format=nv12,hwupload,scale_vaapi=w=%d:h=%d:force_original_aspect_ratio=decrease", c.MaxSize, c.MaxSize)
+		args = append(args,
+			"-vaapi_device", "/dev/dri/renderD128",
+			"-i", orig,
+			"-vf", vaapiFilter,
+			"-c:v", "h264_vaapi",
+			"-b:v", bitrate,
+			"-maxrate", maxBitrate,
+		)
 	case "none", "":
 		slog.Info("Using software encoder (libx264).")
 		args = append(args, "-i", orig, "-c:v", "libx264", "-vf", scaleArg)

@@ -99,6 +99,49 @@ func TestBuildFfmpegArgs_Nvidia(t *testing.T) {
 	}
 }
 
+func TestBuildFfmpegArgs_VAAPI(t *testing.T) {
+	c := Config{
+		MagickBinary:        "magick",
+		FfmpegBinary:        "ffmpeg",
+		MaxSize:             1280,
+		HardwareAccelerator: "vaapi",
+		VideoQuality:        "high",
+	}
+
+	args := c.BuildFfmpegArgs("input.mov", "output.mp4")
+
+	hasArg := func(arg string) bool {
+		for _, a := range args {
+			if a == arg {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !hasArg("-vaapi_device") {
+		t.Error("Expected -vaapi_device for VAAPI")
+	}
+
+	if !hasArg("h264_vaapi") {
+		t.Error("Expected h264_vaapi codec for VAAPI")
+	}
+
+	foundCorrectFilter := false
+	for i, a := range args {
+		if a == "-vf" && i+1 < len(args) {
+			val := args[i+1]
+			if strings.Contains(val, "scale_vaapi=w=1280:h=1280") && strings.Contains(val, "hwupload") {
+				foundCorrectFilter = true
+			}
+			break
+		}
+	}
+	if !foundCorrectFilter {
+		t.Error("Expected scale_vaapi filter with configured MaxSize for VAAPI")
+	}
+}
+
 func TestParseFractionToNanos(t *testing.T) {
 	tests := []struct {
 		input    string
