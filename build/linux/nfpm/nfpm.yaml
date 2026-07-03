@@ -9,11 +9,11 @@ platform: "linux"
 version: "0.4.1"
 section: "default"
 priority: "extra"
-maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
+maintainer: Minje Jeon <i@minje.kr>
 description: "Converts MOV/HEIC to MP4/JPG"
 vendor: ""
-homepage: "https://wails.io"
-license: "MIT"
+homepage: "https://github.com/minjejeon/convert4share"
+license: "AGPL-3.0"
 release: "1"
 
 contents:
