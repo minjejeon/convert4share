@@ -40,6 +40,8 @@ For `Convert4Share` to function correctly, the following tools are required:
 
 The application automatically attempts to detect these binaries in your system `PATH`, as well as standard `WinGet` installation locations on Windows. You can also manually configure the paths in the Settings if they are not detected.
 
+> **Linux: HEIC decoding needs libheif ≥ 1.18.** ImageMagick decodes HEIC through `libheif`. Versions before 1.18 (including the **1.17.x** shipped by Ubuntu 24.04) fail on newer Apple HEIC files that carry multiple auxiliary images — HDR gain map, depth/segmentation mattes — with `Too many auxiliary image references`. If you hit that error, upgrade `libheif` to 1.18 or newer (via a newer distro release, a backport/PPA, or building from source). The app surfaces an actionable message when it detects this failure.
+
 On **Windows**, install the prerequisites via `winget` (or your preferred method). On **Linux**, install them through your system package manager, e.g.:
 
 ```shell
