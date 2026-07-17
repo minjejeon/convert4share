@@ -299,6 +299,7 @@ func (s *Service) runBatch(files []string) {
 		fname := filepath.Base(sysPath)
 		stem := strings.TrimSuffix(fname, filepath.Ext(fname))
 		parent := filepath.Dir(sysPath)
+		pairStem := stem
 
 		if fileNaming == "captureTime" {
 			ct := capturetime.Resolve(sysPath, ext)
@@ -316,6 +317,7 @@ func (s *Service) runBatch(files []string) {
 			src:             sysPath,
 			ext:             ext,
 			stem:            stem,
+			pairStem:        pairStem,
 			parent:          parent,
 			destDir:         destDir,
 			collisionOption: collisionOption,
@@ -368,6 +370,9 @@ type runOneInput struct {
 	src             string
 	ext             string
 	stem            string
+	// pairStem is the original source stem, used for Live Photo pairing
+	// lookups (unaffected by capture-time renaming).
+	pairStem        string
 	parent          string
 	destDir         string
 	collisionOption string
@@ -433,12 +438,10 @@ func (s *Service) runOne(wg *sync.WaitGroup, in runOneInput) {
 		err = copyFile(in.src, dest)
 
 	case in.ext == ".mov":
-		if in.autoLivePhoto && in.heicStems != nil {
-			if _, ok := in.heicStems[filepath.Join(in.parent, in.stem)]; ok {
-				s.logger.Info("Skipping .mov as it is a Live Photo (paired with .heic)", "file", in.src)
-				in.report(in.jobID, "", 100, "done", "Skipped (Live Photo)", "")
-				return
-			}
+		if isPairedLivePhotoMov(in.autoLivePhoto, in.heicStems, in.parent, in.pairStem) {
+			s.logger.Info("Skipping .mov as it is a Live Photo (paired with .heic)", "file", in.src)
+			in.report(in.jobID, "", 100, "done", "Skipped (Live Photo)", "")
+			return
 		}
 
 		dest, err = s.resolveDestination(in.destDir, in.stem, ".mp4", in.collisionOption)
