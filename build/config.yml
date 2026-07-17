@@ -11,7 +11,7 @@ info:
   description: "Converts MOV/HEIC to MP4/JPG"
   copyright: "(c) 2026, minjejeon"
   comments: "Wails 3 migration release"
-  version: "0.5.0"
+  version: "0.5.1"
 
 # File Associations
 # More information at: https://v3.wails.io/noit/done/yet
