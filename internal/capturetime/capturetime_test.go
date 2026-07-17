@@ -24,6 +24,30 @@ func TestVideoCreationTimeMissing(t *testing.T) {
 	}
 }
 
+// TestVideoCreationTimeUTCToLocal pins the fix for the "MOV time is wrong"
+// bug: the mvhd creation time is stored in UTC, so it must be (1) read as
+// the correct UTC instant and (2) returned in the local zone so that the
+// downstream field-by-field filename formatting renders local wall-clock,
+// consistent with the EXIF and filesystem paths. The fixture's mvhd is
+// 2023-05-01T09:08:07Z.
+func TestVideoCreationTimeUTCToLocal(t *testing.T) {
+	got, ok := videoCreationTime("testdata/sample.mp4")
+	if !ok {
+		t.Fatal("expected to extract mvhd creation time from sample.mp4")
+	}
+	// (1) The instant is correct regardless of zone (Equal compares instants).
+	wantInstant := time.Date(2023, 5, 1, 9, 8, 7, 0, time.UTC)
+	if !got.Equal(wantInstant) {
+		t.Errorf("mvhd instant: got %v, want %v", got.UTC(), wantInstant)
+	}
+	// (2) It is returned in the local zone, so formatting shows local
+	// wall-clock (the bug returned it in UTC, producing filenames offset by
+	// the local UTC offset).
+	if got.Location() != time.Local {
+		t.Errorf("video capture time should be in local zone, got location %v", got.Location())
+	}
+}
+
 func TestImageCaptureTime(t *testing.T) {
 	got, ok := imageCaptureTime("testdata/sample.jpg")
 	if !ok {

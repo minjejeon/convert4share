@@ -18,8 +18,11 @@ import (
 var mp4Epoch = time.Date(1904, 1, 1, 0, 0, 0, 0, time.UTC)
 
 // videoCreationTime reads the moov/mvhd creation time from an MP4/MOV
-// file. The value is treated as wall-clock (formatted by field later),
-// so it is constructed in UTC and never zone-shifted.
+// file. Per the QuickTime/ISO-BMFF spec the mvhd value is seconds since
+// the 1904 epoch in UTC (confirmed against iOS recordings via ffprobe),
+// so it is converted to the local zone. Downstream filename formatting
+// reads the time field-by-field, so returning local time yields local
+// wall-clock, consistent with the EXIF and filesystem-timestamp paths.
 func videoCreationTime(path string) (time.Time, bool) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -45,7 +48,7 @@ func videoCreationTime(path string) (time.Time, bool) {
 	if secs == 0 {
 		return time.Time{}, false
 	}
-	return mp4Epoch.Add(time.Duration(secs) * time.Second), true
+	return mp4Epoch.Add(time.Duration(secs) * time.Second).Local(), true
 }
 
 // imageCaptureTime reads EXIF DateTimeOriginal from an image file
