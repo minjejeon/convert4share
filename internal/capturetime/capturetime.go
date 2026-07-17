@@ -5,6 +5,7 @@ package capturetime
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/abema/go-mp4"
@@ -66,4 +67,30 @@ func imageCaptureTime(path string) (time.Time, bool) {
 		}
 	}
 	return time.Time{}, false
+}
+
+// Resolve returns the best-effort capture time for path, whose lowercase
+// extension is ext (e.g. ".mp4"). Order: embedded metadata, then file
+// creation time (birthtime), then modification time. It always returns
+// a usable time for an existing file.
+func Resolve(path, ext string) time.Time {
+	switch strings.ToLower(ext) {
+	case ".mov", ".mp4":
+		if t, ok := videoCreationTime(path); ok {
+			return t
+		}
+	case ".heic", ".jpg", ".jpeg":
+		if t, ok := imageCaptureTime(path); ok {
+			return t
+		}
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return time.Time{}
+	}
+	if t, ok := birthTime(info); ok {
+		return t
+	}
+	return info.ModTime()
 }

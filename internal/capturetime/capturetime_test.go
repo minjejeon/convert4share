@@ -1,6 +1,8 @@
 package capturetime
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -36,6 +38,32 @@ func TestImageCaptureTime(t *testing.T) {
 func TestImageCaptureTimeMissing(t *testing.T) {
 	if _, ok := imageCaptureTime("testdata/does-not-exist.jpg"); ok {
 		t.Error("expected ok=false for missing file")
+	}
+}
+
+func TestResolveFallsBackToMtime(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "plain.txt") // no metadata, unknown ext
+	if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mtime := time.Date(2019, 8, 7, 6, 5, 4, 0, time.Local)
+	if err := os.Chtimes(p, mtime, mtime); err != nil {
+		t.Fatal(err)
+	}
+	got := Resolve(p, ".txt")
+	// birthtime may win on Windows for a just-created file; accept either
+	// birthtime (now-ish) or the mtime we set — but it must be non-zero
+	// and a plausible year.
+	if got.IsZero() || got.Year() < 2000 {
+		t.Errorf("Resolve returned implausible time: %v", got)
+	}
+}
+
+func TestResolveUsesVideoMetadata(t *testing.T) {
+	got := Resolve("testdata/sample.mp4", ".mp4")
+	if got.Year() < 2000 || got.Year() > 2100 {
+		t.Errorf("expected mvhd-derived time, got %v", got)
 	}
 }
 

@@ -8,6 +8,8 @@ require (
 )
 
 require (
+	github.com/abema/go-mp4 v1.7.1
+	github.com/dsoprea/go-exif/v3 v3.0.1
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.92
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
@@ -16,13 +18,11 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
-	github.com/abema/go-mp4 v1.7.1 // indirect
 	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
-	github.com/dsoprea/go-exif/v3 v3.0.1 // indirect
 	github.com/dsoprea/go-logging v0.0.0-20200710184922-b02d349568dd // indirect
 	github.com/dsoprea/go-utility/v2 v2.0.0-20221003172846-a3e1774ef349 // indirect
 	github.com/ebitengine/purego v0.9.1 // indirect
