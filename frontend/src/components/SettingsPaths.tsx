@@ -25,7 +25,11 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
 
     useEffect(() => {
         if (!captureTime) return;
-        PreviewFileName(settings.fileNameFormat || '').then(setPreview);
+        const p = PreviewFileName(settings.fileNameFormat || '');
+        p.then(setPreview);
+        return () => {
+            p.cancel();
+        };
     }, [captureTime, settings.fileNameFormat]);
 
     return (
@@ -40,7 +44,7 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
                     <input
                         id="paths-dest-dir"
                         type="text"
-                        className={inputClass + ' font-mono'}
+                        className={inputClass.replace('sm:text-sm', 'sm:text-xs') + ' font-mono'}
                         value={settings.defaultDestDir}
                         onChange={(e) => onChange({ ...settings, defaultDestDir: e.target.value })}
                     />
@@ -76,7 +80,7 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
                         <select
                             id="paths-name-preset"
                             className={inputClass}
-                            value={PRESETS.find((p) => p.format === settings.fileNameFormat)?.format ?? ''}
+                            value={settings.fileNameFormat || ''}
                             onChange={(e) => onChange({ ...settings, fileNameFormat: e.target.value })}
                         >
                             {!PRESETS.some((p) => p.format === settings.fileNameFormat) && (
@@ -97,7 +101,7 @@ export function SettingsPaths({ settings, onChange }: SettingsPathsProps) {
                         />
                         <p className="text-[10px] text-slate-400 dark:text-slate-500">
                             Preview: <span className="font-mono text-slate-600 dark:text-slate-300">{preview || '…'}</span>
-                            {'  '}· Tokens: {'{YYYY} {YY} {MM} {DD} {HH} {mm} {ss} {num} {seq} {name}'}
+                            <span className="ml-2">· Tokens: {'{YYYY} {YY} {MM} {DD} {HH} {mm} {ss} {num} {seq} {name}'}</span>
                         </p>
                     </div>
                 )}
