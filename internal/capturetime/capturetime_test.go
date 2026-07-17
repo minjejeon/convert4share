@@ -35,6 +35,17 @@ func TestImageCaptureTime(t *testing.T) {
 	}
 }
 
+func TestImageCaptureTimeHeic(t *testing.T) {
+	got, ok := imageCaptureTime("testdata/sample.heic")
+	if !ok {
+		t.Fatal("expected to extract EXIF DateTimeOriginal from sample.heic")
+	}
+	want := time.Date(2022, 2, 3, 4, 5, 6, 0, got.Location())
+	if !got.Equal(want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
 func TestImageCaptureTimeMissing(t *testing.T) {
 	if _, ok := imageCaptureTime("testdata/does-not-exist.jpg"); ok {
 		t.Error("expected ok=false for missing file")

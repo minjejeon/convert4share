@@ -4,6 +4,8 @@
 package capturetime
 
 import (
+	"errors"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -56,7 +58,10 @@ func imageCaptureTime(path string) (time.Time, bool) {
 		return time.Time{}, false
 	}
 	entries, _, err := exif.GetFlatExifData(rawExif, nil)
-	if err != nil {
+	// HEIC (and other formats) store the EXIF block at the very end of the
+	// file, so the parser reaches EOF after reading the last IFD. The
+	// entries it already returned are valid, so io.EOF is not fatal here.
+	if err != nil && !errors.Is(err, io.EOF) {
 		return time.Time{}, false
 	}
 	for _, e := range entries {
