@@ -83,6 +83,19 @@ maxFfmpegWorkers: 1
 # - "error": Skips the file and reports an error.
 collisionOption: "rename"
 
+# Output file naming. "original" keeps the source filename; "captureTime"
+# renames using fileNameFormat below and the media's capture time.
+fileNaming: "original"
+
+# Format used when fileNaming is "captureTime". Tokens:
+#   {YYYY} {YY} {MM} {DD} {HH} {mm} {ss}  - capture date/time
+#   {num}   - trailing number of the source name (>=4 digits), or a
+#             per-batch sequence number when the source has no digits
+#   {seq}   - per-batch sequence number (always)
+#   {name}  - original filename (without extension)
+# Example result: 26-07-05 10-22-43 3574
+fileNameFormat: "{YY}-{MM}-{DD} {HH}-{mm}-{ss} {num}"
+
 # Additional custom arguments for ffmpeg.
 # These arguments will be added to the ffmpeg command line.
 # Example: "-preset slow -crf 23"

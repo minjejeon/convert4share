@@ -61,6 +61,8 @@ type Settings struct {
 	MaxFfmpegWorkers    int      `json:"maxFfmpegWorkers"`
 	MaxMagickWorkers    int      `json:"maxMagickWorkers"`
 	CollisionOption     string   `json:"collisionOption"`
+	FileNaming          string   `json:"fileNaming"`
+	FileNameFormat      string   `json:"fileNameFormat"`
 	LogLevel            string   `json:"logLevel"`
 }
 
@@ -92,6 +94,8 @@ func SetDefaults(defaultLogLevel string) {
 	viper.SetDefault("hardwareAccelerator", "none")
 	viper.SetDefault("videoQuality", "high")
 	viper.SetDefault("collisionOption", "rename")
+	viper.SetDefault("fileNaming", "original")
+	viper.SetDefault("fileNameFormat", "{YY}-{MM}-{DD} {HH}-{mm}-{ss} {num}")
 
 	if defaultLogLevel == "" {
 		defaultLogLevel = "info"
@@ -122,6 +126,8 @@ func Load() Settings {
 		MaxFfmpegWorkers:    viper.GetInt("maxFfmpegWorkers"),
 		MaxMagickWorkers:    viper.GetInt("maxMagickWorkers"),
 		CollisionOption:     viper.GetString("collisionOption"),
+		FileNaming:          viper.GetString("fileNaming"),
+		FileNameFormat:      viper.GetString("fileNameFormat"),
 		LogLevel:            viper.GetString("logLevel"),
 	}
 }
@@ -145,6 +151,8 @@ func Save(s Settings) error {
 	viper.Set("maxFfmpegWorkers", s.MaxFfmpegWorkers)
 	viper.Set("maxMagickWorkers", s.MaxMagickWorkers)
 	viper.Set("collisionOption", s.CollisionOption)
+	viper.Set("fileNaming", s.FileNaming)
+	viper.Set("fileNameFormat", s.FileNameFormat)
 	viper.Set("logLevel", s.LogLevel)
 
 	configPath, err := FilePath()

@@ -98,3 +98,16 @@ func TestSetDefaults_AppliesExpectedValues(t *testing.T) {
 		t.Errorf("CopyOnlyExtensions default: want %v, got %v", wantCopy, s.CopyOnlyExtensions)
 	}
 }
+
+func TestFileNamingDefaults(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+	SetDefaults("info")
+	s := Load()
+	if s.FileNaming != "original" {
+		t.Errorf("FileNaming default: want original, got %q", s.FileNaming)
+	}
+	if s.FileNameFormat != "{YY}-{MM}-{DD} {HH}-{mm}-{ss} {num}" {
+		t.Errorf("FileNameFormat default mismatch, got %q", s.FileNameFormat)
+	}
+}
