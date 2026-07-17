@@ -52,9 +52,11 @@ func TestResolveFallsBackToMtime(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := Resolve(p, ".txt")
-	// birthtime may win on Windows for a just-created file; accept either
-	// birthtime (now-ish) or the mtime we set — but it must be non-zero
-	// and a plausible year.
+	// On Windows birthtime always succeeds, so Resolve returns the file's
+	// creation time (now-ish) and the mtime branch is never reached; the
+	// mtime fallback is exercised on the !windows build where birthTime
+	// reports unsupported. Either way the result must be non-zero with a
+	// plausible year.
 	if got.IsZero() || got.Year() < 2000 {
 		t.Errorf("Resolve returned implausible time: %v", got)
 	}
@@ -67,5 +69,10 @@ func TestResolveUsesVideoMetadata(t *testing.T) {
 	}
 }
 
-// mp4Epoch is the reference used by the implementation.
-var _ = time.UTC
+func TestResolveUsesImageMetadata(t *testing.T) {
+	got := Resolve("testdata/sample.jpg", ".jpg")
+	want := time.Date(2021, 3, 4, 5, 6, 7, 0, got.Location())
+	if !got.Equal(want) {
+		t.Errorf("expected EXIF-derived time via Resolve, got %v want %v", got, want)
+	}
+}
