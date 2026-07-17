@@ -21,10 +21,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v3/pkg/application"
 
+	"github.com/minjejeon/convert4share/internal/capturetime"
 	"github.com/minjejeon/convert4share/internal/concurrency"
 	"github.com/minjejeon/convert4share/internal/config"
 	"github.com/minjejeon/convert4share/internal/converter"
 	"github.com/minjejeon/convert4share/internal/livephoto"
+	"github.com/minjejeon/convert4share/internal/naming"
 )
 
 // JobStatus mirrors the v2 progress payload so the existing frontend
@@ -238,6 +240,8 @@ func (s *Service) runBatch(files []string) {
 	collisionOption := viper.GetString("collisionOption")
 	autoLivePhoto := viper.GetBool("autoLivePhoto")
 	copyOnlyExts := viper.GetStringSlice("copyOnlyExtensions")
+	fileNaming := viper.GetString("fileNaming")
+	fileNameFormat := viper.GetString("fileNameFormat")
 
 	reporter := func(id, destFile string, percent int, status, errMsg, speed string) {
 		s.emit("conversion-progress", JobStatus{
@@ -257,7 +261,7 @@ func (s *Service) runBatch(files []string) {
 	}
 
 	var wg sync.WaitGroup
-	for _, f := range files {
+	for i, f := range files {
 		cleanPath := strings.Trim(f, "\"")
 		jobID := cleanPath
 		sysPath := cleanPath
@@ -295,6 +299,11 @@ func (s *Service) runBatch(files []string) {
 		fname := filepath.Base(sysPath)
 		stem := strings.TrimSuffix(fname, filepath.Ext(fname))
 		parent := filepath.Dir(sysPath)
+
+		if fileNaming == "captureTime" {
+			ct := capturetime.Resolve(sysPath, ext)
+			stem = naming.BuildCaptureName(fileNameFormat, ct, stem, i+1)
+		}
 
 		destDir := parent
 		if isExcludedDir(parent, config.ExcludePatterns()) {
