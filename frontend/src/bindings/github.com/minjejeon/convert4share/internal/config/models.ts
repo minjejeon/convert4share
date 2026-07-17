@@ -25,6 +25,8 @@ export class Settings {
     "maxFfmpegWorkers": number;
     "maxMagickWorkers": number;
     "collisionOption": string;
+    "fileNaming": string;
+    "fileNameFormat": string;
     "logLevel": string;
 
     /** Creates a new Settings instance. */
@@ -70,6 +72,12 @@ export class Settings {
         }
         if (!("collisionOption" in $$source)) {
             this["collisionOption"] = "";
+        }
+        if (!("fileNaming" in $$source)) {
+            this["fileNaming"] = "";
+        }
+        if (!("fileNameFormat" in $$source)) {
+            this["fileNameFormat"] = "";
         }
         if (!("logLevel" in $$source)) {
             this["logLevel"] = "";

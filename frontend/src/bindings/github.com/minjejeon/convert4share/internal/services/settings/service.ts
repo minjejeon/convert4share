@@ -24,6 +24,15 @@ export function GetSettings(): $CancellablePromise<config$0.Settings> {
 }
 
 /**
+ * PreviewFileName renders the given capture-time format with a fixed
+ * sample time, source name, and sequence so the UI can preview it. It
+ * returns the stem (no extension).
+ */
+export function PreviewFileName(format: string): $CancellablePromise<string> {
+    return $Call.ByID(3404930445, format);
+}
+
+/**
  * SaveSettings persists the given Settings to viper + the config file,
  * then notifies the rest of the app. The log-level adjustment is done
  * synchronously here so frontend feedback is immediate.

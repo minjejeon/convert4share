@@ -10,11 +10,13 @@ package settings
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"github.com/minjejeon/convert4share/internal/config"
 	"github.com/minjejeon/convert4share/internal/logging"
+	"github.com/minjejeon/convert4share/internal/naming"
 )
 
 // LevelSetter is the minimal interface the SettingsService needs to
@@ -70,4 +72,12 @@ func (s *Service) SaveSettings(settings config.Settings) error {
 		s.app.Event.Emit("settings-changed", settings)
 	}
 	return nil
+}
+
+// PreviewFileName renders the given capture-time format with a fixed
+// sample time, source name, and sequence so the UI can preview it. It
+// returns the stem (no extension).
+func (s *Service) PreviewFileName(format string) string {
+	sample := time.Date(2026, 7, 5, 10, 22, 43, 0, time.Local)
+	return naming.BuildCaptureName(format, sample, "IMG_3574", 1)
 }
