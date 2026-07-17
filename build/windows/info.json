@@ -1,10 +1,10 @@
 {
 	"fixed": {
-		"file_version": "0.4.1"
+		"file_version": "0.4.2"
 	},
 	"info": {
 		"0000": {
-			"ProductVersion": "0.4.1",
+			"ProductVersion": "0.4.2",
 			"CompanyName": "",
 			"FileDescription": "Converts MOV/HEIC to MP4/JPG",
 			"LegalCopyright": "(c) 2026, minjejeon",

@@ -23,6 +23,8 @@ excludePatterns: []
 # excludePatterns:
 #   - "Some Cloud/Photos"
 #   - "Google Drive/My Pictures"
+# A bare drive letter matches every file on that volume (case-insensitive):
+#   - "Y:"
 
 # The default destination directory for files matching one of the `excludePatterns`.
 # Environment variables like $HOMEDRIVE, $HOMEPATH are supported.

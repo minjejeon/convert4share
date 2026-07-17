@@ -3,6 +3,7 @@ package jobs
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -199,4 +200,49 @@ func TestCancelJobAndPauseQueue_NoApp(t *testing.T) {
 
 	// CancelJob on an unknown ID is a no-op (must not panic).
 	s.CancelJob("unknown-id")
+}
+
+func TestIsExcludedDir(t *testing.T) {
+	// Portable cases: substring folder-name matching works on any OS.
+	portable := []struct {
+		name     string
+		parent   string
+		patterns []string
+		want     bool
+	}{
+		{"folder segment matches", filepath.Join("home", "me", "DCIM", "sub"), []string{"DCIM"}, true},
+		{"no match", filepath.Join("home", "me", "photos"), []string{"DCIM"}, false},
+		{"empty pattern ignored", filepath.Join("home", "me"), []string{""}, false},
+		{"nil patterns", filepath.Join("home", "me"), nil, false},
+	}
+	for _, tc := range portable {
+		if got := isExcludedDir(tc.parent, tc.patterns); got != tc.want {
+			t.Errorf("%s: isExcludedDir(%q, %v) = %v, want %v", tc.name, tc.parent, tc.patterns, got, tc.want)
+		}
+	}
+
+	// Drive-letter patterns only make sense on Windows, where
+	// filepath.VolumeName recognizes "Y:" and Clean turns a bare "Y:"
+	// into the non-matching "Y:.".
+	if runtime.GOOS != "windows" {
+		t.Skip("drive-letter exclude cases are Windows-specific")
+	}
+	drive := []struct {
+		name     string
+		parent   string
+		patterns []string
+		want     bool
+	}{
+		{"bare drive letter matches volume", `Y:\photos\sub`, []string{"Y:"}, true},
+		{"bare drive letter matches root", `Y:\`, []string{"Y:"}, true},
+		{"lowercase pattern matches", `Y:\photos`, []string{"y:"}, true},
+		{"drive with backslash still matches", `Y:\photos`, []string{`Y:\`}, true},
+		{"other drive not matched", `C:\Users\me`, []string{"Y:"}, false},
+		{"drive letter inside path not a false match", `C:\proj\y_stuff`, []string{"Y:"}, false},
+	}
+	for _, tc := range drive {
+		if got := isExcludedDir(tc.parent, tc.patterns); got != tc.want {
+			t.Errorf("%s: isExcludedDir(%q, %v) = %v, want %v", tc.name, tc.parent, tc.patterns, got, tc.want)
+		}
+	}
 }

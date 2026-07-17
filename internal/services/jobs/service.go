@@ -295,15 +295,10 @@ func (s *Service) runBatch(files []string) {
 		fname := filepath.Base(sysPath)
 		stem := strings.TrimSuffix(fname, filepath.Ext(fname))
 		parent := filepath.Dir(sysPath)
-		cleanedParent := filepath.Clean(parent)
 
 		destDir := parent
-		for _, pat := range config.ExcludePatterns() {
-			cleanedPat := filepath.Clean(pat)
-			if strings.Contains(cleanedParent, cleanedPat) {
-				destDir = os.ExpandEnv(viper.GetString("defaultDestDir"))
-				break
-			}
+		if isExcludedDir(parent, config.ExcludePatterns()) {
+			destDir = os.ExpandEnv(viper.GetString("defaultDestDir"))
 		}
 
 		wg.Add(1)
@@ -325,6 +320,38 @@ func (s *Service) runBatch(files []string) {
 
 	wg.Wait()
 	s.emit("all-jobs-done", true)
+}
+
+// isExcludedDir reports whether parent matches any of the exclude
+// patterns, using a substring match against the cleaned parent path.
+//
+// A bare drive-letter pattern (e.g. "Y:") is treated as "match the whole
+// volume": filepath.Clean("Y:") yields the drive-relative "Y:." which can
+// never be a substring of an absolute path like "Y:\photos", so a plain
+// Contains check would silently ignore it. Such patterns are matched
+// case-insensitively against the parent's volume name instead.
+func isExcludedDir(parent string, patterns []string) bool {
+	cleanedParent := filepath.Clean(parent)
+	volume := filepath.VolumeName(cleanedParent)
+	for _, pat := range patterns {
+		if pat == "" {
+			continue
+		}
+		if len(pat) == 2 && pat[1] == ':' && isASCIILetter(pat[0]) {
+			if strings.EqualFold(volume, pat) {
+				return true
+			}
+			continue
+		}
+		if strings.Contains(cleanedParent, filepath.Clean(pat)) {
+			return true
+		}
+	}
+	return false
+}
+
+func isASCIILetter(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }
 
 type runOneInput struct {
