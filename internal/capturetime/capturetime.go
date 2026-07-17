@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/abema/go-mp4"
+	exif "github.com/dsoprea/go-exif/v3"
 )
 
 // mp4Epoch is the MP4/QuickTime time base: 1904-01-01 00:00:00 UTC.
@@ -42,4 +43,27 @@ func videoCreationTime(path string) (time.Time, bool) {
 		return time.Time{}, false
 	}
 	return mp4Epoch.Add(time.Duration(secs) * time.Second), true
+}
+
+// imageCaptureTime reads EXIF DateTimeOriginal from an image file
+// (JPEG or HEIC — the EXIF TIFF block is located by signature scan, so
+// both containers work). The EXIF value has no zone; it is parsed as
+// local wall-clock.
+func imageCaptureTime(path string) (time.Time, bool) {
+	rawExif, err := exif.SearchFileAndExtractExif(path)
+	if err != nil {
+		return time.Time{}, false
+	}
+	entries, _, err := exif.GetFlatExifData(rawExif, nil)
+	if err != nil {
+		return time.Time{}, false
+	}
+	for _, e := range entries {
+		if e.TagName == "DateTimeOriginal" {
+			if t, perr := time.ParseInLocation("2006:01:02 15:04:05", e.Formatted, time.Local); perr == nil {
+				return t, true
+			}
+		}
+	}
+	return time.Time{}, false
 }

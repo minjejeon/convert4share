@@ -22,5 +22,22 @@ func TestVideoCreationTimeMissing(t *testing.T) {
 	}
 }
 
+func TestImageCaptureTime(t *testing.T) {
+	got, ok := imageCaptureTime("testdata/sample.jpg")
+	if !ok {
+		t.Fatal("expected to extract EXIF DateTimeOriginal from sample.jpg")
+	}
+	want := time.Date(2021, 3, 4, 5, 6, 7, 0, got.Location())
+	if !got.Equal(want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestImageCaptureTimeMissing(t *testing.T) {
+	if _, ok := imageCaptureTime("testdata/does-not-exist.jpg"); ok {
+		t.Error("expected ok=false for missing file")
+	}
+}
+
 // mp4Epoch is the reference used by the implementation.
 var _ = time.UTC
