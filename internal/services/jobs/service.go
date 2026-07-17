@@ -370,9 +370,7 @@ type runOneInput struct {
 	src             string
 	ext             string
 	stem            string
-	// pairStem is the original source stem, used for Live Photo pairing
-	// lookups (unaffected by capture-time renaming).
-	pairStem        string
+	pairStem        string // original source stem for Live Photo pairing (pre-rename)
 	parent          string
 	destDir         string
 	collisionOption string
