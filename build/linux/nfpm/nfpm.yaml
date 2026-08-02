@@ -6,7 +6,7 @@
 name: "convert4share"
 arch: ${GOARCH}
 platform: "linux"
-version: "0.5.1"
+version: "0.6.0"
 section: "default"
 priority: "extra"
 maintainer: Minje Jeon <i@minje.kr>
