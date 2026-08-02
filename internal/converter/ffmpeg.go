@@ -11,7 +11,11 @@ import (
 	"time"
 )
 
-func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
+// BuildFfmpegArgs assembles the encode command line. copyAudio
+// stream-copies the audio track instead of re-encoding it, which the
+// caller should set when the source audio is already AAC — running
+// AAC through the encoder again is pure generation loss.
+func (c *Config) BuildFfmpegArgs(orig, dest string, copyAudio bool) []string {
 	args := []string{
 		"-hide_banner",
 		"-loglevel", "info",
@@ -121,16 +125,21 @@ func (c *Config) BuildFfmpegArgs(orig, dest string) []string {
 		args = append(args, strings.Fields(c.FfmpegCustomArgs)...)
 	}
 
+	audioCodec := "aac"
+	if copyAudio {
+		audioCodec = "copy"
+	}
+
 	args = append(args,
-		"-c:a", "aac",
+		"-c:a", audioCodec,
 		dest,
 	)
 
 	return args
 }
 
-func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, onProgress ProgressCallback) error {
-	args := c.BuildFfmpegArgs(orig, dest)
+func (c *Config) Ffmpeg(ctx context.Context, orig, dest string, copyAudio bool, onProgress ProgressCallback) error {
+	args := c.BuildFfmpegArgs(orig, dest, copyAudio)
 	cmd := prepareCommandContext(ctx, c.FfmpegBinary, args...)
 
 	slog.Info("Launching ffmpeg", "command", cmd.String())

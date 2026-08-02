@@ -13,6 +13,7 @@ import { Create as $Create } from "@wailsio/runtime";
 export class Settings {
     "magickBinary": string;
     "ffmpegBinary": string;
+    "ffprobeBinary": string;
     "maxSize": number;
     "maxImageSize": number;
     "autoLivePhoto": boolean;
@@ -36,6 +37,9 @@ export class Settings {
         }
         if (!("ffmpegBinary" in $$source)) {
             this["ffmpegBinary"] = "";
+        }
+        if (!("ffprobeBinary" in $$source)) {
+            this["ffprobeBinary"] = "";
         }
         if (!("maxSize" in $$source)) {
             this["maxSize"] = 0;
@@ -90,14 +94,14 @@ export class Settings {
      * Creates a new Settings instance from a string or object.
      */
     static createFrom($$source: any = {}): Settings {
-        const $$createField5_0 = $$createType0;
-        const $$createField9_0 = $$createType0;
+        const $$createField6_0 = $$createType0;
+        const $$createField10_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("copyOnlyExtensions" in $$parsedSource) {
-            $$parsedSource["copyOnlyExtensions"] = $$createField5_0($$parsedSource["copyOnlyExtensions"]);
+            $$parsedSource["copyOnlyExtensions"] = $$createField6_0($$parsedSource["copyOnlyExtensions"]);
         }
         if ("excludePatterns" in $$parsedSource) {
-            $$parsedSource["excludePatterns"] = $$createField9_0($$parsedSource["excludePatterns"]);
+            $$parsedSource["excludePatterns"] = $$createField10_0($$parsedSource["excludePatterns"]);
         }
         return new Settings($$parsedSource as Partial<Settings>);
     }

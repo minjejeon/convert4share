@@ -27,5 +27,6 @@ func detectPlatformBinaries(results map[string]string) {
 	}
 
 	probe("ffmpeg", "/usr/bin/ffmpeg", "/usr/local/bin/ffmpeg")
+	probe("ffprobe", "/usr/bin/ffprobe", "/usr/local/bin/ffprobe")
 	probe("magick", "/usr/bin/magick", "/usr/local/bin/magick", "/usr/bin/convert", "/usr/local/bin/convert")
 }

@@ -15,6 +15,7 @@ type Job struct{ Orig, Dest string }
 type Config struct {
 	MagickBinary        string
 	FfmpegBinary        string
+	FfprobeBinary       string
 	MaxSize             int
 	MaxImageSize        int
 	HardwareAccelerator string

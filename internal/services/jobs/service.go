@@ -10,6 +10,7 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -231,6 +232,7 @@ func (s *Service) runBatch(files []string) {
 	convConfig := &converter.Config{
 		MagickBinary:        viper.GetString("magickBinary"),
 		FfmpegBinary:        viper.GetString("ffmpegBinary"),
+		FfprobeBinary:       viper.GetString("ffprobeBinary"),
 		MaxSize:             viper.GetInt("maxSize"),
 		MaxImageSize:        viper.GetInt("maxImageSize"),
 		HardwareAccelerator: viper.GetString("hardwareAccelerator"),
@@ -415,6 +417,9 @@ func (s *Service) runOne(wg *sync.WaitGroup, in runOneInput) {
 	var (
 		err  error
 		dest string
+		// note rides along on the terminal "done" event to explain a
+		// non-obvious outcome (e.g. an mp4 that was copied untouched).
+		note string
 	)
 
 	isCopyOnly := false
@@ -434,6 +439,9 @@ func (s *Service) runOne(wg *sync.WaitGroup, in runOneInput) {
 		}
 		in.report(in.jobID, dest, 0, "processing", "", "")
 		err = copyFile(in.src, dest)
+
+	case in.ext == ".mp4":
+		dest, note, err = s.processMP4(jobCtx, in)
 
 	case in.ext == ".mov":
 		if isPairedLivePhotoMov(in.autoLivePhoto, in.heicStems, in.parent, in.pairStem) {
@@ -457,7 +465,7 @@ func (s *Service) runOne(wg *sync.WaitGroup, in runOneInput) {
 		defer release()
 
 		in.report(in.jobID, dest, 0, "processing", "", "")
-		err = in.convConfig.Ffmpeg(jobCtx, in.src, dest, func(progress int, speed string) {
+		err = in.convConfig.Ffmpeg(jobCtx, in.src, dest, false, func(progress int, speed string) {
 			in.report(in.jobID, dest, progress, "processing", "", speed)
 		})
 
@@ -485,13 +493,106 @@ func (s *Service) runOne(wg *sync.WaitGroup, in runOneInput) {
 	}
 
 	if err != nil {
+		if errors.Is(err, errJobCancelled) {
+			return
+		}
 		if dest != "" {
 			os.Remove(dest)
 		}
 		in.report(in.jobID, dest, 100, "error", err.Error(), "")
 		return
 	}
-	in.report(in.jobID, dest, 100, "done", "", "")
+	in.report(in.jobID, dest, 100, "done", note, "")
+}
+
+// errJobCancelled marks a job that ended because its context was
+// cancelled. runOne swallows it: a cancelled job has already been
+// accounted for by whoever cancelled it and needs no error event.
+var errJobCancelled = errors.New("job cancelled")
+
+// processMP4 decides, per file, whether an mp4 can be shared as-is.
+// The extension alone says nothing about the contents — a KakaoTalk
+// export carries H.265 in an mp4 wrapper and will not play on the
+// devices Convert4Share targets — so the streams are probed and only a
+// genuinely compatible file is copied.
+//
+// It returns the destination path and an optional note for the "done"
+// event.
+func (s *Service) processMP4(ctx context.Context, in runOneInput) (string, string, error) {
+	needsConversion, reason, copyAudio := true, "could not inspect the file", false
+
+	info, probeErr := in.convConfig.Probe(ctx, in.src)
+	if probeErr != nil {
+		// Converting is the safe default: a file we cannot vouch for
+		// is better re-encoded than silently passed through broken.
+		s.logger.Warn("ffprobe failed; converting rather than copying blind",
+			"file", in.src, "error", probeErr)
+	} else {
+		needsConversion, reason = converter.NeedsConversion(info, in.convConfig.MaxSize)
+		copyAudio = converter.HasAACAudio(info)
+	}
+
+	dest, err := s.resolveDestination(in.destDir, in.stem, ".mp4", in.collisionOption)
+	if err != nil {
+		return "", "", err
+	}
+
+	if !needsConversion {
+		s.logger.Info("Copying mp4 unchanged; already shareable", "file", in.src)
+		// With collisionOption "overwrite" and the output landing in
+		// the source directory, dest resolves to src itself. Copying
+		// would truncate the original through its own open handle.
+		if sameFile(in.src, dest) {
+			return dest, "Already compatible", nil
+		}
+		in.report(in.jobID, dest, 0, "processing", "", "")
+		if err := copyFile(in.src, dest); err != nil {
+			return dest, "", err
+		}
+		return dest, "Copied (already compatible)", nil
+	}
+
+	s.logger.Info("Converting mp4", "file", in.src, "reason", reason)
+	in.report(in.jobID, dest, 0, "pending", "", "")
+
+	release, acqErr := s.ffmpegSem.Acquire(ctx)
+	if acqErr != nil {
+		return dest, "", errJobCancelled
+	}
+	defer release()
+
+	in.report(in.jobID, dest, 0, "processing", "", "")
+
+	// Encode beside the destination and move into place, so ffmpeg is
+	// never handed the same path as both input and output.
+	tmp := dest + ".c4s-tmp.mp4"
+	err = in.convConfig.Ffmpeg(ctx, in.src, tmp, copyAudio, func(progress int, speed string) {
+		in.report(in.jobID, dest, progress, "processing", "", speed)
+	})
+	if err == nil {
+		err = os.Rename(tmp, dest)
+	}
+	if err != nil {
+		os.Remove(tmp)
+		return dest, "", err
+	}
+
+	return dest, "Converted (" + reason + ")", nil
+}
+
+// sameFile reports whether two paths resolve to the same file on disk,
+// which a plain string comparison misses across case differences and
+// links.
+func sameFile(a, b string) bool {
+	ai, err := os.Stat(a)
+	if err != nil {
+		return false
+	}
+	bi, err := os.Stat(b)
+	if err != nil {
+		return false
+	}
+	return os.SameFile(ai, bi)
 }
 
 // resolveDestination picks a destination path that satisfies the

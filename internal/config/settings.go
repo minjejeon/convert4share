@@ -49,6 +49,7 @@ func FilePath() (string, error) {
 type Settings struct {
 	MagickBinary        string   `json:"magickBinary"`
 	FfmpegBinary        string   `json:"ffmpegBinary"`
+	FfprobeBinary       string   `json:"ffprobeBinary"`
 	MaxSize             int      `json:"maxSize"`
 	MaxImageSize        int      `json:"maxImageSize"`
 	AutoLivePhoto       bool     `json:"autoLivePhoto"`
@@ -85,10 +86,14 @@ func ExcludePatterns() []string {
 func SetDefaults(defaultLogLevel string) {
 	viper.SetDefault("magickBinary", "magick")
 	viper.SetDefault("ffmpegBinary", "ffmpeg")
+	viper.SetDefault("ffprobeBinary", "ffprobe")
 	viper.SetDefault("maxSize", 1920)
 	viper.SetDefault("maxImageSize", 2560)
 	viper.SetDefault("autoLivePhoto", true)
-	viper.SetDefault("copyOnlyExtensions", []string{".jpg", ".jpeg", ".mp4"})
+	// .mp4 is deliberately absent: mp4 inputs are probed and copied
+	// only when their contents are already shareable. Listing it here
+	// would short-circuit that check.
+	viper.SetDefault("copyOnlyExtensions", []string{".jpg", ".jpeg"})
 	viper.SetDefault("maxMagickWorkers", 5)
 	viper.SetDefault("maxFfmpegWorkers", 1)
 	viper.SetDefault("hardwareAccelerator", "none")
@@ -114,6 +119,7 @@ func Load() Settings {
 	return Settings{
 		MagickBinary:        viper.GetString("magickBinary"),
 		FfmpegBinary:        viper.GetString("ffmpegBinary"),
+		FfprobeBinary:       viper.GetString("ffprobeBinary"),
 		MaxSize:             viper.GetInt("maxSize"),
 		MaxImageSize:        viper.GetInt("maxImageSize"),
 		AutoLivePhoto:       viper.GetBool("autoLivePhoto"),
@@ -139,6 +145,7 @@ func Load() Settings {
 func Save(s Settings) error {
 	viper.Set("magickBinary", s.MagickBinary)
 	viper.Set("ffmpegBinary", s.FfmpegBinary)
+	viper.Set("ffprobeBinary", s.FfprobeBinary)
 	viper.Set("maxSize", s.MaxSize)
 	viper.Set("maxImageSize", s.MaxImageSize)
 	viper.Set("autoLivePhoto", s.AutoLivePhoto)

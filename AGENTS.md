@@ -84,8 +84,14 @@ It is a **Wails** desktop application (Go backend + React/Vite/Tailwind frontend
     -   If `autoLivePhoto` is enabled (default: true), the app scans the batch for `.heic` files.
     -   If a `.mov` file shares the same base name and directory as a `.heic` file in the same batch, the `.mov` is skipped (treated as the video part of a Live Photo).
 -   **Pass-through (Copy Only)**:
-    -   Files with extensions listed in `copyOnlyExtensions` (default: `.jpg`, `.jpeg`, `.mp4`) are copied directly to the destination without conversion.
+    -   Files with extensions listed in `copyOnlyExtensions` (default: `.jpg`, `.jpeg`) are copied directly to the destination without conversion. This check runs first and overrides everything below.
     -   The app uses a standard file copy (`io.Copy`) and respects collision resolution rules.
+-   **MP4 Smart Passthrough**:
+    -   `.mp4` is not in the copy-only default. The extension says nothing about the contents — messenger and phone exports commonly wrap H.265 in an mp4 — so each file is probed with ffprobe (`internal/converter/probe.go`) and judged by `converter.NeedsConversion` (`internal/converter/compat.go`).
+    -   Copied as-is only when all hold: video is `h264`, `pix_fmt` is `yuv420p`, the longest side is within `maxSize`, and every audio track is `aac` or `mp3`. Cover art (`attached_pic`) is not counted as video; an audio-only mp4 is copied.
+    -   Anything else is re-encoded. When the source audio is already AAC the ffmpeg call stream-copies it (`-c:a copy`) instead of re-encoding.
+    -   A failed probe converts rather than copying, so an unverifiable file is never passed through broken. A missing ffprobe therefore re-encodes every mp4 — `DetectBinaries` reports an `ffprobe` key so the Settings screen can surface the gap.
+    -   Conversion always writes to `<dest>.c4s-tmp.mp4` and renames into place. Unlike mov→mp4, mp4→mp4 can resolve `dest` onto `src` (collision option `overwrite`, output in the source directory), which would otherwise hand ffmpeg one path as both input and output. The copy path guards the same case with `os.SameFile`.
 
 ### 4. Platform Specifics (Windows & Linux)
 

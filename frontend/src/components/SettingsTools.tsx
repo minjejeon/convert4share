@@ -11,7 +11,7 @@ interface SettingsToolsProps {
 export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
     const [installing, setInstalling] = useState<string | null>(null);
 
-    const handleBrowse = async (field: 'magickBinary' | 'ffmpegBinary') => {
+    const handleBrowse = async (field: 'magickBinary' | 'ffmpegBinary' | 'ffprobeBinary') => {
         const path = await SelectBinaryDialog();
         if (path) {
             onChange({ ...settings, [field]: path });
@@ -26,6 +26,10 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
 
             if (results['ffmpeg']) {
                 newSettings.ffmpegBinary = results['ffmpeg'];
+                updated = true;
+            }
+            if (results['ffprobe']) {
+                newSettings.ffprobeBinary = results['ffprobe'];
                 updated = true;
             }
             if (results['magick']) {
@@ -107,6 +111,29 @@ export function SettingsTools({ settings, onChange }: SettingsToolsProps) {
                             {installing === 'ffmpeg' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                         </button>
                     </div>
+                </div>
+                <div className="space-y-2">
+                    <label htmlFor="tools-ffprobe-path" className="text-xs font-medium text-slate-500 dark:text-slate-400">FFprobe Binary Path</label>
+                    <div className="flex gap-2">
+                        <input
+                            id="tools-ffprobe-path"
+                            type="text"
+                            className="block w-full rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-xs px-3 py-2.5 font-mono truncate transition-shadow"
+                            value={settings.ffprobeBinary}
+                            onChange={(e) => onChange({ ...settings, ffprobeBinary: e.target.value })}
+                        />
+                        <button
+                            onClick={() => handleBrowse('ffprobeBinary')}
+                            className="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 transition-colors shadow-sm"
+                            title="Browse..."
+                            aria-label="Browse for FFprobe binary"
+                        >
+                            <FolderOpen className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Used to inspect incoming MP4 files. Ships with FFmpeg, so it is found automatically in almost every install. Without it, every MP4 is re-encoded instead of copied.
+                    </p>
                 </div>
                 <div className="space-y-2">
                     <label htmlFor="tools-magick-path" className="text-xs font-medium text-slate-500 dark:text-slate-400">Magick Binary Path</label>

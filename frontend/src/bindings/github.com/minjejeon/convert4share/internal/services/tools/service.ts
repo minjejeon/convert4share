@@ -21,9 +21,9 @@ export function CopyFileToClipboard(path: string): $CancellablePromise<void> {
 
 /**
  * DetectBinaries searches PATH (and platform-specific install
- * locations) for ffmpeg / magick and returns a map keyed by tool name.
- * On ImageMagick v6, where the binary is named 'convert' rather than
- * 'magick', the 'convert' path is used for the "magick" key.
+ * locations) for ffmpeg / ffprobe / magick and returns a map keyed by
+ * tool name. On ImageMagick v6, where the binary is named 'convert'
+ * rather than 'magick', the 'convert' path is used for the "magick" key.
  */
 export function DetectBinaries(): $CancellablePromise<{ [_: string]: string }> {
     return $Call.ByID(2600931500).then(($result: any) => {

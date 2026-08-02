@@ -93,7 +93,12 @@ func TestSetDefaults_AppliesExpectedValues(t *testing.T) {
 	if s.LogLevel != "debug" {
 		t.Errorf("LogLevel default: want debug (caller-supplied), got %s", s.LogLevel)
 	}
-	wantCopy := []string{".jpg", ".jpeg", ".mp4"}
+	if s.FfprobeBinary != "ffprobe" {
+		t.Errorf("FfprobeBinary default: want ffprobe, got %s", s.FfprobeBinary)
+	}
+	// .mp4 must stay out of the default: mp4 inputs are probed, and
+	// listing the extension here would bypass that check.
+	wantCopy := []string{".jpg", ".jpeg"}
 	if !reflect.DeepEqual(s.CopyOnlyExtensions, wantCopy) {
 		t.Errorf("CopyOnlyExtensions default: want %v, got %v", wantCopy, s.CopyOnlyExtensions)
 	}

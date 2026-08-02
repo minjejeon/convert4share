@@ -12,7 +12,8 @@ It features a modern GUI and integrates with the file manager via file associati
   - Converts `.mov` (QuickTime Video) files to `.mp4` (H.264/AAC).
   - Converts `.heic` (High-Efficiency Image Format) files to `.jpg`.
   - **HEIC Max Resolution**: Configurable limit for the longest side of converted images (default: 2560px).
-  - **Pass-through (Copy Only)**: Optionally skip conversion and copy files directly for specific extensions (e.g., `.jpg`, `.mp4`).
+  - **MP4 Smart Passthrough**: Incoming `.mp4` files are inspected rather than trusted. One that is already shareable — H.264 in `yuv420p`, within the size limit, with AAC or MP3 audio — is copied untouched. One that is not, such as the H.265 exports messengers and phones produce, is re-encoded to H.264. Audio that is already AAC is passed through without a second encode.
+  - **Pass-through (Copy Only)**: Optionally skip conversion and copy files directly for specific extensions (default: `.jpg`, `.jpeg`). This overrides the MP4 check, so adding `.mp4` here restores unconditional copying.
 - **Live Photo Detection**:
   - Automatically detects and skips the `.mov` component of Apple Live Photos if the corresponding `.heic` file is in the same batch.
 - **Drag & Drop Interface**:
@@ -36,6 +37,7 @@ It features a modern GUI and integrates with the file manager via file associati
 For `Convert4Share` to function correctly, the following tools are required:
 
 - **FFmpeg**: Required for video conversion.
+- **FFprobe**: Required to inspect incoming MP4 files. It ships with FFmpeg, so installing FFmpeg covers it; the app looks for it next to the FFmpeg binary before falling back to `PATH`. Without it, every MP4 is re-encoded instead of copied.
 - **ImageMagick**: Required for image conversion. On ImageMagick v6 the binary is named `convert` rather than `magick`; the app handles both.
 
 The application automatically attempts to detect these binaries in your system `PATH`, as well as standard `WinGet` installation locations on Windows. You can also manually configure the paths in the Settings if they are not detected.

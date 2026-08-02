@@ -31,6 +31,11 @@ func detectPlatformBinaries(results map[string]string) {
 			results["ffmpeg"] = p
 		}
 	}
+	if _, ok := results["ffprobe"]; !ok {
+		if p := filepath.Join(linksDir, "ffprobe.exe"); exists(p) {
+			results["ffprobe"] = p
+		}
+	}
 	if _, ok := results["magick"]; !ok {
 		if p := filepath.Join(linksDir, "magick.exe"); exists(p) {
 			results["magick"] = p
@@ -63,9 +68,17 @@ func detectPlatformBinaries(results map[string]string) {
 			return found
 		}
 
-		if _, ok := results["ffmpeg"]; !ok && strings.Contains(lowerName, "ffmpeg") {
-			if p := findInDir(filepath.Join(packagesDir, entry.Name()), "ffmpeg.exe"); p != "" {
-				results["ffmpeg"] = p
+		if strings.Contains(lowerName, "ffmpeg") {
+			// ffprobe ships in the same package as ffmpeg.
+			if _, ok := results["ffmpeg"]; !ok {
+				if p := findInDir(filepath.Join(packagesDir, entry.Name()), "ffmpeg.exe"); p != "" {
+					results["ffmpeg"] = p
+				}
+			}
+			if _, ok := results["ffprobe"]; !ok {
+				if p := findInDir(filepath.Join(packagesDir, entry.Name()), "ffprobe.exe"); p != "" {
+					results["ffprobe"] = p
+				}
 			}
 		}
 

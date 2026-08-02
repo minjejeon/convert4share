@@ -71,7 +71,7 @@ func (s *Service) SelectFiles() ([]string, error) {
 	}
 	dialog := s.app.Dialog.OpenFile().
 		SetTitle("Select Files to Convert").
-		AddFilter("Media Files", "*.mov;*.heic;*.png;*.jpg;*.jpeg").
+		AddFilter("Media Files", "*.mov;*.mp4;*.heic;*.png;*.jpg;*.jpeg").
 		AddFilter("All Files", "*.*")
 	files, err := dialog.PromptForMultipleSelection()
 	if err != nil {
@@ -107,14 +107,17 @@ func (s *Service) CopyFileToClipboard(path string) error {
 }
 
 // DetectBinaries searches PATH (and platform-specific install
-// locations) for ffmpeg / magick and returns a map keyed by tool name.
-// On ImageMagick v6, where the binary is named 'convert' rather than
-// 'magick', the 'convert' path is used for the "magick" key.
+// locations) for ffmpeg / ffprobe / magick and returns a map keyed by
+// tool name. On ImageMagick v6, where the binary is named 'convert'
+// rather than 'magick', the 'convert' path is used for the "magick" key.
 func (s *Service) DetectBinaries() map[string]string {
 	results := make(map[string]string)
 
 	if path, err := exec.LookPath("ffmpeg"); err == nil {
 		results["ffmpeg"] = path
+	}
+	if path, err := exec.LookPath("ffprobe"); err == nil {
+		results["ffprobe"] = path
 	}
 	if path, err := exec.LookPath("magick"); err == nil {
 		results["magick"] = path
@@ -158,6 +161,11 @@ func (s *Service) InstallTool(toolName string) error {
 	switch toolName {
 	case "ffmpeg":
 		viper.Set("ffmpegBinary", path)
+		// The Gyan.FFmpeg package carries ffprobe too; pick it up in
+		// the same pass so mp4 probing works without a second install.
+		if probePath, ok := detected["ffprobe"]; ok {
+			viper.Set("ffprobeBinary", probePath)
+		}
 	case "magick":
 		viper.Set("magickBinary", path)
 	}

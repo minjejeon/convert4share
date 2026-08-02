@@ -27,7 +27,7 @@ func TestBuildFfmpegArgs(t *testing.T) {
 		VideoQuality:        "high",
 	}
 
-	args := c.BuildFfmpegArgs("input.mov", "output.mp4")
+	args := c.BuildFfmpegArgs("input.mov", "output.mp4", false)
 
 	// Helper to check if arg exists
 	hasArg := func(arg string) bool {
@@ -68,7 +68,7 @@ func TestBuildFfmpegArgs_Nvidia(t *testing.T) {
 		VideoQuality:        "high",
 	}
 
-	args := c.BuildFfmpegArgs("input.mov", "output.mp4")
+	args := c.BuildFfmpegArgs("input.mov", "output.mp4", false)
 
 	// Helper to check if arg exists
 	hasArg := func(arg string) bool {
@@ -108,7 +108,7 @@ func TestBuildFfmpegArgs_VAAPI(t *testing.T) {
 		VideoQuality:        "high",
 	}
 
-	args := c.BuildFfmpegArgs("input.mov", "output.mp4")
+	args := c.BuildFfmpegArgs("input.mov", "output.mp4", false)
 
 	hasArg := func(arg string) bool {
 		for _, a := range args {

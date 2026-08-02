@@ -12,6 +12,12 @@ magickBinary: "magick"
 # If not set or invalid, the application will attempt to auto-detect it.
 ffmpegBinary: "ffmpeg"
 
+# Path to the FFprobe executable, used to inspect incoming .mp4 files and
+# decide whether they can be shared as-is. FFprobe ships alongside FFmpeg,
+# so a bare name here resolves against the FFmpeg directory first, then PATH.
+# When it cannot be found, every .mp4 is re-encoded rather than copied.
+ffprobeBinary: "ffprobe"
+
 # A list of path patterns. If a source file's path contains one of these strings,
 # the output will be saved to the `defaultDestDir` instead of the source directory.
 # Note: the legacy key `excludeStringPatterns` is still read for backward compatibility,
@@ -59,13 +65,17 @@ maxImageSize: 2560
 # the .mov file will be skipped, assuming it's the video component of a Live Photo.
 autoLivePhoto: true
 
-# List of extensions to copy directly without conversion.
-# If a file matches one of these extensions, it will be copied to the destination
-# instead of being processed by ffmpeg or ImageMagick.
+# List of extensions to copy directly without conversion. A match here wins
+# over every other rule, including the .mp4 compatibility check below.
+#
+# Note: .mp4 is deliberately not listed. Incoming .mp4 files are inspected
+# with ffprobe and copied only when their contents are already shareable
+# (H.264 / yuv420p within maxSize, AAC or MP3 audio); anything else — most
+# often H.265 from a phone or a messenger export — is re-encoded. Adding
+# ".mp4" here restores blind copying and lets incompatible files through.
 copyOnlyExtensions:
   - ".jpg"
   - ".jpeg"
-  - ".mp4"
 
 # Number of concurrent workers for image conversion.
 # More workers can speed up processing for many images, but uses more CPU.
