@@ -287,7 +287,7 @@ func (r *Runner) Run(ctx context.Context, files []string, reporter ProgressRepor
 				}
 
 				report(src, dest, 0, "processing", "", "")
-				err = r.convConfig.Ffmpeg(ctx, src, dest, func(progress int, speed string) {
+				err = r.convConfig.Ffmpeg(ctx, src, dest, false, func(progress int, speed string) {
 					report(src, dest, progress, "processing", "", speed)
 				})
 				release()
