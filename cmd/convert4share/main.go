@@ -18,6 +18,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 
+	"github.com/minjejeon/convert4share/internal/cli"
 	"github.com/minjejeon/convert4share/internal/config"
 	"github.com/minjejeon/convert4share/internal/logging"
 	"github.com/minjejeon/convert4share/internal/services/jobs"
@@ -33,6 +34,10 @@ import (
 var assets embed.FS
 
 func main() {
+	if hasCLIFlag(os.Args) {
+		os.Exit(cli.Run(filterCLIFlag(os.Args[1:])))
+	}
+
 	levelVar := new(slog.LevelVar)
 	levelVar.Set(slog.LevelInfo)
 	logger := logging.New(levelVar)
@@ -288,4 +293,23 @@ func autoDetectBinaries(logger *slog.Logger, ts *tools.Service) {
 			viper.Set("magickBinary", path)
 		}
 	}
+}
+
+func hasCLIFlag(args []string) bool {
+	for _, arg := range args {
+		if arg == "--cli" {
+			return true
+		}
+	}
+	return false
+}
+
+func filterCLIFlag(args []string) []string {
+	var out []string
+	for _, arg := range args {
+		if arg != "--cli" {
+			out = append(out, arg)
+		}
+	}
+	return out
 }
