@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	Version   = "0.4.1"
+	Version   = "0.7.0"
 	usageText = `Usage: c4s [options] <file1> [file2 ...]
 
 Convert MOV and HEIC files to MP4 and JPG using hardware acceleration.

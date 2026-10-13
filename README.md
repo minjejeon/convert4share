@@ -29,6 +29,9 @@ It features a modern GUI and integrates with the file manager via file associati
   - Otherwise, the converted file is saved in the same directory as the original file.
 - **Theme Support**:
   - Fully supports Light and Dark modes (defaults to Dark), matching your system preference or manual toggle.
+- **Headless CLI Mode (`c4s`)**:
+  - Full-featured command-line interface powered by a minimal C trampoline (`c4s` / `c4s.exe`, ~15KB).
+  - Fast execution without opening a GUI window, with full control over quality, hardware acceleration, output destination, and collision handling.
 - **Single Instance Execution**:
   - Ensures that only one instance of the application runs at a time. If you select multiple files to convert, they are queued and processed by the single master instance.
 
@@ -122,9 +125,27 @@ No in-app install button or admin CLI is needed — the file associations are de
 
 If you prefer not to use the installer, you can still launch the app and drop files into the window (see Drag & Drop) or invoke it from the command line.
 
-### Command Line
+### Command Line (Headless CLI)
 
-Pass file paths as arguments. The running instance (if any) receives them via the Wails v3 single-instance lock and queues them automatically:
+Use `c4s` (or `c4s.exe` on Windows) for headless batch conversions directly from the terminal without opening the GUI window:
+
+```shell
+# Convert files with default settings
+c4s video.mov photo.heic
+
+# Specify output directory and high quality preset
+c4s -o /path/to/output -q high video.mov
+
+# Choose hardware acceleration and overwrite existing files
+c4s --hwaccel nvenc --collision overwrite video.mov
+
+# Show full options and usage
+c4s --help
+```
+
+### Launching GUI with Files
+
+You can also pass file paths to `convert4share` to open the GUI and automatically queue them:
 
 ```shell
 # Windows
