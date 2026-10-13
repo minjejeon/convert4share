@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails/v3/pkg/application"
 
+	"github.com/minjejeon/convert4share/internal/batch"
 	"github.com/minjejeon/convert4share/internal/capturetime"
 	"github.com/minjejeon/convert4share/internal/concurrency"
 	"github.com/minjejeon/convert4share/internal/config"
@@ -30,17 +31,8 @@ import (
 	"github.com/minjejeon/convert4share/internal/naming"
 )
 
-// JobStatus mirrors the v2 progress payload so the existing frontend
-// event handler keeps working once it switches to the v3 bindings.
-type JobStatus struct {
-	ID       string `json:"id"`
-	File     string `json:"file"`
-	DestFile string `json:"destFile,omitempty"`
-	Status   string `json:"status"` // "queued", "processing", "done", "error"
-	Progress int    `json:"progress"`
-	Speed    string `json:"speed,omitempty"`
-	Error    string `json:"error,omitempty"`
-}
+// JobStatus mirrors batch.JobStatus and keeps frontend compatibility.
+type JobStatus = batch.JobStatus
 
 // Service owns the conversion queue plus its concurrency primitives.
 // All exported methods are bound by Wails v3.
@@ -601,44 +593,7 @@ func sameFile(a, b string) bool {
 func (s *Service) resolveDestination(dir, name, ext, collisionOption string) (string, error) {
 	s.destMu.Lock()
 	defer s.destMu.Unlock()
-
-	dest := filepath.Join(dir, name+ext)
-
-	createPlaceholder := func(path string) bool {
-		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL, 0666)
-		if err == nil {
-			f.Close()
-			return true
-		}
-		return false
-	}
-
-	if collisionOption == "overwrite" {
-		return dest, nil
-	}
-
-	info, err := os.Stat(dest)
-	if os.IsNotExist(err) {
-		if createPlaceholder(dest) {
-			return dest, nil
-		}
-		info, err = os.Stat(dest)
-	}
-
-	if err == nil && info != nil && info.Size() == 0 {
-		return dest, nil
-	}
-
-	if collisionOption == "error" {
-		return "", fmt.Errorf("file already exists: %s", dest)
-	}
-
-	for i := 1; ; i++ {
-		d := filepath.Join(dir, fmt.Sprintf("%s (%d)%s", name, i, ext))
-		if createPlaceholder(d) {
-			return d, nil
-		}
-	}
+	return batch.ResolveDestination(dir, name, ext, collisionOption)
 }
 
 func copyFile(src, dst string) error {
