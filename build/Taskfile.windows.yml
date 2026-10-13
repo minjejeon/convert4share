@@ -13,6 +13,7 @@ tasks:
       - task: common:build:frontend
       - task: common:generate:icons
       - task: generate:syso
+      - task: build:c4s
     cmds:
       - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}.exe ./cmd/convert4share
       - powershell -NoProfile -Command "Remove-Item cmd/convert4share/*.syso -ErrorAction SilentlyContinue"
@@ -23,6 +24,11 @@ tasks:
       CGO_ENABLED: 0
       GOARCH: '{{.ARCH | default ARCH}}'
       PRODUCTION: '{{.PRODUCTION | default "false"}}'
+
+  build:c4s:
+    summary: Builds the minimal C trampoline for Windows
+    cmds:
+      - '{{.CC | default "gcc"}} -O2 -s -municode -mconsole -o {{.BIN_DIR}}/c4s.exe ./cmd/c4s/main.c'
 
   package:
     summary: Packages a production build of the application into a `.exe` bundle
@@ -45,7 +51,7 @@ tasks:
           PRODUCTION: "true"
       - task: ensure:webview2:bootstrapper
     cmds:
-      - makensis -INPUTCHARSET UTF8 -DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\{{.APP_NAME}}.exe" project.nsi
+      - makensis -INPUTCHARSET UTF8 -DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\{{.APP_NAME}}.exe" -DARG_C4S_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\c4s.exe" project.nsi
     vars:
       ARCH: '{{.ARCH | default ARCH}}'
       ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'

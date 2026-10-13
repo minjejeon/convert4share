@@ -19,6 +19,8 @@ release: "1"
 contents:
   - src: "./bin/convert4share"
     dst: "/usr/local/bin/convert4share"
+  - src: "./bin/c4s"
+    dst: "/usr/local/bin/c4s"
   - src: "./build/appicon.png"
     dst: "/usr/share/icons/hicolor/128x128/apps/convert4share.png"
   - src: "./build/linux/convert4share.desktop"

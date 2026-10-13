@@ -8,8 +8,14 @@ tasks:
     summary: Builds the application for Linux
     deps:
       - task: common:build:frontend
+      - task: build:c4s
     cmds:
       - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}} ./cmd/convert4share
+
+  build:c4s:
+    summary: Builds the minimal C trampoline for Linux
+    cmds:
+      - '{{.CC | default "gcc"}} -O2 -s -o {{.BIN_DIR}}/c4s ./cmd/c4s/main.c'
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -ldflags="-w -s"{{else}}-gcflags=all="-l"{{end}}'
     env:

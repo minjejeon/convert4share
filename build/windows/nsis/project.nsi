@@ -335,6 +335,18 @@ Section
 
     !insertmacro wails.files
 
+    !ifdef ARG_C4S_AMD64_BINARY
+        ${if} ${IsNativeAMD64}
+            File "/oname=c4s.exe" "${ARG_C4S_AMD64_BINARY}"
+        ${EndIf}
+    !endif
+
+    !ifdef ARG_C4S_ARM64_BINARY
+        ${if} ${IsNativeARM64}
+            File "/oname=c4s.exe" "${ARG_C4S_ARM64_BINARY}"
+        ${EndIf}
+    !endif
+
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
     CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
 

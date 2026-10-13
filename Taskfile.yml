@@ -43,7 +43,7 @@ tasks:
         vars:
           PRODUCTION: "true"
     cmds:
-      - '{{if eq OS "windows"}}powershell -NoProfile -Command "Compress-Archive -Path {{.BIN_DIR}}/{{.APP_NAME}}.exe -DestinationPath {{.BIN_DIR}}/{{.APP_NAME}}-windows-amd64.zip -Force"{{else}}tar czf {{.BIN_DIR}}/{{.APP_NAME}}-linux-{{ARCH}}.tar.gz -C {{.BIN_DIR}} {{.APP_NAME}}{{end}}'
+      - '{{if eq OS "windows"}}powershell -NoProfile -Command "Compress-Archive -Path {{.BIN_DIR}}/{{.APP_NAME}}.exe, {{.BIN_DIR}}/c4s.exe -DestinationPath {{.BIN_DIR}}/{{.APP_NAME}}-windows-amd64.zip -Force"{{else}}tar czf {{.BIN_DIR}}/{{.APP_NAME}}-linux-{{ARCH}}.tar.gz -C {{.BIN_DIR}} {{.APP_NAME}} c4s{{end}}'
 
   clean:
     summary: Removes build artifacts
